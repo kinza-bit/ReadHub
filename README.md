@@ -65,4 +65,4 @@ ReadHub is a modern, responsive web application designed for a seamless bookstor
 3. Navigate to **`http://localhost:3000`** to access the ReadHub Bookstore.
 
 ---
-*Developed for the Project Submission - 2026*
+

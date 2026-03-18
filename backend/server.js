@@ -66,45 +66,26 @@ app.post('/api/register', async (req, res) => {
         const pool = await poolPromise;
         if (!pool) return res.status(503).json({ error: 'Database is offline. Please check your SQL Server Configuration.' });
 
-        // Check for duplicate email
-        const checkUser = await pool.request()
-            .input('Email', sql.NVARCHAR, email)
-            .query('SELECT UserID FROM Users WHERE Email = @Email');
-
-        if (checkUser.recordset.length > 0) {
-            return res.status(409).json({ error: 'Email address is already registered.' });
-        }
-
-        // Hash password
+        // Hash password before calling SP
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // Get Customer Role ID
-        const roleResult = await pool.request()
-            .input('RoleName', sql.NVARCHAR, 'Customer')
-            .query('SELECT RoleID FROM Roles WHERE RoleName = @RoleName');
-
-        if (roleResult.recordset.length === 0) {
-            return res.status(500).json({ error: 'Customer role not found in database.' });
-        }
-        const roleId = roleResult.recordset[0].RoleID;
-
-        // Insert new user
-        // Note: Using default values for nullable fields to fulfill schema requirements
+        // Call stored procedure for registration
         await pool.request()
-            .input('Username', sql.NVARCHAR, email) // Using email as username for simplicity
+            .input('Username', sql.NVARCHAR, email)
             .input('PasswordHash', sql.NVARCHAR, passwordHash)
             .input('Email', sql.NVARCHAR, email)
             .input('FullName', sql.NVARCHAR, name)
-            .input('RoleID', sql.INT, roleId)
-            .query(`
-                INSERT INTO Users (Username, PasswordHash, Email, FullName, RoleID, IsActive) 
-                VALUES (@Username, @PasswordHash, @Email, @FullName, @RoleID, 1)
-            `);
+            .input('RoleName', sql.NVARCHAR, 'Customer')
+            .execute('sp_RegisterUser');
 
         res.status(201).json({ message: 'Account created successfully!' });
 
     } catch (error) {
+        // Check for specific SP error (Email already registered)
+        if (error.number === 50004) {
+            return res.status(409).json({ error: 'Email address is already registered.' });
+        }
         console.error('Registration error:', error);
         res.status(500).json({ error: 'An internal error occurred during registration.' });
     }
@@ -122,16 +103,10 @@ app.post('/api/login/user', async (req, res) => {
         const pool = await poolPromise;
         if (!pool) return res.status(503).json({ error: 'Database is offline.' });
 
-        // Use vw_AllUsers view from features.sql to simplify the query
-        // Note: Joining with Users only to get the PasswordHash which isn't in the view
+        // Use stored procedure to get user details
         const userResult = await pool.request()
             .input('Email', sql.NVARCHAR, email)
-            .query(`
-                SELECT v.UserID, v.FullName, v.Email, u.PasswordHash, v.RoleName 
-                FROM vw_AllUsers v
-                INNER JOIN Users u ON v.UserID = u.UserID
-                WHERE v.Email = @Email AND v.IsActive = 1
-            `);
+            .execute('sp_GetUserByEmail');
 
         if (userResult.recordset.length === 0) {
             // US-02.2: Do not specify which field is wrong
@@ -180,15 +155,10 @@ app.post('/api/login/admin', async (req, res) => {
         const pool = await poolPromise;
         if (!pool) return res.status(503).json({ error: 'Database is offline.' });
 
-        // Use vw_AllUsers view for admin login as well
+        // Use stored procedure for admin login
         const adminResult = await pool.request()
             .input('Email', sql.NVARCHAR, email)
-            .query(`
-                SELECT v.UserID, v.FullName, v.Email, u.PasswordHash, v.RoleName 
-                FROM vw_AllUsers v
-                INNER JOIN Users u ON v.UserID = u.UserID
-                WHERE v.Email = @Email AND v.IsActive = 1
-            `);
+            .execute('sp_GetUserByEmail');
 
         console.log('Admin login attempt:', email);
         console.log('Recordset length:', adminResult.recordset.length);
@@ -250,34 +220,13 @@ app.get('/api/admin/users', requireAdminAuth, async (req, res) => {
         const pool = await poolPromise;
         if (!pool) return res.status(503).json({ error: 'Database is offline.' });
 
-        let query = `
-            SELECT v.UserID, v.FullName, v.Email, v.RoleName, u.Username, u.PhoneNumber, u.City, v.IsActive, u.CreatedAt
-            FROM vw_AllUsers v
-            INNER JOIN Users u ON v.UserID = u.UserID
-            WHERE 1=1
-        `;
-
-        const request = pool.request();
-
-        if (search) {
-            query += ` AND (v.FullName LIKE @Search OR v.Email LIKE @Search OR u.Username LIKE @Search)`;
-            request.input('Search', sql.NVARCHAR, `%${search}%`);
-        }
-
-        if (role) {
-            query += ` AND v.RoleName = @Role`;
-            request.input('Role', sql.NVARCHAR, role);
-        }
-
-        // Default sorting
-        const validSortColumns = ['UserID', 'FullName', 'Email', 'RoleName', 'CreatedAt'];
-        const validSortOrders = ['ASC', 'DESC'];
-        const sortCol = validSortColumns.includes(sortBy) ? sortBy : 'UserID';
-        const sortDir = validSortOrders.includes(sortOrder?.toUpperCase()) ? sortOrder.toUpperCase() : 'ASC';
-
-        query += ` ORDER BY ${sortCol} ${sortDir}`;
-
-        const result = await request.query(query);
+        // Using Stored Procedure for filtered and sorted users
+        const result = await pool.request()
+            .input('Search', sql.NVARCHAR, search || null)
+            .input('Role', sql.NVARCHAR, role || null)
+            .input('SortBy', sql.NVARCHAR, sortBy || 'UserID')
+            .input('SortOrder', sql.NVARCHAR, sortOrder || 'ASC')
+            .execute('sp_GetUsersFiltered');
         res.json(result.recordset);
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -291,11 +240,7 @@ app.get('/api/admin/users/:id', requireAdminAuth, async (req, res) => {
         const pool = await poolPromise;
         const result = await pool.request()
             .input('UserID', sql.INT, req.params.id)
-            .query(`
-                SELECT UserID, Username, Email, FullName, PhoneNumber, AddressLine1, City, Country, IsActive, RoleID, CreatedAt 
-                FROM Users 
-                WHERE UserID = @UserID
-            `);
+            .execute('sp_GetUserDetails');
 
         if (result.recordset.length === 0) {
             return res.status(404).json({ error: 'User not found.' });
@@ -321,11 +266,7 @@ app.put('/api/admin/users/:id', requireAdminAuth, async (req, res) => {
             .input('City', sql.NVARCHAR, city)
             .input('RoleID', sql.INT, roleId)
             .input('IsActive', sql.BIT, isActive ? 1 : 0)
-            .query(`
-                UPDATE Users 
-                SET FullName = @FullName, Email = @Email, PhoneNumber = @PhoneNumber, City = @City, RoleID = @RoleID, IsActive = @IsActive
-                WHERE UserID = @UserID
-            `);
+            .execute('sp_UpdateUserDetails');
 
         res.json({ message: 'User updated successfully.' });
     } catch (error) {
@@ -340,7 +281,7 @@ app.delete('/api/admin/users/:id', requireAdminAuth, async (req, res) => {
         const pool = await poolPromise;
         await pool.request()
             .input('UserID', sql.INT, req.params.id)
-            .query(`UPDATE Users SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE UserID = @UserID`);
+            .execute('sp_ToggleUserStatus');
         
         res.json({ message: 'User status toggled successfully.' });
     } catch (error) {

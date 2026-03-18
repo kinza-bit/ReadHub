@@ -601,6 +601,149 @@ BEGIN
 END;
 GO
 
+-- ────────────────────────────────────────────────────────────
+-- 2.9  Register New User
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_RegisterUser', 'P') IS NOT NULL DROP PROCEDURE sp_RegisterUser;
+GO
+CREATE PROCEDURE sp_RegisterUser
+    @Username NVARCHAR(50),
+    @PasswordHash NVARCHAR(256),
+    @Email NVARCHAR(100),
+    @FullName NVARCHAR(100),
+    @RoleName NVARCHAR(50) = 'Customer'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @RoleID INT = (SELECT RoleID FROM Roles WHERE RoleName = @RoleName);
+    
+    IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
+    BEGIN
+        THROW 50004, 'Email already registered.', 1;
+    END
+
+    INSERT INTO Users (Username, PasswordHash, Email, FullName, RoleID, IsActive)
+    VALUES (@Username, @PasswordHash, @Email, @FullName, @RoleID, 1);
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.10 Get User By Email (for Login/Auth)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_GetUserByEmail', 'P') IS NOT NULL DROP PROCEDURE sp_GetUserByEmail;
+GO
+CREATE PROCEDURE sp_GetUserByEmail
+    @Email NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT v.*, u.PasswordHash, u.RoleID
+    FROM vw_AllUsers v
+    INNER JOIN Users u ON v.UserID = u.UserID
+    WHERE v.Email = @Email;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.11 Get Detailed User Info (Admin)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_GetUserDetails', 'P') IS NOT NULL DROP PROCEDURE sp_GetUserDetails;
+GO
+CREATE PROCEDURE sp_GetUserDetails
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT UserID, Username, Email, FullName, PhoneNumber, AddressLine1, City, Country, IsActive, RoleID, CreatedAt 
+    FROM Users 
+    WHERE UserID = @UserID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.12 Update User Details (Admin)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_UpdateUserDetails', 'P') IS NOT NULL DROP PROCEDURE sp_UpdateUserDetails;
+GO
+CREATE PROCEDURE sp_UpdateUserDetails
+    @UserID INT,
+    @FullName NVARCHAR(100),
+    @Email NVARCHAR(100),
+    @PhoneNumber NVARCHAR(20),
+    @City NVARCHAR(100),
+    @RoleID INT,
+    @IsActive BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Users 
+    SET FullName = @FullName, 
+        Email = @Email, 
+        PhoneNumber = @PhoneNumber, 
+        City = @City, 
+        RoleID = @RoleID, 
+        IsActive = @IsActive
+    WHERE UserID = @UserID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.13 Toggle User Status (Admin Soft Delete)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_ToggleUserStatus', 'P') IS NOT NULL DROP PROCEDURE sp_ToggleUserStatus;
+GO
+CREATE PROCEDURE sp_ToggleUserStatus
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Users SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE UserID = @UserID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.14 Get Users with Filtering and Sorting (Admin)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_GetUsersFiltered', 'P') IS NOT NULL DROP PROCEDURE sp_GetUsersFiltered;
+GO
+CREATE PROCEDURE sp_GetUsersFiltered
+    @Search NVARCHAR(100) = NULL,
+    @Role NVARCHAR(50) = NULL,
+    @SortBy NVARCHAR(50) = 'UserID',
+    @SortOrder NVARCHAR(4) = 'ASC'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Note: Handling sorting in SP to avoid dynamic SQL where possible
+    SELECT v.UserID, v.FullName, v.Email, v.RoleName, u.Username, u.PhoneNumber, u.City, v.IsActive, u.CreatedAt
+    FROM vw_AllUsers v
+    INNER JOIN Users u ON v.UserID = u.UserID
+    WHERE (@Search IS NULL OR v.FullName LIKE '%' + @Search + '%' OR v.Email LIKE '%' + @Search + '%' OR u.Username LIKE '%' + @Search + '%')
+      AND (@Role IS NULL OR v.RoleName = @Role)
+    ORDER BY 
+        CASE WHEN @SortOrder = 'ASC' THEN
+            CASE @SortBy 
+                WHEN 'UserID' THEN CAST(v.UserID AS NVARCHAR(50))
+                WHEN 'FullName' THEN v.FullName
+                WHEN 'Email' THEN v.Email
+                WHEN 'RoleName' THEN v.RoleName
+                WHEN 'CreatedAt' THEN CONVERT(NVARCHAR(50), u.CreatedAt, 126)
+                ELSE CAST(v.UserID AS NVARCHAR(50))
+            END
+        END ASC,
+        CASE WHEN @SortOrder = 'DESC' THEN
+            CASE @SortBy 
+                WHEN 'UserID' THEN CAST(v.UserID AS NVARCHAR(50))
+                WHEN 'FullName' THEN v.FullName
+                WHEN 'Email' THEN v.Email
+                WHEN 'RoleName' THEN v.RoleName
+                WHEN 'CreatedAt' THEN CONVERT(NVARCHAR(50), u.CreatedAt, 126)
+                ELSE CAST(v.UserID AS NVARCHAR(50))
+            END
+        END DESC;
+END;
+GO
+
 -- ============================================================
 -- END OF FEATURE PROCEDURES & VIEWS
 -- ============================================================

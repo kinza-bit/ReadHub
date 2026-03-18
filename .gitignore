@@ -1,0 +1,8 @@
+node_modules/
+.env
+backend/.env
+db-status.txt
+backend/db-status.txt
+.vscode/
+.idea/
+*.log

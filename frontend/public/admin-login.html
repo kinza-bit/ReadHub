@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - READhub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .auth-container::before { background: rgba(239, 68, 68, 0.2); }
+        .auth-container::after { background: rgba(16, 185, 129, 0.15); }
+        .btn-primary { background: #ef4444; }
+        .btn-primary:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+        .auth-card { border: 1px solid rgba(239, 68, 68, 0.2); }
+        .brand span { color: #ef4444; font-size: 0.8rem; text-transform: uppercase; vertical-align: super; margin-left: 0.2rem; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card glass">
+            <div class="auth-header">
+                <h2 class="brand">READhub<span>Admin</span></h2>
+                <p>Authorized personnel only.</p>
+            </div>
+            
+            <div id="global-alert" class="alert"></div>
+
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="email">Admin Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="admin@readhub.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Enter admin password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Access Dashboard</button>
+            </form>
+            
+            <div class="switch-form">
+                <a href="/login.html">Return to User Login</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE_URL = '/api';
+
+        const showAlert = (message, type = 'error') => {
+            const alertEl = document.getElementById('global-alert');
+            if (!alertEl) return;
+            alertEl.className = `alert alert-${type}`;
+            alertEl.textContent = message;
+            alertEl.style.display = 'block';
+        };
+
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alertEl = document.getElementById('global-alert');
+            if (alertEl) alertEl.style.display = 'none';
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showAlert('Please enter both email and password.');
+                return;
+            }
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Verifying...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/login/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    showAlert(data.error || 'Invalid admin credentials.', 'error');
+                    return;
+                }
+                
+                window.location.href = 'admin-dashboard.html';
+                
+            } catch (err) {
+                 showAlert('Network error. Please try again later.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

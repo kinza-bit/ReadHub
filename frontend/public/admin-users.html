@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - READhub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar glass">
+        <div class="brand">READhub ADMIN</div>
+        <div class="nav-links">
+            <span id="admin-name" style="color: var(--text-muted);">Admin</span>
+            <a href="/admin-dashboard.html" class="btn btn-sm btn-secondary">Dashboard</a>
+            <a href="/" class="btn btn-sm btn-secondary">View Store</a>
+            <button id="logout-btn" class="btn btn-sm btn-danger" style="width: auto;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="auth-header" style="text-align: left; margin-bottom: 3rem;">
+            <h2>User Management</h2>
+            <p>View, search, and manage all registered accounts.</p>
+        </div>
+
+        <div id="alert-container" class="alert"></div>
+
+        <div class="admin-controls">
+            <input type="text" id="user-search" class="form-control search-input" placeholder="Search by name, email, or username...">
+            
+            <select id="role-filter" class="form-control filter-select">
+                <option value="">All Roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Customer">Customer</option>
+            </select>
+
+            <select id="sort-by" class="form-control filter-select">
+                <option value="UserID">Sort by ID</option>
+                <option value="FullName">Sort by Name</option>
+                <option value="Email">Sort by Email</option>
+                <option value="CreatedAt">Sort by Joined Date</option>
+            </select>
+        </div>
+
+        <div class="admin-table-container glass">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th data-sort="UserID">ID</th>
+                        <th data-sort="FullName">Full Name</th>
+                        <th data-sort="Email">Email</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body">
+                    <!-- Users will be loaded here -->
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem;">Loading users...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3>Edit User Details</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="edit-full-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="edit-email" class="form-control" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="edit-phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="edit-city" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="edit-role" class="form-control">
+                        <option value="1">Admin</option>
+                        <option value="2">Customer</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                    <input type="checkbox" id="edit-is-active" style="width: auto;">
+                    <label for="edit-is-active" style="margin-bottom: 0;">Account Active</label>
+                </div>
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+
+</html>

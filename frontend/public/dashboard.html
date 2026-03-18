@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - READhub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<!-- The class protected-user triggers the auth check in auth.js -->
+<body class="protected-user">
+    
+    <nav class="navbar glass">
+        <div class="brand">READhub</div>
+        <div class="nav-links">
+            <span>Welcome, <strong id="user-name-display">Reader</strong>!</span>
+            <button id="logout-btn" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Log Out</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        
+        <div style="margin-bottom: 2rem;">
+            <h2>Your Reading Hub</h2>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Explore our collection of premium engineering, horror, mystery, and self-help books.</p>
+        </div>
+
+        <div class="overview-cards">
+            <div class="stat-card glass">
+                <h3>Books Purchased</h3>
+                <div class="value">0</div>
+            </div>
+            <div class="stat-card glass">
+                <h3>Active Rentals</h3>
+                <div class="value">0</div>
+            </div>
+            <div class="stat-card glass">
+                <h3>Wishlist</h3>
+                <div class="value">0</div>
+            </div>
+        </div>
+
+        <div class="glass" style="margin-top: 3rem; padding: 2rem; border-radius: 1rem;">
+            <h3>Available Books Collection</h3>
+            <p style="color: var(--text-muted); margin-top: 1rem;">(Future iterations will dynamically load books here from the API)</p>
+            <div style="height: 200px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); border-radius: 0.5rem; margin-top: 1.5rem;">
+                <span style="color: var(--text-muted);">Book Catalog Coming Soon</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="/js/auth.js"></script>
+</body>
+</html>

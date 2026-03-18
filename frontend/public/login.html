@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - READhub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card glass">
+            <div class="auth-header">
+                <h2>Welcome Back</h2>
+                <p>Log in to your READhub account.</p>
+            </div>
+            
+            <div id="global-alert" class="alert"></div>
+
+            <form id="user-login-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+                    <div id="email-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+                    <div id="password-error" class="error-message"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Log In</button>
+            </form>
+            
+            <div class="switch-form">
+                Don't have an account? <a href="/register.html">Sign up</a>
+                <br>
+                <a href="/admin-login.html" style="font-size: 0.75rem; margin-top: 1rem; display: inline-block;">Admin Portal</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- The actual login request function definition -->
+    <script>
+        const API_BASE_URL = '/api';
+
+        const showAlert = (message, type = 'error') => {
+            const alertEl = document.getElementById('global-alert');
+            if (!alertEl) return;
+            alertEl.className = `alert alert-${type}`;
+            alertEl.textContent = message;
+            alertEl.style.display = 'block';
+        };
+
+        const hideAlert = () => {
+             const alertEl = document.getElementById('global-alert');
+             if (alertEl) alertEl.style.display = 'none';
+        }
+
+        document.getElementById('user-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showAlert('Please enter both email and password.');
+                return;
+            }
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Authenticating...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/login/user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    showAlert(data.error || 'Incorrect email or password.', 'error');
+                    return;
+                }
+                
+                window.location.href = 'dashboard.html';
+                
+            } catch (err) {
+                 showAlert('Network error. Please try again later.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

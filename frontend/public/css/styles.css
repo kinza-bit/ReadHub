@@ -484,3 +484,123 @@ a:hover {
 .btn-danger:hover {
     background: rgba(239, 68, 68, 0.2);
 }
+
+/* Logout Button Animation (Finalized Walking & Shutting) */
+.logoutButton {
+    --figure-duration: 800;
+    --transform-duration: 400;
+    --color: #ffffff;
+    --icon-color: #ffffff;
+    --background: #6366f1; /* Vibrant Indigo for visibility */
+    --background-hover: #4f46e5;
+    
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.75rem;
+    cursor: pointer;
+    border: none;
+    background: var(--background);
+    color: var(--color);
+    border-radius: 0.75rem;
+    position: relative;
+    overflow: hidden;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    min-width: 155px;
+}
+
+.logoutButton:hover {
+    background: var(--background-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+}
+
+.logoutButton .button-text {
+    z-index: 10;
+    position: relative;
+    margin-right: 2.75rem;
+    transition: transform 0.3s ease, opacity 0.2s;
+}
+
+.logoutButton:hover .button-text {
+    transform: translateX(-3px);
+}
+
+.logoutButton.logging-out .button-text {
+    opacity: 0.5;
+    transform: translateX(-5px);
+}
+
+.logoutButton svg {
+    display: block;
+    position: absolute;
+    fill: var(--icon-color);
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+}
+
+.logoutButton .doorway {
+    width: 22px;
+    height: 26px;
+    opacity: 0.9;
+    z-index: 1;
+}
+
+.logoutButton .door {
+    width: 16px;
+    height: 22px;
+    right: 1.35rem;
+    transform-origin: 0% 50%;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+}
+
+.logoutButton:hover .door {
+    transform: translateY(-50%) rotateY(-35deg);
+}
+
+.logoutButton.logging-out .door {
+    transform: translateY(-50%) rotateY(0deg);
+    transition-delay: 0.5s; /* Shuts faster after character enters */
+}
+
+.logoutButton .figure {
+    width: 12px;
+    height: 18px;
+    right: 3rem; 
+    z-index: 4;
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+.logoutButton.logging-out .figure {
+    animation: walkThrough 0.6s ease-in-out forwards;
+}
+
+@keyframes walkThrough {
+    0% {
+        transform: translateY(-50%) translateX(0);
+    }
+    30% {
+        transform: translateY(-55%) translateX(10px);
+    }
+    60% {
+        transform: translateY(-50%) translateX(20px);
+    }
+    100% {
+        transform: translateY(-50%) translateX(32px);
+        opacity: 0;
+    }
+}
+
+/* Light version override if needed specifically */
+.logoutButton--light {
+    --background: #6366f1; /* Kept Indigo for visibility per user request */
+    --background-hover: #4f46e5;
+}

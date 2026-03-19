@@ -167,14 +167,23 @@ const handleLogin = async (e, type = 'user') => {
 };
 
 // Handle Logout (US-04)
-const handleLogout = async () => {
-    try {
-        await fetch(`${API_BASE_URL}/logout`, { method: 'POST' });
-        // US-04.2 Redirect to login
-        window.location.href = 'login.html';
-    } catch (err) {
-        console.error('Logout failed:', err);
-    }
+const handleLogout = async (e) => {
+    const btn = e.currentTarget;
+    if (btn.classList.contains('logging-out')) return;
+    
+    btn.classList.add('logging-out');
+    
+    // Wait for the walking entry and door shut (approx 1s)
+    setTimeout(async () => {
+        try {
+            await fetch(`${API_BASE_URL}/logout`, { method: 'POST' });
+            // US-04.2 Redirect to login
+            window.location.href = 'login.html';
+        } catch (err) {
+            console.error('Logout failed:', err);
+            btn.classList.remove('logging-out');
+        }
+    }, 1000); 
 };
 
 

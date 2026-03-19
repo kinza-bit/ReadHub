@@ -9,6 +9,24 @@
 </head>
 <body>
     <div class="auth-container">
+        <!-- Hamburger Menu -->
+        <div class="hamburger-icon" id="hamburger-menu">
+            <span></span><span></span><span></span>
+        </div>
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">READhub</div>
+                <button class="sidebar-close" id="sidebar-close">&times;</button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/login.html" class="sidebar-link">User Login</a>
+                <a href="/admin-login.html" class="sidebar-link">Admin Login</a>
+                <a href="/register.html" class="sidebar-link" style="color: var(--primary)">Register</a>
+            </nav>
+        </aside>
+
         <div class="auth-card glass">
             <div class="auth-header">
                 <h2>Create Account</h2>
@@ -45,5 +63,22 @@
         </div>
     </div>
     <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburger = document.getElementById('hamburger-menu');
+            const closeBtn = document.getElementById('sidebar-close');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            if(hamburger) hamburger.addEventListener('click', toggleSidebar);
+            if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+            if(overlay) overlay.addEventListener('click', toggleSidebar);
+        });
+    </script>
 </body>
 </html>

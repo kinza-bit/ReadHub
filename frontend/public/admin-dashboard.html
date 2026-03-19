@@ -12,9 +12,28 @@
 </head>
 <!-- The class protected-admin triggers the auth check in auth.js -->
 <body class="protected-admin">
-    
+    <!-- Sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">READhub<span>Admin</span></div>
+            <button class="sidebar-close" id="sidebar-close">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard.html" class="sidebar-link">Dashboard</a>
+            <a href="/admin-dashboard.html" class="sidebar-link" style="color: var(--primary)">Admin Panel</a>
+            <a href="/admin-users.html" class="sidebar-link">Manage Users</a>
+            <a href="/login.html" class="sidebar-link">User Login</a>
+        </nav>
+    </aside>
+
     <nav class="navbar glass" style="border-bottom-color: rgba(239, 68, 68, 0.3);">
-        <div class="brand">READhub<span>Admin</span></div>
+        <div style="display: flex; align-items: center;">
+            <div class="hamburger-icon" id="hamburger-menu">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="brand">READhub<span>Admin</span></div>
+        </div>
         <div class="nav-links">
             <span>Logged in as: <strong id="user-name-display" style="color: #ef4444;">Admin</strong></span>
             <button id="logout-btn" class="logoutButton">
@@ -68,5 +87,22 @@
     </main>
 
     <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburger = document.getElementById('hamburger-menu');
+            const closeBtn = document.getElementById('sidebar-close');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            if(hamburger) hamburger.addEventListener('click', toggleSidebar);
+            if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+            if(overlay) overlay.addEventListener('click', toggleSidebar);
+        });
+    </script>
 </body>
 </html>

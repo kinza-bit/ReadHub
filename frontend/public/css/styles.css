@@ -1,14 +1,14 @@
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --background: #0f172a;
-    --surface: #1e293b;
-    --surface-hover: #334155;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --primary: #c4a1e6; /* muted pink/blue/purple accent */
+    --primary-hover: #b085db;
+    --background: linear-gradient(135deg, #f6f0fa, #e6d9f2);
+    --surface: rgba(255, 255, 255, 0.85); /* soft off-white surface */
+    --surface-hover: rgba(255, 255, 255, 0.95);
+    --text-main: #2b2233; /* deep purple/dark gray text */
+    --text-muted: #645c6b;
     --error: #ef4444;
     --success: #10b981;
-    --border: #334155;
+    --border: rgba(180, 160, 200, 0.3);
 }
 
 * {
@@ -19,7 +19,8 @@
 }
 
 body {
-    background-color: var(--background);
+    background: var(--background);
+    background-attachment: fixed;
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
@@ -28,11 +29,12 @@ body {
 
 /* Glassmorphism utility */
 .glass {
-    background: rgba(30, 41, 59, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 40px -10px rgba(110, 80, 140, 0.15); /* Soft, minimal shadow */
+    border-radius: 1.5rem;
 }
 
 /* Typography */
@@ -42,7 +44,7 @@ h3,
 h4 {
     font-weight: 700;
     letter-spacing: -0.025em;
-    color: #fff;
+    color: var(--text-main);
 }
 
 a {
@@ -79,13 +81,13 @@ a:hover {
 }
 
 .auth-container::before {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba(196, 161, 230, 0.3);
     top: -100px;
     left: -100px;
 }
 
 .auth-container::after {
-    background: rgba(16, 185, 129, 0.15);
+    background: rgba(176, 133, 219, 0.2);
     bottom: -100px;
     right: -100px;
 }
@@ -107,7 +109,7 @@ a:hover {
 .auth-header h2 {
     font-size: 1.875rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #fff, #94a3b8);
+    background: linear-gradient(135deg, var(--text-main), var(--text-muted));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -132,9 +134,9 @@ a:hover {
 .form-control {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid var(--border);
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     color: var(--text-main);
     font-size: 1rem;
     transition: all 0.3s ease;
@@ -327,7 +329,7 @@ a:hover {
 .admin-table {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(30, 41, 59, 0.4);
+    background: rgba(255, 255, 255, 0.6);
     color: var(--text-main);
 }
 
@@ -339,7 +341,7 @@ a:hover {
 }
 
 .admin-table th {
-    background: rgba(15, 23, 42, 0.8);
+    background: rgba(240, 235, 250, 0.9);
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -394,7 +396,7 @@ a:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(26, 20, 35, 0.5); /* softer dark overlay */
     backdrop-filter: blur(4px);
     display: none;
     align-items: center;
@@ -601,6 +603,148 @@ a:hover {
 
 /* Light version override if needed specifically */
 .logoutButton--light {
-    --background: #6366f1; /* Kept Indigo for visibility per user request */
-    --background-hover: #4f46e5;
+    --background: #c4a1e6; /* soft match */
+    --background-hover: #b085db;
+}
+
+/* ------------------------------------- */
+/* Sidebar and Hamburger Menu Styles      */
+/* ------------------------------------- */
+
+.hamburger-icon {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(110, 80, 140, 0.1);
+    transition: all 0.3s ease;
+}
+
+.hamburger-icon span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: var(--text-main);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(110, 80, 140, 0.15);
+}
+
+.navbar .hamburger-icon {
+    position: static;
+    margin-right: 1.5rem;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+}
+.navbar .hamburger-icon:hover {
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(26, 20, 35, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 300px;
+    height: 100vh;
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    box-shadow: 10px 0 30px rgba(110, 80, 140, 0.15);
+    z-index: 1002;
+    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 2.5rem 2rem;
+    border-right: 1px solid var(--border);
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.sidebar-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.sidebar-close:hover {
+    color: var(--text-main);
+    background: var(--surface-hover);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-link {
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+    color: var(--text-main);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-link:hover {
+    background: #fdfcff;
+    color: var(--primary);
+    transform: translateX(6px);
+    box-shadow: 0 4px 10px rgba(110, 80, 140, 0.05);
 }

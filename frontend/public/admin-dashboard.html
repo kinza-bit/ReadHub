@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,17 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/theme.js"></script>
     <style>
-        .brand span { color: #ef4444; font-size: 0.8rem; text-transform: uppercase; vertical-align: super; margin-left: 0.2rem; }
+        .brand span {
+            color: #ef4444;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            vertical-align: super;
+            margin-left: 0.2rem;
+        }
     </style>
 </head>
 <!-- The class protected-admin triggers the auth check in auth.js -->
+
 <body class="protected-admin">
     <!-- Sidebar -->
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -56,7 +64,7 @@
     </nav>
 
     <main class="dashboard-container">
-        
+
         <div style="margin-bottom: 2rem;">
             <h2>Platform Management Panel</h2>
             <p style="color: var(--text-muted); margin-top: 0.5rem;">System overview and administrative controls.</p>
@@ -81,8 +89,8 @@
             <h3>Quick Actions</h3>
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
                 <a href="/admin-users.html" class="btn btn-primary" style="text-decoration: none;">Manage Users</a>
-                <button class="btn" style="background: rgba(255,255,255,0.1); color: white;">Manage Inventory</button>
-                <button class="btn" style="background: rgba(255,255,255,0.1); color: white;">View Requests</button>
+                <button class="btn btn-primary">Manage Inventory</button>
+                <button class="btn btn-primary">View Requests</button>
             </div>
         </div>
 
@@ -101,10 +109,11 @@
                 overlay.classList.toggle('active');
             }
 
-            if(hamburger) hamburger.addEventListener('click', toggleSidebar);
-            if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
-            if(overlay) overlay.addEventListener('click', toggleSidebar);
+            if (hamburger) hamburger.addEventListener('click', toggleSidebar);
+            if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+            if (overlay) overlay.addEventListener('click', toggleSidebar);
         });
     </script>
 </body>
+
 </html>

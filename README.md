@@ -46,14 +46,24 @@ ReadHub is a modern, responsive web application designed for a seamless bookstor
    npm install
    ```
 3. Navigate to the `backend/` folder and locate `.env.example`.
-4. Rename `.env.example` to `.env` and fill in your SQL Server credentials:
+4. Copy `.env.example` to `.env` and fill in your credentials:
    ```env
-   DB_USER=your_username
-   DB_PASSWORD=your_password
-   DB_SERVER=localhost\SQLEXPRESS
+   DB_USER=sa
+   DB_PASSWORD=your_sql_password
+   DB_SERVER=localhost
    DB_DATABASE=Read_Hub
-   SESSION_SECRET=a_secure_random_string
+   PORT=3000
+   SESSION_SECRET=your_secret_key
    ```
+
+   | Variable | Description |
+   |---|---|
+   | `DB_USER` | SQL Server login username (e.g. `sa`) |
+   | `DB_PASSWORD` | SQL Server login password |
+   | `DB_SERVER` | Server name — use `localhost` for a default local instance |
+   | `DB_DATABASE` | Database name — must be `Read_Hub` |
+   | `PORT` | Port Express listens on (default `3000`) |
+   | `SESSION_SECRET` | A long random string used to sign session cookies |
 
 ## 🚀 How to Run the Project
 

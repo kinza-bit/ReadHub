@@ -1,16 +1,63 @@
+/* ============================================================
+   READHUB — DESIGN TOKENS (Light default + Dark override)
+   ============================================================ */
 :root {
-    --primary: #c4a1e6; /* muted pink/blue/purple accent */
-    --primary-hover: #b085db;
-    --background: linear-gradient(135deg, #f6f0fa, #e6d9f2);
-    --surface: rgba(255, 255, 255, 0.85); /* soft off-white surface */
-    --surface-hover: rgba(255, 255, 255, 0.95);
-    --text-main: #2b2233; /* deep purple/dark gray text */
-    --text-muted: #645c6b;
-    --error: #ef4444;
-    --success: #10b981;
-    --border: rgba(180, 160, 200, 0.3);
+    /* Gradients */
+    --bg-gradient:      linear-gradient(135deg, #E8F5BD 0%, #C7EABB 40%, #A2CB8B 100%);
+    --card-gradient:    linear-gradient(160deg, #C7EABB, #E8F5BD);
+    --accent-gradient:  linear-gradient(90deg, #84B179, #A2CB8B);
+
+    /* Palette */
+    --color-primary:    #84B179;
+    --color-secondary:  #A2CB8B;
+    --color-surface:    #C7EABB;
+    --color-bg:         #E8F5BD;
+    --color-text:       #1a2e14;
+    --color-text-muted: #3d5c35;
+    --color-border:     rgba(132, 177, 121, 0.35);
+
+    /* Legacy aliases (keep old CSS rules working) */
+    --primary:          var(--color-primary);
+    --primary-hover:    var(--color-secondary);
+    --background:       var(--bg-gradient);
+    --surface:          rgba(199, 234, 187, 0.88);
+    --surface-hover:    rgba(199, 234, 187, 0.98);
+    --text-main:        var(--color-text);
+    --text-muted:       var(--color-text-muted);
+    --border:           var(--color-border);
+    --error:            #ef4444;
+    --success:          #10b981;
 }
 
+[data-theme="dark"] {
+    /* Gradients */
+    --bg-gradient:      linear-gradient(135deg, #18230F 0%, #27391C 40%, #255F38 100%);
+    --card-gradient:    linear-gradient(160deg, #27391C, #18230F);
+    --accent-gradient:  linear-gradient(90deg, #255F38, #1F7D53);
+
+    /* Palette */
+    --color-primary:    #1F7D53;
+    --color-secondary:  #255F38;
+    --color-surface:    #27391C;
+    --color-bg:         #18230F;
+    --color-text:       #C7EABB;
+    --color-text-muted: #A2CB8B;
+    --color-border:     rgba(31, 125, 83, 0.35);
+
+    /* Legacy aliases */
+    --primary:          var(--color-primary);
+    --primary-hover:    var(--color-secondary);
+    --background:       var(--bg-gradient);
+    --surface:          rgba(39, 57, 28, 0.92);
+    --surface-hover:    rgba(39, 57, 28, 0.99);
+    --text-main:        var(--color-text);
+    --text-muted:       var(--color-text-muted);
+    --border:           var(--color-border);
+}
+
+/* ============================================================
+   GLOBAL RESET & TRANSITIONS
+   ============================================================ */
 * {
     margin: 0;
     padding: 0;
@@ -18,46 +65,78 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+html {
+    transition: color-scheme 0.4s ease;
+}
+
+body,
+.navbar,
+.sidebar,
+.auth-card,
+.stat-card,
+.glass,
+.modal-content,
+.admin-table,
+.admin-table th,
+.admin-table td,
+.form-control,
+.btn,
+.btn-primary,
+.btn-secondary,
+.sidebar-link,
+.hamburger-icon {
+    transition: background 0.4s ease, background-color 0.4s ease,
+                color 0.3s ease, border-color 0.3s ease,
+                box-shadow 0.3s ease;
+}
+
 body {
-    background: var(--background);
+    background: var(--bg-gradient);
     background-attachment: fixed;
-    color: var(--text-main);
+    color: var(--color-text);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* Glassmorphism utility */
+/* ============================================================
+   GLASSMORPHISM UTILITY
+   ============================================================ */
 .glass {
     background: var(--surface);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border);
-    box-shadow: 0 10px 40px -10px rgba(110, 80, 140, 0.15); /* Soft, minimal shadow */
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 40px -10px rgba(60, 80, 50, 0.18);
     border-radius: 1.5rem;
 }
 
-/* Typography */
-h1,
-h2,
-h3,
-h4 {
+[data-theme="dark"] .glass {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+h1, h2, h3, h4 {
     font-weight: 700;
     letter-spacing: -0.025em;
-    color: var(--text-main);
+    color: var(--color-text);
 }
 
 a {
-    color: var(--primary);
+    color: var(--color-primary);
     text-decoration: none;
     transition: color 0.2s;
 }
 
 a:hover {
-    color: var(--primary-hover);
+    color: var(--color-secondary);
 }
 
-/* Form Layout */
+/* ============================================================
+   AUTH / FORM LAYOUT
+   ============================================================ */
 .auth-container {
     flex: 1;
     display: flex;
@@ -78,18 +157,27 @@ a:hover {
     border-radius: 50%;
     filter: blur(100px);
     z-index: 0;
+    transition: background 0.4s ease;
 }
 
 .auth-container::before {
-    background: rgba(196, 161, 230, 0.3);
+    background: rgba(162, 203, 139, 0.3);
     top: -100px;
     left: -100px;
 }
 
 .auth-container::after {
-    background: rgba(176, 133, 219, 0.2);
+    background: rgba(132, 177, 121, 0.2);
     bottom: -100px;
     right: -100px;
+}
+
+[data-theme="dark"] .auth-container::before {
+    background: rgba(31, 125, 83, 0.25);
+}
+
+[data-theme="dark"] .auth-container::after {
+    background: rgba(37, 95, 56, 0.2);
 }
 
 .auth-card {
@@ -99,6 +187,7 @@ a:hover {
     border-radius: 1.5rem;
     z-index: 1;
     animation: slideUp 0.5s ease-out;
+    background: var(--card-gradient);
 }
 
 .auth-header {
@@ -109,14 +198,14 @@ a:hover {
 .auth-header h2 {
     font-size: 1.875rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--text-main), var(--text-muted));
+    background: var(--accent-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .auth-header p {
-    color: var(--text-muted);
+    color: var(--color-text-muted);
 }
 
 .form-group {
@@ -128,24 +217,47 @@ a:hover {
     font-size: 0.875rem;
     font-weight: 500;
     margin-bottom: 0.5rem;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
 }
 
 .form-control {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--color-border);
     border-radius: 1rem;
-    color: var(--text-main);
+    color: var(--color-text);
     font-size: 1rem;
     transition: all 0.3s ease;
 }
 
+[data-theme="dark"] .form-control {
+    background: rgba(24, 35, 15, 0.6);
+    color: var(--color-text);
+}
+
+.form-control::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.75;
+}
+
 .form-control:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(132, 177, 121, 0.25);
+}
+
+[data-theme="dark"] .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(31, 125, 83, 0.3);
+}
+
+select.form-control {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+}
+
+[data-theme="dark"] select.form-control {
+    background-color: var(--color-surface);
 }
 
 .error-message {
@@ -164,6 +276,9 @@ a:hover {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
+/* ============================================================
+   BUTTONS
+   ============================================================ */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -179,34 +294,66 @@ a:hover {
 }
 
 .btn-primary {
-    background: var(--primary);
-    color: white;
+    background: var(--accent-gradient);
+    color: #fff;
 }
 
 .btn-primary:hover {
-    background: var(--primary-hover);
+    background: linear-gradient(90deg, #6e9663, #84B179);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 14px rgba(132, 177, 121, 0.4);
+}
+
+[data-theme="dark"] .btn-primary {
+    background: var(--accent-gradient);
+    color: #E8F5BD;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    box-shadow: 0 4px 14px rgba(31, 125, 83, 0.5);
 }
 
 .btn-primary:active {
     transform: translateY(0);
 }
 
-/* Dashboard Styles */
+.btn-secondary {
+    background: var(--surface-hover);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    background: var(--color-surface);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
 .navbar {
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .brand {
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -1px;
-    background: linear-gradient(135deg, var(--primary), #a5b4fc);
+    background: var(--accent-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -218,6 +365,9 @@ a:hover {
     align-items: center;
 }
 
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
 .dashboard-container {
     padding: 3rem 2rem;
     max-width: 1200px;
@@ -235,7 +385,8 @@ a:hover {
 .stat-card {
     padding: 1.5rem;
     border-radius: 1rem;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background 0.4s ease;
+    background: var(--card-gradient);
 }
 
 .stat-card:hover {
@@ -243,7 +394,7 @@ a:hover {
 }
 
 .stat-card h3 {
-    color: var(--text-muted);
+    color: var(--color-text-muted);
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -255,7 +406,9 @@ a:hover {
     font-weight: 700;
 }
 
-/* Alert System */
+/* ============================================================
+   ALERT SYSTEM
+   ============================================================ */
 .alert {
     padding: 1rem;
     border-radius: 0.75rem;
@@ -276,79 +429,71 @@ a:hover {
     color: var(--error);
 }
 
-/* Animations */
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ============================================================
+   SWITCH FORM FOOTER
+   ============================================================ */
 .switch-form {
     text-align: center;
     margin-top: 1.5rem;
     font-size: 0.875rem;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
 }
 
-/* Admin Dashboard Table Styles */
+/* ============================================================
+   ADMIN TABLE
+   ============================================================ */
 .admin-table-container {
     margin-top: 2rem;
     overflow-x: auto;
     border-radius: 1rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-border);
 }
 
 .admin-table {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(255, 255, 255, 0.6);
-    color: var(--text-main);
+    background: transparent;
+    color: var(--color-text);
 }
 
-.admin-table th, 
+.admin-table th,
 .admin-table td {
     padding: 1rem 1.5rem;
     text-align: left;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .admin-table th {
-    background: rgba(240, 235, 250, 0.9);
+    background: rgba(199, 234, 187, 0.7);
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.05em;
     cursor: pointer;
     transition: background 0.2s;
+}
+
+[data-theme="dark"] .admin-table th {
+    background: rgba(39, 57, 28, 0.85);
 }
 
 .admin-table th:hover {
@@ -360,7 +505,7 @@ a:hover {
 }
 
 .admin-table tr:hover td {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(132, 177, 121, 0.05);
 }
 
 /* Status Badges */
@@ -384,19 +529,19 @@ a:hover {
 }
 
 .badge-primary {
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--primary);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(132, 177, 121, 0.15);
+    color: var(--color-primary);
+    border: 1px solid rgba(132, 177, 121, 0.3);
 }
 
-/* Modal Styles */
+/* ============================================================
+   MODAL
+   ============================================================ */
 .modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(26, 20, 35, 0.5); /* softer dark overlay */
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(26, 46, 20, 0.45);
     backdrop-filter: blur(4px);
     display: none;
     align-items: center;
@@ -405,18 +550,22 @@ a:hover {
     padding: 1rem;
 }
 
+[data-theme="dark"] .modal {
+    background: rgba(0, 0, 0, 0.55);
+}
+
 .modal.active {
     display: flex;
 }
 
 .modal-content {
-    background: var(--surface);
+    background: var(--card-gradient);
     width: 100%;
     max-width: 600px;
     border-radius: 1.5rem;
     padding: 2.5rem;
     position: relative;
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-border);
     animation: slideUp 0.3s ease-out;
 }
 
@@ -430,17 +579,20 @@ a:hover {
 .close-modal {
     background: none;
     border: none;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0.5rem;
+    transition: color 0.2s;
 }
 
 .close-modal:hover {
-    color: white;
+    color: var(--color-text);
 }
 
-/* Controls (Search/Filter) */
+/* ============================================================
+   CONTROLS (SEARCH / FILTER)
+   ============================================================ */
 .admin-controls {
     display: flex;
     gap: 1rem;
@@ -453,49 +605,25 @@ a:hover {
     min-width: 250px;
 }
 
-.filter-select {
-    width: 150px;
-}
-
-.action-btns {
-    display: flex;
-    gap: 0.5rem;
-}
+.filter-select  { width: 150px; }
+.action-btns    { display: flex; gap: 0.5rem; }
 
 .btn-sm {
     padding: 0.4rem 0.8rem;
     font-size: 0.875rem;
 }
 
-.btn-secondary {
-    background: var(--surface-hover);
-    color: var(--text-main);
-    border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-    background: #475569;
-}
-
-.btn-danger {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--error);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2);
-}
-
-/* Logout Button Animation (Finalized Walking & Shutting) */
+/* ============================================================
+   LOGOUT BUTTON ANIMATION
+   ============================================================ */
 .logoutButton {
     --figure-duration: 800;
     --transform-duration: 400;
     --color: #ffffff;
     --icon-color: #ffffff;
-    --background: #6366f1; /* Vibrant Indigo for visibility */
-    --background-hover: #4f46e5;
-    
+    --background: var(--color-primary);
+    --background-hover: var(--color-secondary);
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -511,14 +639,22 @@ a:hover {
     font-size: 1rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 15px rgba(132, 177, 121, 0.35);
     min-width: 155px;
 }
 
 .logoutButton:hover {
     background: var(--background-hover);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 10px 25px rgba(132, 177, 121, 0.45);
+}
+
+[data-theme="dark"] .logoutButton {
+    box-shadow: 0 4px 15px rgba(31, 125, 83, 0.4);
+}
+
+[data-theme="dark"] .logoutButton:hover {
+    box-shadow: 0 10px 25px rgba(31, 125, 83, 0.5);
 }
 
 .logoutButton .button-text {
@@ -569,13 +705,13 @@ a:hover {
 
 .logoutButton.logging-out .door {
     transform: translateY(-50%) rotateY(0deg);
-    transition-delay: 0.5s; /* Shuts faster after character enters */
+    transition-delay: 0.5s;
 }
 
 .logoutButton .figure {
     width: 12px;
     height: 18px;
-    right: 3rem; 
+    right: 3rem;
     z-index: 4;
     opacity: 1;
     transition: opacity 0.2s;
@@ -586,37 +722,27 @@ a:hover {
 }
 
 @keyframes walkThrough {
-    0% {
-        transform: translateY(-50%) translateX(0);
-    }
-    30% {
-        transform: translateY(-55%) translateX(10px);
-    }
-    60% {
-        transform: translateY(-50%) translateX(20px);
-    }
-    100% {
-        transform: translateY(-50%) translateX(32px);
-        opacity: 0;
-    }
+    0%   { transform: translateY(-50%) translateX(0); }
+    30%  { transform: translateY(-55%) translateX(10px); }
+    60%  { transform: translateY(-50%) translateX(20px); }
+    100% { transform: translateY(-50%) translateX(32px); opacity: 0; }
 }
 
-/* Light version override if needed specifically */
+/* Light version override */
 .logoutButton--light {
-    --background: #c4a1e6; /* soft match */
-    --background-hover: #b085db;
+    --background: var(--color-primary);
+    --background-hover: var(--color-secondary);
 }
 
-/* ------------------------------------- */
-/* Sidebar and Hamburger Menu Styles      */
-/* ------------------------------------- */
-
+/* ============================================================
+   HAMBURGER & SIDEBAR
+   ============================================================ */
 .hamburger-icon {
     position: absolute;
     top: 2rem;
     left: 2rem;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     width: 48px;
     height: 48px;
@@ -627,7 +753,7 @@ a:hover {
     gap: 5px;
     cursor: pointer;
     z-index: 100;
-    box-shadow: 0 4px 15px rgba(110, 80, 140, 0.1);
+    box-shadow: 0 4px 15px rgba(60, 80, 50, 0.1);
     transition: all 0.3s ease;
 }
 
@@ -635,14 +761,14 @@ a:hover {
     display: block;
     width: 24px;
     height: 2px;
-    background-color: var(--text-main);
+    background-color: var(--color-text);
     border-radius: 2px;
     transition: all 0.3s ease;
 }
 
 .hamburger-icon:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(110, 80, 140, 0.15);
+    box-shadow: 0 6px 20px rgba(60, 80, 50, 0.15);
 }
 
 .navbar .hamburger-icon {
@@ -652,18 +778,18 @@ a:hover {
     background: transparent;
     border: none;
 }
+
 .navbar .hamburger-icon:hover {
     box-shadow: none;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(132, 177, 121, 0.15);
 }
 
 .sidebar-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(26, 20, 35, 0.4);
+    background: rgba(26, 46, 20, 0.38);
     backdrop-filter: blur(4px);
     z-index: 1001;
     opacity: 0;
@@ -682,15 +808,19 @@ a:hover {
     left: -320px;
     width: 300px;
     height: 100vh;
-    background: var(--surface);
+    background: var(--card-gradient);
     backdrop-filter: blur(20px);
-    box-shadow: 10px 0 30px rgba(110, 80, 140, 0.15);
+    box-shadow: 10px 0 30px rgba(60, 80, 50, 0.15);
     z-index: 1002;
-    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
     display: flex;
     flex-direction: column;
     padding: 2.5rem 2rem;
-    border-right: 1px solid var(--border);
+    border-right: 1px solid var(--color-border);
+}
+
+[data-theme="dark"] .sidebar {
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
 }
 
 .sidebar.active {
@@ -708,7 +838,7 @@ a:hover {
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: color 0.2s;
     display: flex;
@@ -720,7 +850,7 @@ a:hover {
 }
 
 .sidebar-close:hover {
-    color: var(--text-main);
+    color: var(--color-text);
     background: var(--surface-hover);
 }
 
@@ -733,7 +863,7 @@ a:hover {
 .sidebar-link {
     padding: 1rem 1.25rem;
     border-radius: 1rem;
-    color: var(--text-main);
+    color: var(--color-text);
     font-weight: 500;
     transition: all 0.2s ease;
     text-decoration: none;
@@ -743,8 +873,57 @@ a:hover {
 }
 
 .sidebar-link:hover {
-    background: #fdfcff;
-    color: var(--primary);
+    background: rgba(132, 177, 121, 0.18);
+    color: var(--color-primary);
     transform: translateX(6px);
-    box-shadow: 0 4px 10px rgba(110, 80, 140, 0.05);
+    box-shadow: 0 4px 10px rgba(60, 80, 50, 0.06);
+}
+
+[data-theme="dark"] .sidebar-link:hover {
+    background: rgba(31, 125, 83, 0.18);
+    color: var(--color-text);
+}
+
+/* ============================================================
+   THEME TOGGLE BUTTON
+   ============================================================ */
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: background 0.4s ease, border-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(60, 80, 50, 0.12);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle-btn:hover {
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 4px 14px rgba(132, 177, 121, 0.35);
+}
+
+/* Icon swap: show moon in light mode, sun in dark mode */
+.theme-icon {
+    position: absolute;
+    transition: opacity 0.3s ease, transform 0.4s ease;
+}
+
+.theme-icon--moon { opacity: 1;  transform: rotate(0deg) scale(1); }
+.theme-icon--sun  { opacity: 0;  transform: rotate(90deg) scale(0.5); }
+
+.theme-toggle-btn.is-dark .theme-icon--moon { opacity: 0;  transform: rotate(-90deg) scale(0.5); }
+.theme-toggle-btn.is-dark .theme-icon--sun  { opacity: 1;  transform: rotate(0deg) scale(1); }
+
+/* The host container sits in nav-links */
+.theme-toggle-host {
+    display: flex;
+    align-items: center;
 }

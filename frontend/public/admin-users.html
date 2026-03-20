@@ -7,15 +7,17 @@
     <title>Admin Dashboard - READhub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/theme.js"></script>
 </head>
 
 <body>
     <nav class="navbar glass">
         <div class="brand">READhub ADMIN</div>
         <div class="nav-links">
-            <span id="admin-name" style="color: var(--text-muted);">Admin</span>
+            <span id="admin-name" style="color: var(--color-text-muted);">Admin</span>
             <a href="/admin-dashboard.html" class="btn btn-sm btn-secondary">Dashboard</a>
             <a href="/" class="btn btn-sm btn-secondary">View Store</a>
+            <div class="theme-toggle-host"></div>
             <button id="logout-btn" class="logoutButton">
                 <span class="button-text">Log Out</span>
                 <svg class="doorway" viewBox="0 0 16 16">

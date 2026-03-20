@@ -1494,3 +1494,96 @@ footer, .site-footer {
     display: flex;
     align-items: center;
 }
+
+/* ============================================================
+   CONTAINED CARD GLOW — auth cards only
+   The glow lives INSIDE the card, hard-clipped by overflow:hidden.
+   No light bleeds onto the background.
+   ============================================================ */
+
+/* Glow colour tokens — light theme */
+:root {
+    --card-glow-bg:        #f4f2fc;                    /* card surface fill (::after mask) */
+    --card-glow-circle:    rgba(108, 63, 197, 0.28);   /* inner glow circle colour */
+    --card-glow-border:    #7c3aed;                    /* conic border sweep colour */
+    --card-glow-border-2:  rgba(108, 63, 197, 0.25);   /* conic mid colour */
+}
+
+/* Glow colour tokens — dark theme */
+[data-theme="dark"] {
+    --card-glow-bg:        rgba(30, 20, 64, 0.95);
+    --card-glow-circle:    rgba(168, 85, 247, 0.45);
+    --card-glow-border:    #a855f7;
+    --card-glow-border-2:  rgba(168, 85, 247, 0.3);
+}
+
+/* Card setup — overflow:hidden clips the .inner-glow div */
+.auth-card {
+    position: relative;
+    overflow: hidden;   /* ← hard clip; glow cannot escape the card */
+    cursor: none;       /* cursor hidden inside card; glow takes its place */
+    isolation: isolate;
+}
+
+/* Restore cursor outside the card */
+body { cursor: default; }
+
+/* ── ::before — conic-gradient border ring, rotated via --a ── */
+.auth-card::before {
+    content: '';
+    position: absolute;
+    inset: -1.5px;
+    border-radius: inherit;
+    background: conic-gradient(
+        from calc(var(--a, -90deg) - 50deg),
+        transparent 0%,
+        transparent 30%,
+        var(--card-glow-border-2) 48%,
+        var(--card-glow-border)   55%,
+        var(--card-glow-border-2) 62%,
+        transparent 80%,
+        transparent 100%
+    );
+    opacity: var(--op, 0);
+    z-index: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+/* ── ::after — fills the card interior with card bg color,
+   masking the conic bg so only the border ring is visible ── */
+.auth-card::after {
+    content: '';
+    position: absolute;
+    inset: 1.5px;
+    border-radius: inherit;
+    background: var(--card-glow-bg);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* ── .inner-glow — JS-injected div, follows cursor inside card ── */
+.inner-glow {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    pointer-events: none;
+    /* centred on cursor via left/top + translate */
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        circle,
+        var(--card-glow-circle) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    z-index: 2;
+    transition: opacity 0.25s ease;
+    will-change: transform, left, top;
+}
+
+/* Everything inside the card sits above ::after (z-index 1) */
+.auth-card > *:not(.inner-glow) {
+    position: relative;
+    z-index: 2;
+}

@@ -3,6 +3,7 @@ const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { sql, poolPromise } = require('./db');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -209,6 +210,92 @@ app.post('/api/logout', (req, res) => {
         res.clearCookie('connect.sid'); // Clear the session cookie
         res.status(200).json({ message: 'Logged out successfully' });
     });
+});
+
+// Route: Forgot Password
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required.' });
+        }
+
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        // Check if email exists
+        const emailCheck = await pool.request()
+            .input('Email', sql.NVARCHAR, email)
+            .execute('sp_CheckEmailExists');
+
+        const exists = emailCheck.recordset[0].EmailExists;
+
+        // If email not found, return an error (we're automatically redirecting so UX trumps anti-enumeration here)
+        if (!exists) {
+            return res.status(404).json({ error: 'Email address not found in our records.' });
+        }
+
+        // Generate token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+        // Store token in DB
+        await pool.request()
+            .input('Email', sql.NVARCHAR, email)
+            .input('Token', sql.NVARCHAR, resetToken)
+            .input('Expiry', sql.DATETIME2, tokenExpiry)
+            .execute('sp_StoreResetToken');
+
+        // Return the token to automatically redirect the user
+        res.status(200).json({ message: 'Redirecting to reset password page...', token: resetToken });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: 'An error occurred while processing your request.' });
+    }
+});
+
+// Route: Reset Password
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(400).json({ error: 'Token and new password are required.' });
+        }
+        if (newPassword.length < 8) {
+            return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+        }
+
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        // Validate Token
+        const tokenCheck = await pool.request()
+            .input('Token', sql.NVARCHAR, token)
+            .execute('sp_ValidateResetToken');
+
+        if (tokenCheck.recordset.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired reset token.' });
+        }
+
+        const userId = tokenCheck.recordset[0].UserID;
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(newPassword, salt);
+
+        // Update password and clear token
+        await pool.request()
+            .input('UserID', sql.INT, userId)
+            .input('NewPasswordHash', sql.NVARCHAR, passwordHash)
+            .execute('sp_UpdatePasswordAndClearToken');
+
+        res.status(200).json({ message: 'Password has been successfully reset. You can now log in.' });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: 'An error occurred while resetting your password.' });
+    }
 });
 
 // Admin User Management Routes

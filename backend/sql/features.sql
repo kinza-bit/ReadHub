@@ -744,6 +744,76 @@ BEGIN
 END;
 GO
 
+-- ────────────────────────────────────────────────────────────
+-- 2.15 Check Email Exists (Forgot Password)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_CheckEmailExists', 'P') IS NOT NULL DROP PROCEDURE sp_CheckEmailExists;
+GO
+CREATE PROCEDURE sp_CheckEmailExists
+    @Email NVARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
+        SELECT 1 AS EmailExists;
+    ELSE
+        SELECT 0 AS EmailExists;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.16 Store Reset Token
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_StoreResetToken', 'P') IS NOT NULL DROP PROCEDURE sp_StoreResetToken;
+GO
+CREATE PROCEDURE sp_StoreResetToken
+    @Email NVARCHAR(200),
+    @Token NVARCHAR(64),
+    @Expiry DATETIME2
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Users 
+    SET ResetToken = @Token, TokenExpiry = @Expiry 
+    WHERE Email = @Email;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.17 Validate Reset Token
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_ValidateResetToken', 'P') IS NOT NULL DROP PROCEDURE sp_ValidateResetToken;
+GO
+CREATE PROCEDURE sp_ValidateResetToken
+    @Token NVARCHAR(64)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT UserID 
+    FROM Users 
+    WHERE ResetToken = @Token AND TokenExpiry > SYSUTCDATETIME();
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- 2.18 Update Password and Clear Token
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_UpdatePasswordAndClearToken', 'P') IS NOT NULL DROP PROCEDURE sp_UpdatePasswordAndClearToken;
+GO
+CREATE PROCEDURE sp_UpdatePasswordAndClearToken
+    @UserID INT,
+    @NewPasswordHash NVARCHAR(256)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Users 
+    SET PasswordHash = @NewPasswordHash, 
+        ResetToken = NULL, 
+        TokenExpiry = NULL 
+    WHERE UserID = @UserID;
+END;
+GO
+
 -- ============================================================
 -- END OF FEATURE PROCEDURES & VIEWS
 -- ============================================================

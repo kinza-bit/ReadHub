@@ -73,15 +73,15 @@
         <div class="overview-cards">
             <div class="stat-card glass" style="border-top: 3px solid var(--primary);">
                 <h3>Total Users</h3>
-                <div class="value">0</div>
+                <div class="value" id="stat-total-users">—</div>
             </div>
             <div class="stat-card glass" style="border-top: 3px solid var(--success);">
                 <h3>Books in Catalog</h3>
-                <div class="value">0</div>
+                <div class="value" id="stat-total-books">—</div>
             </div>
             <div class="stat-card glass" style="border-top: 3px solid var(--error);">
                 <h3>Total Orders</h3>
-                <div class="value">0</div>
+                <div class="value" id="stat-total-orders">—</div>
             </div>
         </div>
 
@@ -112,6 +112,22 @@
             if (hamburger) hamburger.addEventListener('click', toggleSidebar);
             if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
             if (overlay) overlay.addEventListener('click', toggleSidebar);
+
+            // Load admin stats
+            async function loadStats() {
+                try {
+                    const res = await fetch('/api/admin/stats');
+                    if (!res.ok) throw new Error('Failed to load stats');
+                    const data = await res.json();
+                    document.getElementById('stat-total-users').textContent = data.totalUsers;
+                    document.getElementById('stat-total-books').textContent = data.totalBooks;
+                    document.getElementById('stat-total-orders').textContent = data.totalOrders;
+                } catch (err) {
+                    console.error('Stats error:', err);
+                }
+            }
+
+            loadStats();
         });
     </script>
 </body>

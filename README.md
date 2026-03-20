@@ -21,7 +21,7 @@ ReadHub is a modern, responsive web application designed for a seamless bookstor
 ## 📂 Project Structure
 
 - `backend/`: Node.js Express server, database connection logic, and utility scripts.
-  - `sql/`: Contains `.sql` scripts for database schema and feature implementation.
+  - `sql/`: Contains `.sql` scripts for database schema and feature implementation and schema view.
 - `frontend/`: All static files (HTML, CSS, JS) served as the user interface.
 - `docs/`: Project documentation and user stories.
 - `final report/`: Submission-ready project reports.
@@ -75,4 +75,10 @@ ReadHub is a modern, responsive web application designed for a seamless bookstor
 3. Navigate to **`http://localhost:3000`** to access the ReadHub Bookstore.
 
 ---
+## For Admin Access(This seed is inserted in ReadHubschema.sql)
+Email: [admin@gmail.com]
+password: [password]
+
+## For Customer Access
+Create an account using sign up and then login to it
 

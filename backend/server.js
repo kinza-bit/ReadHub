@@ -377,6 +377,31 @@ app.delete('/api/admin/users/:id', requireAdminAuth, async (req, res) => {
     }
 });
 
+// Route: Admin Stats (for Dashboard)
+app.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        const result = await pool.request().query(`
+            SELECT
+                (SELECT COUNT(*) FROM Users) AS TotalUsers,
+                (SELECT COUNT(*) FROM Books) AS TotalBooks,
+                (SELECT COUNT(*) FROM Orders) AS TotalOrders
+        `);
+
+        const row = result.recordset[0];
+        res.json({
+            totalUsers: row.TotalUsers || 0,
+            totalBooks: row.TotalBooks || 0,
+            totalOrders: row.TotalOrders || 0
+        });
+    } catch (error) {
+        console.error('Error fetching admin stats:', error);
+        res.status(500).json({ error: 'Failed to fetch stats.' });
+    }
+});
+
 // New Route: Get All Available Books (Demonstrating Stored Procedure)
 app.get('/api/books', async (req, res) => {
     try {

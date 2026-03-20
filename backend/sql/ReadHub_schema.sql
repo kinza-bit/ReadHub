@@ -91,6 +91,8 @@ CREATE TABLE Users (
     IsActive BIT DEFAULT 1,
     RoleID INT NOT NULL,
     CreatedAt DATETIME2 DEFAULT SYSUTCDATETIME(),
+    ResetToken NVARCHAR(64) NULL,
+    TokenExpiry DATETIME2 NULL,
     CONSTRAINT FK_Users_Role FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
     
 );

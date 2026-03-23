@@ -1,13 +1,11 @@
--- ============================================================
+
 -- Read_Hub Bookstore – Feature Queries (Views & Stored Procedures)
 -- Database : Read_Hub (SQL Server)
--- ============================================================
+
 USE Read_Hub;
 GO
 
--- ████████████████████████████████████████████████████████████
---  SECTION 0 :  VIEWS
--- ████████████████████████████████████████████████████████████
+-- VIEWS
 
 -- ────────────────────────────────────────────────────────────
 -- View: vw_AllUsers
@@ -77,12 +75,10 @@ FROM Requests r
 INNER JOIN Users u ON r.UserID = u.UserID;
 GO
 
--- ████████████████████████████████████████████████████████████
---  SECTION 1 :  ADMIN FEATURES
--- ████████████████████████████████████████████████████████████
+-- ADMIN FEATURES
 
 -- ────────────────────────────────────────────────────────────
--- 1.1  Admin Login
+--   Admin Login
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_AdminLogin', 'P') IS NOT NULL DROP PROCEDURE sp_AdminLogin;
 GO
@@ -102,7 +98,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 1.2  Manage User Accounts
+--   Manage User Accounts
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_GetAllUsers', 'P') IS NOT NULL DROP PROCEDURE sp_GetAllUsers;
 GO
@@ -138,7 +134,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 1.3  Organize Books by Categories
+--   Organize Books by Categories
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_GetAllCategories', 'P') IS NOT NULL DROP PROCEDURE sp_GetAllCategories;
 GO
@@ -195,7 +191,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 1.4  Add New Books
+--   Add New Books
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_AddNewBook', 'P') IS NOT NULL DROP PROCEDURE sp_AddNewBook;
 GO
@@ -236,7 +232,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 1.5  Edit / Update Book Information
+--   Edit / Update Book Information
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_UpdateBook', 'P') IS NOT NULL DROP PROCEDURE sp_UpdateBook;
 GO
@@ -273,7 +269,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 1.6  Delete Books
+--   Delete Books
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_DeleteBook', 'P') IS NOT NULL DROP PROCEDURE sp_DeleteBook;
 GO
@@ -287,7 +283,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 1.7  Inventory Management
+--   Inventory Management
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_GetFullInventory', 'P') IS NOT NULL DROP PROCEDURE sp_GetFullInventory;
 GO
@@ -315,12 +311,10 @@ BEGIN
 END;
 GO
 
--- ████████████████████████████████████████████████████████████
---  SECTION 2 :  USER FEATURES
--- ████████████████████████████████████████████████████████████
+--  USER FEATURES
 
 -- ────────────────────────────────────────────────────────────
--- 2.1  User Login
+--   User Login
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_UserLogin', 'P') IS NOT NULL DROP PROCEDURE sp_UserLogin;
 GO
@@ -340,7 +334,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.2  View Available Books
+--   View Available Books
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_ViewAvailableBooks', 'P') IS NOT NULL DROP PROCEDURE sp_ViewAvailableBooks;
 GO
@@ -353,7 +347,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.3  Search for Books
+--  Search for Books
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_SearchBooks', 'P') IS NOT NULL DROP PROCEDURE sp_SearchBooks;
 GO
@@ -371,7 +365,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.4  Buy Books (Physical or Ebook)
+--  Buy Books (Physical or Ebook)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_BuyBook', 'P') IS NOT NULL DROP PROCEDURE sp_BuyBook;
 GO
@@ -440,7 +434,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.5  Rent Ebook
+--  Rent Ebook
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_RentEbook', 'P') IS NOT NULL DROP PROCEDURE sp_RentEbook;
 GO
@@ -487,7 +481,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.6  Download Ebook
+--  Download Ebook
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_DownloadEbook', 'P') IS NOT NULL DROP PROCEDURE sp_DownloadEbook;
 GO
@@ -519,7 +513,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.7  Request Books
+--  Request Books
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_RequestBook', 'P') IS NOT NULL DROP PROCEDURE sp_RequestBook;
 GO
@@ -563,7 +557,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.8  Rate Books (Star Rating Only)
+--   Rate Books (Star Rating Only)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_RateBook', 'P') IS NOT NULL DROP PROCEDURE sp_RateBook;
 GO
@@ -602,7 +596,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.9  Register New User
+--   Register New User
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_RegisterUser', 'P') IS NOT NULL DROP PROCEDURE sp_RegisterUser;
 GO
@@ -628,7 +622,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.10 Get User By Email (for Login/Auth)
+--  Get User By Email (for Login/Auth)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_GetUserByEmail', 'P') IS NOT NULL DROP PROCEDURE sp_GetUserByEmail;
 GO
@@ -645,7 +639,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.11 Get Detailed User Info (Admin)
+--  Get Detailed User Info (Admin)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_GetUserDetails', 'P') IS NOT NULL DROP PROCEDURE sp_GetUserDetails;
 GO
@@ -661,7 +655,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.12 Update User Details (Admin)
+-- Update User Details (Admin)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_UpdateUserDetails', 'P') IS NOT NULL DROP PROCEDURE sp_UpdateUserDetails;
 GO
@@ -688,7 +682,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.13 Toggle User Status (Admin Soft Delete)
+--  Toggle User Status (Admin Soft Delete)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_ToggleUserStatus', 'P') IS NOT NULL DROP PROCEDURE sp_ToggleUserStatus;
 GO
@@ -702,7 +696,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.14 Get Users with Filtering and Sorting (Admin)
+--  Get Users with Filtering and Sorting (Admin)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_GetUsersFiltered', 'P') IS NOT NULL DROP PROCEDURE sp_GetUsersFiltered;
 GO
@@ -745,7 +739,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.15 Check Email Exists (Forgot Password)
+--  Check Email Exists (Forgot Password)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_CheckEmailExists', 'P') IS NOT NULL DROP PROCEDURE sp_CheckEmailExists;
 GO
@@ -762,7 +756,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.16 Store Reset Token
+--  Store Reset Token
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_StoreResetToken', 'P') IS NOT NULL DROP PROCEDURE sp_StoreResetToken;
 GO
@@ -780,7 +774,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.17 Validate Reset Token
+--  Validate Reset Token
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_ValidateResetToken', 'P') IS NOT NULL DROP PROCEDURE sp_ValidateResetToken;
 GO
@@ -796,7 +790,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- 2.18 Update Password and Clear Token
+-- Update Password and Clear Token
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_UpdatePasswordAndClearToken', 'P') IS NOT NULL DROP PROCEDURE sp_UpdatePasswordAndClearToken;
 GO
@@ -814,6 +808,3 @@ BEGIN
 END;
 GO
 
--- ============================================================
--- END OF FEATURE PROCEDURES & VIEWS
--- ============================================================

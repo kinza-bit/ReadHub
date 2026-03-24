@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
@@ -456,6 +456,413 @@ app.get('/api/session', (req, res) => {
         });
     } else {
         res.json({ isAuthenticated: false });
+    }
+});
+
+
+// â”€â”€â”€ PUBLIC ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// Route: Get All Categories (public â€“ for browsing)
+app.get('/api/categories', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+        const result = await pool.request().execute('sp_GetAllCategories');
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).json({ error: 'Failed to fetch categories.' });
+    }
+});
+
+// Route: Get Books by Category (public â€“ browse by category)
+// NOTE: This must be BEFORE /api/books/:id to avoid route conflict
+app.get('/api/books/category/:categoryId', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+        const result = await pool.request()
+            .input('CategoryID', sql.INT, req.params.categoryId)
+            .query('SELECT * FROM vw_AvailableBooks WHERE CategoryID = @CategoryID ORDER BY Title ASC');
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching books by category:', error);
+        res.status(500).json({ error: 'Failed to fetch books by category.' });
+    }
+});
+
+// Route: Get Single Book by ID (public)
+app.get('/api/books/:id', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+        const result = await pool.request()
+            .input('BookID', sql.INT, req.params.id)
+            .query('SELECT * FROM vw_AvailableBooks WHERE BookID = @BookID');
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ error: 'Book not found.' });
+        }
+        res.json(result.recordset[0]);
+    } catch (error) {
+        console.error('Error fetching book:', error);
+        res.status(500).json({ error: 'Failed to fetch book.' });
+    }
+});
+
+// â”€â”€â”€ USER PROTECTED ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// Route: Buy a Book â€“ Physical (FormatID=1) or Ebook (FormatID=2)
+app.post('/api/orders/buy', requireUserAuth, async (req, res) => {
+    try {
+        const { bookId, isPhysical, quantity, paymentMethodId, shippingAddress } = req.body;
+        if (!bookId || isPhysical === undefined || !quantity || !paymentMethodId) {
+            return res.status(400).json({ error: 'bookId, isPhysical, quantity, and paymentMethodId are required.' });
+        }
+
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('BookID', sql.INT, bookId)
+            .input('IsPhysical', sql.Bit, isPhysical ? 1 : 0)
+            .input('Quantity', sql.INT, quantity)
+            .input('PaymentMethodID', sql.INT, paymentMethodId)
+            .input('ShippingAddress', sql.NVarChar, shippingAddress || null)
+            .execute('sp_BuyBook');
+
+        res.status(201).json({ message: 'Order placed successfully.' });
+    } catch (error) {
+        if (error.number === 50002 || error.number === 50010) {
+            return res.status(400).json({ error: 'Insufficient physical stock.' });
+        }
+        console.error('Buy book error:', error);
+        res.status(500).json({ error: 'Failed to place order.' });
+    }
+});
+
+// Route: Rent an Ebook (FormatID=3)
+app.post('/api/orders/rent', requireUserAuth, async (req, res) => {
+    try {
+        const { bookId, rentalDays, paymentMethodId } = req.body;
+        if (!bookId || !rentalDays || !paymentMethodId) {
+            return res.status(400).json({ error: 'bookId, rentalDays, and paymentMethodId are required.' });
+        }
+
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('BookID', sql.INT, bookId)
+            .input('RentalDays', sql.INT, rentalDays)
+            .input('PaymentMethodID', sql.INT, paymentMethodId)
+            .execute('sp_RentEbook');
+
+        res.status(201).json({ message: 'Ebook rented successfully.' });
+    } catch (error) {
+        console.error('Rent ebook error:', error);
+        res.status(500).json({ error: 'Failed to rent ebook.' });
+    }
+});
+
+// Route: Get Ebook Download URL (must have purchased or active rental)
+app.get('/api/ebook/download/:bookId', requireUserAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('BookID', sql.INT, req.params.bookId)
+            .execute('sp_DownloadEbook');
+
+        if (result.recordset.length === 0 || !result.recordset[0].PdfURL) {
+            return res.status(403).json({ error: 'Access denied. Purchase or rent this ebook first.' });
+        }
+
+        res.json({ pdfUrl: result.recordset[0].PdfURL });
+    } catch (error) {
+        console.error('Ebook download error:', error);
+        res.status(500).json({ error: 'Failed to retrieve ebook download link.' });
+    }
+});
+
+// Route: Submit a Book Request (user)
+app.post('/api/requests', requireUserAuth, async (req, res) => {
+    try {
+        const { title, author } = req.body;
+        if (!title) return res.status(400).json({ error: 'Book title is required.' });
+
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('RequestedTitle', sql.NVarChar, title)
+            .input('RequestedAuthor', sql.NVarChar, author || null)
+            .execute('sp_RequestBook');
+
+        res.status(201).json({ message: 'Book request submitted successfully.' });
+    } catch (error) {
+        console.error('Book request error:', error);
+        res.status(500).json({ error: 'Failed to submit book request.' });
+    }
+});
+
+// Route: Get User's Own Book Requests
+app.get('/api/requests', requireUserAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .execute('sp_GetUserRequests');
+
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching user requests:', error);
+        res.status(500).json({ error: 'Failed to fetch book requests.' });
+    }
+});
+
+// Route: Rate a Book â€“ 1 to 5 stars only
+app.post('/api/books/:id/rate', requireUserAuth, async (req, res) => {
+    try {
+        const { rating } = req.body;
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'Rating must be an integer between 1 and 5.' });
+        }
+
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('BookID', sql.INT, req.params.id)
+            .input('Rating', sql.INT, rating)
+            .execute('sp_RateBook');
+
+        res.json({ message: 'Rating submitted successfully.' });
+    } catch (error) {
+        if (error.number === 50003) {
+            return res.status(400).json({ error: 'Rating must be between 1 and 5.' });
+        }
+        console.error('Rating error:', error);
+        res.status(500).json({ error: 'Failed to submit rating.' });
+    }
+});
+
+// â”€â”€â”€ ADMIN ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// Route: Get All Categories (Admin)
+app.get('/api/admin/categories', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().execute('sp_GetAllCategories');
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching categories (admin):', error);
+        res.status(500).json({ error: 'Failed to fetch categories.' });
+    }
+});
+
+// Route: Add Category (Admin)
+app.post('/api/admin/categories', requireAdminAuth, async (req, res) => {
+    try {
+        const { name, description } = req.body;
+        if (!name) return res.status(400).json({ error: 'Category name is required.' });
+
+        const pool = await poolPromise;
+        await pool.request()
+            .input('CategoryName', sql.NVarChar, name)
+            .input('CategoryDescription', sql.NVarChar, description || null)
+            .execute('sp_AddCategory');
+
+        res.status(201).json({ message: 'Category added successfully.' });
+    } catch (error) {
+        console.error('Error adding category:', error);
+        res.status(500).json({ error: 'Failed to add category.' });
+    }
+});
+
+// Route: Update Category (Admin)
+app.put('/api/admin/categories/:id', requireAdminAuth, async (req, res) => {
+    try {
+        const { name, description } = req.body;
+        if (!name) return res.status(400).json({ error: 'Category name is required.' });
+
+        const pool = await poolPromise;
+        await pool.request()
+            .input('CategoryID', sql.INT, req.params.id)
+            .input('CategoryName', sql.NVarChar, name)
+            .input('CategoryDescription', sql.NVarChar, description || null)
+            .execute('sp_UpdateCategory');
+
+        res.json({ message: 'Category updated successfully.' });
+    } catch (error) {
+        console.error('Error updating category:', error);
+        res.status(500).json({ error: 'Failed to update category.' });
+    }
+});
+
+// Route: Delete Category (Admin â€“ fails if books still in it)
+app.delete('/api/admin/categories/:id', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        await pool.request()
+            .input('CategoryID', sql.INT, req.params.id)
+            .execute('sp_DeleteCategory');
+
+        res.json({ message: 'Category deleted successfully.' });
+    } catch (error) {
+        if (error.number === 50001) {
+            return res.status(409).json({ error: 'Cannot delete a category that still contains books.' });
+        }
+        console.error('Error deleting category:', error);
+        res.status(500).json({ error: 'Failed to delete category.' });
+    }
+});
+
+// Route: Get All Books â€“ Admin View
+app.get('/api/admin/books', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().execute('sp_ViewAvailableBooks');
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching admin books:', error);
+        res.status(500).json({ error: 'Failed to fetch books.' });
+    }
+});
+
+// Route: Add New Book (Admin)
+app.post('/api/admin/books', requireAdminAuth, async (req, res) => {
+    try {
+        const {
+            isbn, title, author, categoryId, description,
+            physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay,
+            imageUrl, pdfUrl, stockLevel, lowStockThreshold
+        } = req.body;
+
+        if (!title || !author || !categoryId) {
+            return res.status(400).json({ error: 'title, author, and categoryId are required.' });
+        }
+
+        const pool = await poolPromise;
+        await pool.request()
+            .input('ISBN', sql.NVarChar, isbn || null)
+            .input('Title', sql.NVarChar, title)
+            .input('Author', sql.NVarChar, author)
+            .input('CategoryID', sql.INT, categoryId)
+            .input('Description', sql.NVarChar, description || null)
+            .input('PhysicalPrice', sql.Decimal(10, 2), physicalPrice || null)
+            .input('EbookPrice', sql.Decimal(10, 2), ebookPrice || null)
+            .input('RentalPricePerDay', sql.Decimal(10, 2), rentalPricePerDay || null)
+            .input('LateFeePerDay', sql.Decimal(10, 2), lateFeePerDay || 1.00)
+            .input('ImageURL', sql.NVarChar, imageUrl || null)
+            .input('PdfURL', sql.NVarChar, pdfUrl || null)
+            .input('StockLevel', sql.INT, stockLevel || 0)
+            .input('LowStockThreshold', sql.INT, lowStockThreshold || 5)
+            .execute('sp_AddNewBook');
+
+        res.status(201).json({ message: 'Book added successfully.' });
+    } catch (error) {
+        console.error('Error adding book:', error);
+        res.status(500).json({ error: 'Failed to add book.' });
+    }
+});
+
+// Route: Update Book Info (Admin)
+app.put('/api/admin/books/:id', requireAdminAuth, async (req, res) => {
+    try {
+        const {
+            title, author, isbn, categoryId, description,
+            physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay,
+            imageUrl, pdfUrl
+        } = req.body;
+
+        const pool = await poolPromise;
+        await pool.request()
+            .input('BookID', sql.INT, req.params.id)
+            .input('Title', sql.NVarChar, title || null)
+            .input('Author', sql.NVarChar, author || null)
+            .input('ISBN', sql.NVarChar, isbn || null)
+            .input('CategoryID', sql.INT, categoryId || null)
+            .input('Description', sql.NVarChar, description || null)
+            .input('PhysicalPrice', sql.Decimal(10, 2), physicalPrice || null)
+            .input('EbookPrice', sql.Decimal(10, 2), ebookPrice || null)
+            .input('RentalPricePerDay', sql.Decimal(10, 2), rentalPricePerDay || null)
+            .input('LateFeePerDay', sql.Decimal(10, 2), lateFeePerDay || null)
+            .input('ImageURL', sql.NVarChar, imageUrl || null)
+            .input('PdfURL', sql.NVarChar, pdfUrl || null)
+            .execute('sp_UpdateBook');
+
+        res.json({ message: 'Book updated successfully.' });
+    } catch (error) {
+        console.error('Error updating book:', error);
+        res.status(500).json({ error: 'Failed to update book.' });
+    }
+});
+
+// Route: Delete Book (Admin)
+app.delete('/api/admin/books/:id', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        await pool.request()
+            .input('BookID', sql.INT, req.params.id)
+            .execute('sp_DeleteBook');
+
+        res.json({ message: 'Book deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting book:', error);
+        res.status(500).json({ error: 'Failed to delete book.' });
+    }
+});
+
+// Route: Get Full Inventory (Admin)
+app.get('/api/admin/inventory', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().execute('sp_GetFullInventory');
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching inventory:', error);
+        res.status(500).json({ error: 'Failed to fetch inventory.' });
+    }
+});
+
+// Route: Update Stock Level / Restock (Admin)
+app.put('/api/admin/inventory/:bookId', requireAdminAuth, async (req, res) => {
+    try {
+        const { quantityToAdd } = req.body;
+        if (quantityToAdd === undefined || quantityToAdd === null) {
+            return res.status(400).json({ error: 'quantityToAdd is required.' });
+        }
+
+        const pool = await poolPromise;
+        await pool.request()
+            .input('BookID', sql.INT, req.params.bookId)
+            .input('QuantityToAdd', sql.INT, quantityToAdd)
+            .execute('sp_UpdateStockLevel');
+
+        res.json({ message: 'Stock updated successfully.' });
+    } catch (error) {
+        console.error('Error updating stock:', error);
+        res.status(500).json({ error: 'Failed to update stock level.' });
+    }
+});
+
+// Route: Get All User Book Requests (Admin)
+app.get('/api/admin/requests', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().execute('sp_GetAllUserRequests_Admin');
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching all requests (admin):', error);
+        res.status(500).json({ error: 'Failed to fetch book requests.' });
     }
 });
 

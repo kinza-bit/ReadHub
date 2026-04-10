@@ -364,121 +364,7 @@ BEGIN
 END;
 GO
 
--- ────────────────────────────────────────────────────────────
---  Buy Books (Physical or Ebook)
--- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_BuyBook', 'P') IS NOT NULL DROP PROCEDURE sp_BuyBook;
-GO
-CREATE PROCEDURE sp_BuyBook
-    @UserID INT,
-    @BookID INT,
-    @IsPhysical BIT, -- 1 for Physical, 0 for Ebook
-    @Quantity INT,
-    @PaymentMethodID INT,
-    @ShippingAddress NVARCHAR(MAX)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-    BEGIN TRY
-        DECLARE @FormatID INT = CASE WHEN @IsPhysical = 1 THEN 1 ELSE 2 END;
-        DECLARE @UnitPrice DECIMAL(10,2) = 
-            (SELECT CASE WHEN @IsPhysical = 1 THEN PhysicalPrice ELSE EbookPrice END FROM Books WHERE BookID = @BookID);
-        DECLARE @TotalAmount DECIMAL(10,2) = @UnitPrice * @Quantity;
-        DECLARE @OrderNumber NVARCHAR(50) = 'ORD-' + CAST(NEWID() AS NVARCHAR(50));
 
-        INSERT INTO Orders (OrderNumber, UserID, TotalAmount, StatusID, PaymentMethodID, PaymentStatusID, ShippingAddress)
-        VALUES (
-            @OrderNumber, @UserID, @TotalAmount,
-            (SELECT StatusID FROM OrderStatus WHERE StatusName = 'Pending'),
-            @PaymentMethodID,
-            (SELECT StatusID FROM PaymentStatus WHERE StatusName = 'Pending'),
-            @ShippingAddress
-        );
-
-        DECLARE @NewOrderID INT = SCOPE_IDENTITY();
-
-        INSERT INTO OrderItems (OrderID, BookID, FormatID, Quantity, UnitPrice)
-        VALUES (@NewOrderID, @BookID, @FormatID, @Quantity, @UnitPrice);
-
-        IF @IsPhysical = 1
-        BEGIN
-            IF (SELECT StockLevel FROM Inventory WHERE BookID = @BookID) >= @Quantity
-            BEGIN
-                UPDATE Inventory
-                SET StockLevel = StockLevel - @Quantity,
-                    TotalPhysicalSold = TotalPhysicalSold + @Quantity,
-                    UpdatedAt = SYSUTCDATETIME()
-                WHERE BookID = @BookID;
-            END
-            ELSE
-            BEGIN
-                THROW 50002, 'Insufficient physical stock.', 1;
-            END
-        END
-        ELSE
-        BEGIN
-            UPDATE Inventory
-            SET TotalEbooksSold = TotalEbooksSold + @Quantity,
-                UpdatedAt = SYSUTCDATETIME()
-            WHERE BookID = @BookID;
-        END
-
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END;
-GO
-
--- ────────────────────────────────────────────────────────────
---  Rent Ebook
--- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_RentEbook', 'P') IS NOT NULL DROP PROCEDURE sp_RentEbook;
-GO
-CREATE PROCEDURE sp_RentEbook
-    @UserID INT,
-    @BookID INT,
-    @RentalDays INT,
-    @PaymentMethodID INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-    BEGIN TRY
-        DECLARE @UnitPrice DECIMAL(10,2) = (SELECT RentalPricePerDay FROM Books WHERE BookID = @BookID);
-        DECLARE @TotalAmount DECIMAL(10,2) = @UnitPrice * @RentalDays;
-        DECLARE @OrderNumber NVARCHAR(50) = 'RNT-' + CAST(NEWID() AS NVARCHAR(50));
-        
-        INSERT INTO Orders (OrderNumber, UserID, TotalAmount, StatusID, PaymentMethodID, PaymentStatusID, ShippingAddress)
-        VALUES (
-            @OrderNumber, @UserID, @TotalAmount,
-            (SELECT StatusID FROM OrderStatus WHERE StatusName = 'Completed'),
-            @PaymentMethodID,
-            (SELECT StatusID FROM PaymentStatus WHERE StatusName = 'Completed'),
-            'N/A (Digital)'
-        );
-
-        DECLARE @NewOrderID INT = SCOPE_IDENTITY();
-
-        INSERT INTO OrderItems (OrderID, BookID, FormatID, Quantity, UnitPrice, RentalDays)
-        VALUES (@NewOrderID, @BookID, 3, 1, @TotalAmount, @RentalDays);
-
-        INSERT INTO EbookRentals (OrderID, UserID, BookID, DueDate)
-        VALUES (@NewOrderID, @UserID, @BookID, DATEADD(DAY, @RentalDays, SYSUTCDATETIME()));
-
-        UPDATE Inventory SET TotalEbooksRented = TotalEbooksRented + 1 WHERE BookID = @BookID;
-
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
-END;
-GO
 
 -- ────────────────────────────────────────────────────────────
 --  Download Ebook
@@ -808,3 +694,367 @@ BEGIN
 END;
 GO
 
+
+-- ============================================================
+-- TRIGGERS
+-- ============================================================
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 1: trg_AfterInsertBook
+-- Automatically create an Inventory row whenever a new Book is
+-- inserted (Admin: Add New Books).
+-- Guarantees every book always has inventory tracking even if
+-- sp_AddNewBook is bypassed by a direct INSERT.
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterInsertBook', 'TR') IS NOT NULL DROP TRIGGER trg_AfterInsertBook;
+GO
+CREATE TRIGGER trg_AfterInsertBook
+ON Books
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Insert Inventory row only if one does not already exist
+    -- (sp_AddNewBook inserts it explicitly; this is a safety net)
+    INSERT INTO Inventory (BookID, StockLevel, LowStockThreshold,
+                           TotalPhysicalSold, TotalEbooksSold, TotalEbooksRented, LastRestockDate)
+    SELECT i.BookID, 0, 5, 0, 0, 0, SYSUTCDATETIME()
+    FROM inserted i
+    WHERE NOT EXISTS (SELECT 1 FROM Inventory inv WHERE inv.BookID = i.BookID);
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 2: trg_AfterInsertOrderItem
+-- When an OrderItem is inserted:
+--   Physical (FormatID=1) : decrement StockLevel, increment TotalPhysicalSold
+--   Ebook Buy (FormatID=2): increment TotalEbooksSold
+-- Raises error 50010 if physical stock is insufficient.
+-- (Admin: Inventory Management | User: Buy Books)
+-- NOTE: sp_BuyBook manual inventory UPDATE is removed; this
+--       trigger handles inventory automatically.
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterInsertOrderItem', 'TR') IS NOT NULL DROP TRIGGER trg_AfterInsertOrderItem;
+GO
+CREATE TRIGGER trg_AfterInsertOrderItem
+ON OrderItems
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Guard: abort if any physical item would cause negative stock
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        INNER JOIN Inventory inv ON inv.BookID = i.BookID
+        WHERE i.FormatID = 1
+          AND inv.StockLevel - i.Quantity < 0
+    )
+    BEGIN
+        THROW 50010, 'Insufficient physical stock for one or more items.', 1;
+    END
+
+    -- Physical purchases: decrement stock and increment TotalPhysicalSold
+    UPDATE inv
+    SET inv.StockLevel        = inv.StockLevel - i.Quantity,
+        inv.TotalPhysicalSold = inv.TotalPhysicalSold + i.Quantity,
+        inv.UpdatedAt         = SYSUTCDATETIME()
+    FROM Inventory inv
+    INNER JOIN inserted i ON inv.BookID = i.BookID
+    WHERE i.FormatID = 1;
+
+    -- Ebook purchases: only increment TotalEbooksSold
+    UPDATE inv
+    SET inv.TotalEbooksSold = inv.TotalEbooksSold + i.Quantity,
+        inv.UpdatedAt       = SYSUTCDATETIME()
+    FROM Inventory inv
+    INNER JOIN inserted i ON inv.BookID = i.BookID
+    WHERE i.FormatID = 2;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 3: trg_AfterUpdateOrderStatus_Cancelled
+-- When an Order's StatusID changes TO Cancelled, restore
+-- the physical stock consumed by that order's physical items.
+-- (Admin: Inventory Management | Order cancellation flow)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterUpdateOrderStatus_Cancelled', 'TR') IS NOT NULL DROP TRIGGER trg_AfterUpdateOrderStatus_Cancelled;
+GO
+CREATE TRIGGER trg_AfterUpdateOrderStatus_Cancelled
+ON Orders
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF UPDATE(StatusID)
+    BEGIN
+        DECLARE @CancelledStatusID INT = (SELECT StatusID FROM OrderStatus WHERE StatusName = 'Cancelled');
+
+        -- Restore stock only for orders that JUST became Cancelled
+        UPDATE inv
+        SET inv.StockLevel        = inv.StockLevel + oi.Quantity,
+            inv.TotalPhysicalSold = inv.TotalPhysicalSold - oi.Quantity,
+            inv.UpdatedAt         = SYSUTCDATETIME()
+        FROM Inventory inv
+        INNER JOIN OrderItems oi ON oi.BookID = inv.BookID
+        INNER JOIN inserted ins  ON ins.OrderID = oi.OrderID
+        INNER JOIN deleted del   ON del.OrderID = ins.OrderID
+        WHERE oi.FormatID = 1
+          AND ins.StatusID = @CancelledStatusID
+          AND del.StatusID <> @CancelledStatusID;
+    END
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 4: trg_AfterInsertBookRating
+-- Recalculate Books.AverageRating after a new rating is added.
+-- (User: Rate Books)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterInsertBookRating', 'TR') IS NOT NULL DROP TRIGGER trg_AfterInsertBookRating;
+GO
+CREATE TRIGGER trg_AfterInsertBookRating
+ON BookRating
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE b
+    SET b.AverageRating = (
+        SELECT ISNULL(AVG(CAST(br.Rating AS DECIMAL(3,2))), 0.00)
+        FROM BookRating br
+        WHERE br.BookID = i.BookID
+    )
+    FROM Books b
+    INNER JOIN inserted i ON b.BookID = i.BookID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 5: trg_AfterUpdateBookRating
+-- Recalculate Books.AverageRating after an existing rating
+-- is changed by the user.
+-- (User: Rate Books - update existing rating)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterUpdateBookRating', 'TR') IS NOT NULL DROP TRIGGER trg_AfterUpdateBookRating;
+GO
+CREATE TRIGGER trg_AfterUpdateBookRating
+ON BookRating
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE b
+    SET b.AverageRating = (
+        SELECT ISNULL(AVG(CAST(br.Rating AS DECIMAL(3,2))), 0.00)
+        FROM BookRating br
+        WHERE br.BookID = i.BookID
+    )
+    FROM Books b
+    INNER JOIN inserted i ON b.BookID = i.BookID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 6: trg_AfterDeleteBookRating
+-- Recalculate Books.AverageRating when a rating is deleted.
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterDeleteBookRating', 'TR') IS NOT NULL DROP TRIGGER trg_AfterDeleteBookRating;
+GO
+CREATE TRIGGER trg_AfterDeleteBookRating
+ON BookRating
+AFTER DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE b
+    SET b.AverageRating = (
+        SELECT ISNULL(AVG(CAST(br.Rating AS DECIMAL(3,2))), 0.00)
+        FROM BookRating br
+        WHERE br.BookID = d.BookID
+    )
+    FROM Books b
+    INNER JOIN deleted d ON b.BookID = d.BookID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 7: trg_AfterInsertEbookRental
+-- Increment Inventory.TotalEbooksRented when a new rental is
+-- created in EbookRentals.
+-- (User: Rent Ebook)
+-- NOTE: sp_RentEbook currently also updates TotalEbooksRented
+--       manually. Remove that UPDATE from sp_RentEbook to avoid
+--       double-counting, OR keep this trigger as the authoritative
+--       source and remove the manual update from the SP.
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterInsertEbookRental', 'TR') IS NOT NULL DROP TRIGGER trg_AfterInsertEbookRental;
+GO
+CREATE TRIGGER trg_AfterInsertEbookRental
+ON EbookRentals
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE inv
+    SET inv.TotalEbooksRented = inv.TotalEbooksRented + 1,
+        inv.UpdatedAt         = SYSUTCDATETIME()
+    FROM Inventory inv
+    INNER JOIN inserted i ON inv.BookID = i.BookID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- Trigger 8: trg_AfterUpdateInventory_LowStock
+-- Raise a non-terminating informational warning (severity 10)
+-- when StockLevel drops to or below LowStockThreshold after
+-- an inventory update.
+-- (Admin: Inventory Management - low stock awareness)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('trg_AfterUpdateInventory_LowStock', 'TR') IS NOT NULL DROP TRIGGER trg_AfterUpdateInventory_LowStock;
+GO
+CREATE TRIGGER trg_AfterUpdateInventory_LowStock
+ON Inventory
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF UPDATE(StockLevel)
+    BEGIN
+        DECLARE @BookTitle  NVARCHAR(300);
+        DECLARE @StockLevel INT;
+        DECLARE @Threshold  INT;
+
+        DECLARE low_stock_cursor CURSOR FOR
+            SELECT b.Title, i.StockLevel, i.LowStockThreshold
+            FROM inserted i
+            INNER JOIN Books b ON b.BookID = i.BookID
+            WHERE i.StockLevel <= i.LowStockThreshold;
+
+        OPEN low_stock_cursor;
+        FETCH NEXT FROM low_stock_cursor INTO @BookTitle, @StockLevel, @Threshold;
+
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            RAISERROR(
+                'LOW STOCK ALERT: "%s" has only %d unit(s) remaining (threshold: %d).',
+                10, 1, @BookTitle, @StockLevel, @Threshold
+            ) WITH NOWAIT;
+            FETCH NEXT FROM low_stock_cursor INTO @BookTitle, @StockLevel, @Threshold;
+        END
+
+        CLOSE low_stock_cursor;
+        DEALLOCATE low_stock_cursor;
+    END
+END;
+GO
+
+-- Patch: Remove manual inventory updates from sp_BuyBook and sp_RentEbook
+-- since trg_AfterInsertOrderItem and trg_AfterInsertEbookRental now handle this.
+
+USE Read_Hub;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- sp_BuyBook (patched): removes manual Inventory UPDATE.
+-- The trigger trg_AfterInsertOrderItem fires after OrderItems
+-- INSERT and handles stock decrement / sold count updates.
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_BuyBook', 'P') IS NOT NULL DROP PROCEDURE sp_BuyBook;
+GO
+CREATE PROCEDURE sp_BuyBook
+    @UserID INT,
+    @BookID INT,
+    @IsPhysical BIT,
+    @Quantity INT,
+    @PaymentMethodID INT,
+    @ShippingAddress NVARCHAR(MAX)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @FormatID INT = CASE WHEN @IsPhysical = 1 THEN 1 ELSE 2 END;
+        DECLARE @UnitPrice DECIMAL(10,2) =
+            (SELECT CASE WHEN @IsPhysical = 1 THEN PhysicalPrice ELSE EbookPrice END
+             FROM Books WHERE BookID = @BookID);
+        DECLARE @TotalAmount DECIMAL(10,2) = @UnitPrice * @Quantity;
+        DECLARE @OrderNumber NVARCHAR(50) = 'ORD-' + CAST(NEWID() AS NVARCHAR(50));
+
+        INSERT INTO Orders (OrderNumber, UserID, TotalAmount, StatusID, PaymentMethodID, PaymentStatusID, ShippingAddress)
+        VALUES (
+            @OrderNumber, @UserID, @TotalAmount,
+            (SELECT StatusID FROM OrderStatus WHERE StatusName = 'Pending'),
+            @PaymentMethodID,
+            (SELECT StatusID FROM PaymentStatus WHERE StatusName = 'Pending'),
+            @ShippingAddress
+        );
+
+        DECLARE @NewOrderID INT = SCOPE_IDENTITY();
+
+        -- Inserting into OrderItems fires trg_AfterInsertOrderItem,
+        -- which handles stock decrement and sold-count updates automatically.
+        INSERT INTO OrderItems (OrderID, BookID, FormatID, Quantity, UnitPrice)
+        VALUES (@NewOrderID, @BookID, @FormatID, @Quantity, @UnitPrice);
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+-- sp_RentEbook (patched): removes manual TotalEbooksRented UPDATE.
+-- The trigger trg_AfterInsertEbookRental fires after EbookRentals
+-- INSERT and increments TotalEbooksRented automatically.
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_RentEbook', 'P') IS NOT NULL DROP PROCEDURE sp_RentEbook;
+GO
+CREATE PROCEDURE sp_RentEbook
+    @UserID INT,
+    @BookID INT,
+    @RentalDays INT,
+    @PaymentMethodID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @UnitPrice DECIMAL(10,2) = (SELECT RentalPricePerDay FROM Books WHERE BookID = @BookID);
+        DECLARE @TotalAmount DECIMAL(10,2) = @UnitPrice * @RentalDays;
+        DECLARE @OrderNumber NVARCHAR(50) = 'RNT-' + CAST(NEWID() AS NVARCHAR(50));
+
+        INSERT INTO Orders (OrderNumber, UserID, TotalAmount, StatusID, PaymentMethodID, PaymentStatusID, ShippingAddress)
+        VALUES (
+            @OrderNumber, @UserID, @TotalAmount,
+            (SELECT StatusID FROM OrderStatus WHERE StatusName = 'Completed'),
+            @PaymentMethodID,
+            (SELECT StatusID FROM PaymentStatus WHERE StatusName = 'Completed'),
+            'N/A (Digital)'
+        );
+
+        DECLARE @NewOrderID INT = SCOPE_IDENTITY();
+
+        INSERT INTO OrderItems (OrderID, BookID, FormatID, Quantity, UnitPrice, RentalDays)
+        VALUES (@NewOrderID, @BookID, 3, 1, @TotalAmount, @RentalDays);
+
+        -- Inserting into EbookRentals fires trg_AfterInsertEbookRental,
+        -- which increments TotalEbooksRented in Inventory automatically.
+        INSERT INTO EbookRentals (OrderID, UserID, BookID, DueDate)
+        VALUES (@NewOrderID, @UserID, @BookID, DATEADD(DAY, @RentalDays, SYSUTCDATETIME()));
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO

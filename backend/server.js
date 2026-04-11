@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
@@ -722,6 +722,25 @@ app.delete('/api/admin/categories/:id', requireAdminAuth, async (req, res) => {
         }
         console.error('Error deleting category:', error);
         res.status(500).json({ error: 'Failed to delete category.' });
+    }
+});
+
+// Route: Get Categories with Book Counts (Admin)
+app.get('/api/admin/categories/with-counts', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT c.CategoryID, c.Name AS CategoryName, c.Description AS CategoryDescription,
+                   COUNT(b.BookID) AS BookCount
+            FROM Categories c
+            LEFT JOIN Books b ON b.CategoryID = c.CategoryID
+            GROUP BY c.CategoryID, c.Name, c.Description
+            ORDER BY c.Name ASC
+        `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching categories with counts:', error);
+        res.status(500).json({ error: 'Failed to fetch categories with counts.' });
     }
 });
 

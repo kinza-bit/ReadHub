@@ -8,39 +8,28 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/theme.js"></script>
 </head>
-<!-- The class protected-user triggers the auth check in auth.js -->
 <body class="protected-user">
     
-    <nav class="navbar glass">
+    <nav class="navbar glass" style="position: sticky; top: 0; z-index: 100;">
         <div class="brand">READhub</div>
+        
+        <!-- US-05: Visible search bar on the main page -->
+        <div class="search-container" style="flex: 1; max-width: 500px; margin: 0 2rem;">
+            <input type="text" id="catalog-search" class="form-control" placeholder="Search books by title, author, or genre..." style="width: 100%; border-radius: 20px; padding-left: 1.5rem;">
+        </div>
+
         <div class="nav-links">
             <span>Welcome, <strong id="user-name-display">Reader</strong>!</span>
             <div class="theme-toggle-host"></div>
             <button id="logout-btn" class="logoutButton logoutButton--light">
                 <span class="button-text">Log Out</span>
-                <svg class="doorway" viewBox="0 0 16 16">
-                    <path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" />
-                </svg>
-                <svg class="door" viewBox="0 0 16 16">
-                    <path d="M3 1H13V15H3V1Z" />
-                    <circle cx="10" cy="8" r="1.2" fill="#fff" />
-                </svg>
-                <svg class="figure" viewBox="0 0 16 16">
-                    <circle cx="8" cy="3" r="2.5" />
-                    <path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" />
-                </svg>
             </button>
         </div>
     </nav>
 
     <main class="dashboard-container">
-        
-        <div style="margin-bottom: 2rem;">
-            <h2>Your Reading Hub</h2>
-            <p style="color: var(--text-muted); margin-top: 0.5rem;">Explore our collection of premium engineering, horror, mystery, and self-help books.</p>
-        </div>
-
-        <div class="overview-cards">
+        <!-- Dashboard Overview cards (existing) -->
+        <div class="overview-cards" style="margin-bottom: 2rem; margin-top: 2rem;">
             <div class="stat-card glass">
                 <h3>Books Purchased</h3>
                 <div class="value">0</div>
@@ -55,16 +44,76 @@
             </div>
         </div>
 
-        <div class="glass" style="margin-top: 3rem; padding: 2rem; border-radius: 1rem;">
-            <h3>Available Books Collection</h3>
-            <p style="color: var(--text-muted); margin-top: 1rem;">(Future iterations will dynamically load books here from the API)</p>
-            <div style="height: 200px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); border-radius: 0.5rem; margin-top: 1.5rem;">
-                <span style="color: var(--text-muted);">Book Catalog Coming Soon</span>
+        <div class="catalog-section" style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+                <div>
+                    <h2 id="catalog-title">Explore Collection</h2>
+                    <p style="color: var(--text-muted); margin-top: 0.5rem;" id="catalog-subtitle">Find your next great read.</p>
+                </div>
             </div>
-        </div>
 
+            <!-- US-06: List of all available categories -->
+            <div class="category-filters" id="category-filters" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 1rem;">
+                <button class="btn btn-sm btn-primary category-pill" data-id="">All Categories</button>
+                <!-- Categories populated here dynamically -->
+            </div>
+
+            <!-- Additional filters: Book Type and Sort -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center;">
+                <select id="type-filter" class="form-control filter-select" style="max-width: 200px;">
+                    <option value="">Any Format</option>
+                    <option value="physical">Physical Book</option>
+                    <option value="ebook">eBook</option>
+                </select>
+
+                <select id="sort-filter" class="form-control filter-select" style="max-width: 200px;">
+                    <option value="rating">Sort by Highest Rated</option>
+                    <option value="title">Sort by Title (A-Z)</option>
+                    <option value="price">Sort by Price (Low to High)</option>
+                </select>
+            </div>
+
+            <!-- US-05, US-06: Books Grid Display -->
+            <div id="books-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 2rem;">
+                <!-- Skeleton Loading / Content dynamically placed here -->
+            </div>
+
+            <!-- US-05: No results found message -->
+            <div id="no-results-msg" class="glass" style="display: none; height: 300px; align-items: center; justify-content: center; border-radius: 1rem; text-align: center; flex-direction: column;">
+                <h3 style="margin-bottom: 0.5rem;">No results found</h3>
+                <p style="color: var(--text-muted);">We couldn't find any books matching your criteria. Try a different search.</p>
+            </div>
+            
+        </div>
     </main>
 
+    <!-- Modal for rating (US-06) -->
+    <div id="rating-modal" class="modal">
+        <div class="modal-content glass" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h3>Rate Book</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <p style="margin: 1rem 0;">How many stars for <strong id="rating-book-title"></strong>?</p>
+            <div style="font-size: 2rem; color: #ffd700; cursor: pointer; display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;" id="star-rating-container">
+                <span data-val="1">☆</span>
+                <span data-val="2">☆</span>
+                <span data-val="3">☆</span>
+                <span data-val="4">☆</span>
+                <span data-val="5">☆</span>
+            </div>
+            <form id="rating-form">
+                <input type="hidden" id="rating-book-id">
+                <input type="hidden" id="rating-value" required>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Rating</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert functionality -->
+    <div id="alert-container" class="alert"></div>
+
     <script src="/js/auth.js"></script>
+    <script src="/js/dashboard.js"></script>
 </body>
 </html>

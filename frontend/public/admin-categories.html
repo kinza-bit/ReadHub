@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Categories - READhub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar glass">
+        <div class="brand">READhub ADMIN</div>
+        <div class="nav-links">
+            <span id="admin-name" style="color: var(--color-text-muted);">Admin</span>
+            <a href="/admin-dashboard.html" class="btn btn-sm btn-secondary">Dashboard</a>
+            <a href="/admin-users.html" class="btn btn-sm btn-secondary">Users</a>
+            <a href="/admin-books.html" class="btn btn-sm btn-secondary">Books</a>
+            <a href="/" class="btn btn-sm btn-secondary">View Store</a>
+            <div class="theme-toggle-host"></div>
+            <button id="logout-btn" class="logoutButton">
+                <span class="button-text">Log Out</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="auth-header" style="text-align: left; margin-bottom: 2rem;">
+            <h2>Category Management</h2>
+            <p>Create and manage book genres to organize the catalog.</p>
+        </div>
+
+        <div id="alert-container" class="alert"></div>
+
+        <div class="admin-controls" style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+            <button class="btn btn-primary" id="btn-add-category">Add New Category</button>
+        </div>
+
+        <div class="admin-table-container glass">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Total Books</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="category-table-body">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 3rem;">Loading categories...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add / Edit Category Modal -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content glass" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="category-modal-title">Add New Category</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="category-form">
+                <input type="hidden" id="edit-category-id">
+                
+                <div class="form-group">
+                    <label>Category Name (Genre)</label>
+                    <input type="text" id="category-name" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="category-description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary">Save Category</button>
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin-categories.js"></script>
+</body>
+</html>

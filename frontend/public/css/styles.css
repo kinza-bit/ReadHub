@@ -1586,4 +1586,421 @@ body { cursor: default; }
 .auth-card > *:not(.inner-glow) {
     position: relative;
     z-index: 2;
+}
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+.toast-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    background: var(--card-gradient);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(16px);
+    animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 300px;
+    max-width: 420px;
+    font-size: 0.925rem;
+    color: var(--color-text);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.toast-exit {
+    animation: toastSlideOut 0.3s ease forwards;
+}
+
+.toast-success {
+    border-left: 4px solid var(--success);
+}
+
+.toast-error {
+    border-left: 4px solid #c0392b;
+}
+
+.toast-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.toast-success .toast-icon { color: var(--success); }
+.toast-error .toast-icon { color: #c0392b; }
+
+.toast-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0.25rem;
+    line-height: 1;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+
+.toast-close:hover {
+    color: var(--color-primary);
+}
+
+@keyframes toastSlideIn {
+    from { opacity: 0; transform: translateX(100px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastSlideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(100px); }
+}
+
+/* ============================================================
+   CONFIRMATION DIALOG
+   ============================================================ */
+.confirm-dialog {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--overlay);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+}
+
+.confirm-dialog.active {
+    display: flex;
+}
+
+.confirm-dialog-content {
+    background: var(--card-gradient);
+    border: 1px solid var(--color-border);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(15, 10, 26, 0.35);
+    animation: slideUp 0.3s ease-out;
+}
+
+.confirm-dialog-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(192, 57, 43, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 1.75rem;
+}
+
+.confirm-dialog-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+}
+
+.confirm-dialog-message {
+    color: var(--color-text-muted);
+    font-size: 0.925rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.confirm-dialog-actions .btn {
+    flex: 1;
+}
+
+/* ============================================================
+   BOOK TYPE BADGE
+   ============================================================ */
+.badge-physical {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-ebook {
+    background: rgba(124, 58, 237, 0.12);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-both {
+    background: rgba(217, 70, 239, 0.12);
+    color: var(--color-accent);
+    border: 1px solid rgba(217, 70, 239, 0.25);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ============================================================
+   IMAGE PREVIEW IN BOOK FORM
+   ============================================================ */
+.image-preview-container {
+    margin-top: 0.5rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    max-width: 160px;
+    max-height: 200px;
+    background: var(--color-surface);
+    display: none;
+}
+
+.image-preview-container.has-image {
+    display: block;
+}
+
+.image-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ============================================================
+   ADMIN PAGE HEADER SECTION
+   ============================================================ */
+.admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.admin-page-header h2 {
+    font-size: 1.75rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.admin-page-header p {
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+}
+
+/* ============================================================
+   BOOK TABLE THUMBNAIL
+   ============================================================ */
+.book-thumb {
+    width: 44px;
+    height: 56px;
+    border-radius: 0.375rem;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.book-thumb-placeholder {
+    width: 44px;
+    height: 56px;
+    border-radius: 0.375rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--color-text-muted);
+}
+
+/* ============================================================
+   STOCK INDICATOR
+   ============================================================ */
+.stock-good { color: var(--success); font-weight: 600; }
+.stock-low { color: #f59e0b; font-weight: 600; }
+.stock-out { color: #c0392b; font-weight: 600; }
+
+/* ============================================================
+   INLINE FORM ROW (for add category inline)
+   ============================================================ */
+.inline-form-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.inline-form-row .form-control {
+    flex: 1;
+    min-width: 180px;
+}
+
+.inline-form-row .btn {
+    width: auto;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   CATEGORY CARD GRID
+   ============================================================ */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+.category-card {
+    background: var(--card-gradient);
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.15);
+}
+
+.category-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.category-card-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--color-text);
+}
+
+.category-card-count {
+    background: rgba(124, 58, 237, 0.12);
+    color: var(--color-primary);
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.category-card-desc {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.category-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.category-card-actions .btn {
+    width: auto;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+}
+
+/* ============================================================
+   FORM GRID (for modal layouts)
+   ============================================================ */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 480px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .admin-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .toast {
+        min-width: unset;
+        max-width: calc(100vw - 3rem);
+    }
+}
+
+/* ============================================================
+   LOADING SPINNER
+   ============================================================ */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }

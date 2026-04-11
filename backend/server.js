@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
@@ -725,6 +725,43 @@ app.delete('/api/admin/categories/:id', requireAdminAuth, async (req, res) => {
     }
 });
 
+// Route: Get Categories with Book Counts (Admin)
+app.get('/api/admin/categories/with-counts', requireAdminAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT c.CategoryID, c.CategoryName, c.CategoryDescription,
+                   COUNT(b.BookID) AS BookCount
+            FROM Categories c
+            LEFT JOIN Books b ON b.CategoryID = c.CategoryID
+            GROUP BY c.CategoryID, c.CategoryName, c.CategoryDescription
+            ORDER BY c.CategoryName ASC
+        `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching categories with counts:', error);
+        res.status(500).json({ error: 'Failed to fetch categories with counts.' });
+    }
+});
+
+// Route: Admin Book Search
+app.get('/api/admin/books/search', requireAdminAuth, async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) return res.status(400).json({ error: 'Search term is required.' });
+
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('SearchTerm', sql.NVARCHAR, q)
+            .execute('sp_SearchBooks');
+
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Admin search error:', error);
+        res.status(500).json({ error: 'Search failed.' });
+    }
+});
+
 // Route: Get All Books â€“ Admin View
 app.get('/api/admin/books', requireAdminAuth, async (req, res) => {
     try {
@@ -780,7 +817,7 @@ app.put('/api/admin/books/:id', requireAdminAuth, async (req, res) => {
         const {
             title, author, isbn, categoryId, description,
             physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay,
-            imageUrl, pdfUrl
+            imageUrl, pdfUrl, stockLevel
         } = req.body;
 
         const pool = await poolPromise;
@@ -798,6 +835,25 @@ app.put('/api/admin/books/:id', requireAdminAuth, async (req, res) => {
             .input('ImageURL', sql.NVarChar, imageUrl || null)
             .input('PdfURL', sql.NVarChar, pdfUrl || null)
             .execute('sp_UpdateBook');
+
+        // Update stock level if provided
+        if (stockLevel !== undefined && stockLevel !== null) {
+            // Get current stock to compute delta
+            const currentStock = await pool.request()
+                .input('BookID', sql.INT, req.params.id)
+                .query('SELECT StockLevel FROM Inventory WHERE BookID = @BookID');
+            
+            if (currentStock.recordset.length > 0) {
+                const currentLevel = currentStock.recordset[0].StockLevel;
+                const delta = parseInt(stockLevel) - currentLevel;
+                if (delta !== 0) {
+                    await pool.request()
+                        .input('BookID', sql.INT, req.params.id)
+                        .input('QuantityToAdd', sql.INT, delta)
+                        .execute('sp_UpdateStockLevel');
+                }
+            }
+        }
 
         res.json({ message: 'Book updated successfully.' });
     } catch (error) {

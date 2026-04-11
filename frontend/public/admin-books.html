@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Books - READhub Admin</title>
+    <meta name="description" content="Admin book management panel for READhub bookstore. Add, edit, and delete books from the catalog.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/theme.js"></script>
+    <style>
+        .brand span {
+            color: #ef4444;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            vertical-align: super;
+            margin-left: 0.2rem;
+        }
+    </style>
+</head>
+
+<body class="protected-admin">
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">READhub<span>Admin</span></div>
+            <button class="sidebar-close" id="sidebar-close">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin-dashboard.html" class="sidebar-link">📊 Dashboard</a>
+            <a href="/admin-users.html" class="sidebar-link">👥 Manage Users</a>
+            <a href="/admin-books.html" class="sidebar-link" style="color: var(--primary)">📚 Manage Books</a>
+            <a href="/admin-categories.html" class="sidebar-link">🏷️ Categories</a>
+        </nav>
+    </aside>
+
+    <nav class="navbar glass" style="border-bottom-color: rgba(239, 68, 68, 0.3);">
+        <div style="display: flex; align-items: center;">
+            <div class="hamburger-icon" id="hamburger-menu">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="brand">READhub<span>Admin</span></div>
+        </div>
+        <div class="nav-links">
+            <span>Logged in as: <strong id="user-name-display" style="color: #ef4444;">Admin</strong></span>
+            <div class="theme-toggle-host"></div>
+            <button id="logout-btn" class="logoutButton">
+                <span class="button-text">Log Out</span>
+                <svg class="doorway" viewBox="0 0 16 16">
+                    <path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+                <svg class="door" viewBox="0 0 16 16">
+                    <path d="M3 1H13V15H3V1Z" />
+                    <circle cx="10" cy="8" r="1.2" fill="#fff" />
+                </svg>
+                <svg class="figure" viewBox="0 0 16 16">
+                    <circle cx="8" cy="3" r="2.5" />
+                    <path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <!-- Page Header -->
+        <div class="admin-page-header">
+            <div>
+                <h2>📚 Book Management</h2>
+                <p>Add, edit, and remove books from your catalog.</p>
+            </div>
+            <button id="btn-add-book" class="btn btn-primary" style="width: auto; padding: 0.75rem 1.75rem;">
+                ✚ Add New Book
+            </button>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="admin-controls">
+            <input type="text" id="book-search" class="form-control search-input" placeholder="Search by title, author, or ISBN...">
+            <select id="category-filter" class="form-control filter-select">
+                <option value="">All Categories</option>
+                <!-- Populated dynamically -->
+            </select>
+        </div>
+
+        <!-- Books Table -->
+        <div class="admin-table-container glass">
+            <table class="admin-table" id="books-table">
+                <thead>
+                    <tr>
+                        <th>Cover</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>ISBN</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="books-table-body">
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 3rem;">
+                            <div class="spinner"></div>
+                            <p style="margin-top: 1rem; color: var(--color-text-muted);">Loading books...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Add/Edit Book Modal -->
+    <div id="book-modal" class="modal">
+        <div class="modal-content glass" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 id="book-modal-title">Add New Book</h3>
+                <button class="close-modal" id="close-book-modal">&times;</button>
+            </div>
+            <form id="book-form">
+                <input type="hidden" id="book-id">
+
+                <div class="form-group">
+                    <label for="book-title">Title *</label>
+                    <input type="text" id="book-title" class="form-control" required placeholder="Enter book title">
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="book-author">Author *</label>
+                        <input type="text" id="book-author" class="form-control" required placeholder="Author name">
+                    </div>
+                    <div class="form-group">
+                        <label for="book-isbn">ISBN</label>
+                        <input type="text" id="book-isbn" class="form-control" placeholder="e.g., 978-0-13-468599-1">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="book-category">Category *</label>
+                        <select id="book-category" class="form-control" required>
+                            <option value="">Select category</option>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="book-stock">Stock Level</label>
+                        <input type="number" id="book-stock" class="form-control" min="0" value="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="book-description">Description</label>
+                    <textarea id="book-description" class="form-control" rows="3" placeholder="Brief description of the book" style="resize: vertical;"></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="book-physical-price">Physical Price ($)</label>
+                        <input type="number" id="book-physical-price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="book-ebook-price">eBook Price ($)</label>
+                        <input type="number" id="book-ebook-price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="book-rental-price">Rental Price/Day ($)</label>
+                        <input type="number" id="book-rental-price" class="form-control" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="book-late-fee">Late Fee/Day ($)</label>
+                        <input type="number" id="book-late-fee" class="form-control" step="0.01" min="0" placeholder="1.00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="book-image-url">Cover Image URL</label>
+                    <input type="url" id="book-image-url" class="form-control" placeholder="https://example.com/cover.jpg">
+                    <div id="image-preview" class="image-preview-container">
+                        <img id="image-preview-img" src="" alt="Cover preview">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="book-pdf-url">PDF URL (for eBook)</label>
+                    <input type="url" id="book-pdf-url" class="form-control" placeholder="https://example.com/book.pdf">
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary" id="book-submit-btn">Add Book</button>
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <div id="delete-confirm" class="confirm-dialog">
+        <div class="confirm-dialog-content">
+            <div class="confirm-dialog-icon">🗑️</div>
+            <h3 class="confirm-dialog-title">Delete Book</h3>
+            <p class="confirm-dialog-message" id="delete-confirm-message">
+                Are you sure you want to delete this book? This action cannot be undone.
+            </p>
+            <div class="confirm-dialog-actions">
+                <button id="btn-confirm-delete" class="btn btn-danger" style="border-radius: 0.75rem;">Delete</button>
+                <button id="btn-cancel-delete" class="btn btn-secondary" style="border-radius: 0.75rem;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin-books.js"></script>
+</body>
+
+</html>

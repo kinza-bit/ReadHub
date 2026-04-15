@@ -1,20 +1,76 @@
-﻿const express = require('express');
+const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const fs = require('fs');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 const { sql, poolPromise } = require('./db');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ── File storage paths ───────────────────────────────────────────────────────
+const IMGS_DIR = path.join(__dirname, '..', 'frontend', 'BooksIMG');
+const PDFS_DIR = path.join(__dirname, '..', 'frontend', 'BooksPDF');
+
+// Ensure BooksPDF directory exists
+if (!fs.existsSync(PDFS_DIR)) fs.mkdirSync(PDFS_DIR, { recursive: true });
+
+// ── Multer — disk storage, unique filenames, validation ─────────────────────
+const diskStorage = multer.diskStorage({
+    destination(req, file, cb) {
+        cb(null, file.fieldname === 'coverImage' ? IMGS_DIR : PDFS_DIR);
+    },
+    filename(req, file, cb) {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const safe = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+        cb(null, `${uuidv4()}-${safe}${ext}`);
+    },
+});
+
+const uploadBooks = multer({
+    storage: diskStorage,
+    limits: { fileSize: 50 * 1024 * 1024 },          // 50 MB max
+    fileFilter(req, file, cb) {
+        if (file.fieldname === 'coverImage') {
+            const ok = ['image/jpeg','image/png','image/webp','image/gif'].includes(file.mimetype);
+            return ok ? cb(null, true) : cb(new Error('Cover must be JPEG, PNG, WEBP, or GIF.'), false);
+        }
+        if (file.fieldname === 'pdfFile') {
+            return file.mimetype === 'application/pdf'
+                ? cb(null, true)
+                : cb(new Error('File must be a PDF.'), false);
+        }
+        cb(null, true);
+    },
+});
+
+// Helper: parse multipart fields for books
+const bookUpload = uploadBooks.fields([
+    { name: 'coverImage', maxCount: 1 },
+    { name: 'pdfFile',    maxCount: 1 },
+]);
+
+// Helper: delete a file from disk (silent if missing)
+function unlinkOldFile(dir, publicUrl) {
+    if (!publicUrl) return;
+    try {
+        const fullPath = path.join(dir, path.basename(publicUrl));
+        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    } catch (e) { console.warn('[unlinkOldFile]', e.message); }
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'public'))); // Serve frontend files from frontend/public
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'public')));
+app.use('/images', express.static(IMGS_DIR));
+app.use('/pdfs',   express.static(PDFS_DIR));
 
 // Session setup
 app.use(session({
@@ -344,7 +400,7 @@ app.put('/api/admin/users/:id', requireAdminAuth, async (req, res) => {
     try {
         const { fullName, email, phoneNumber, city, roleId, isActive } = req.body;
         const pool = await poolPromise;
-        
+
         await pool.request()
             .input('UserID', sql.INT, req.params.id)
             .input('FullName', sql.NVARCHAR, fullName)
@@ -369,7 +425,7 @@ app.delete('/api/admin/users/:id', requireAdminAuth, async (req, res) => {
         await pool.request()
             .input('UserID', sql.INT, req.params.id)
             .execute('sp_ToggleUserStatus');
-        
+
         res.json({ message: 'User status toggled successfully.' });
     } catch (error) {
         console.error('Error toggling user status:', error);
@@ -471,6 +527,26 @@ app.get('/api/categories', async (req, res) => {
         res.json(result.recordset);
     } catch (error) {
         console.error('Error fetching categories:', error);
+        res.status(500).json({ error: 'Failed to fetch categories.' });
+    }
+});
+
+// Route: Get All Categories WITH book counts (for admin & browse)
+app.get('/api/categories/with-counts', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+        const result = await pool.request().query(`
+            SELECT c.CategoryID, c.Name, ISNULL(c.Description, 'No description') AS Description,
+                   COUNT(b.BookID) AS BookCount
+            FROM Categories c
+            LEFT JOIN Books b ON b.CategoryID = c.CategoryID
+            GROUP BY c.CategoryID, c.Name, c.Description
+            ORDER BY c.Name ASC
+        `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching categories with counts:', error);
         res.status(500).json({ error: 'Failed to fetch categories.' });
     }
 });
@@ -707,7 +783,7 @@ app.put('/api/admin/categories/:id', requireAdminAuth, async (req, res) => {
     }
 });
 
-// Route: Delete Category (Admin â€“ fails if books still in it)
+// Route: Delete Category (Admin — fails if books still in it)
 app.delete('/api/admin/categories/:id', requireAdminAuth, async (req, res) => {
     try {
         const pool = await poolPromise;
@@ -725,11 +801,27 @@ app.delete('/api/admin/categories/:id', requireAdminAuth, async (req, res) => {
     }
 });
 
-// Route: Get All Books â€“ Admin View
+// ── Admin Book Management — with image & PDF file upload ─────────────────────
+
+// GET all books (admin view — full object with ImageURL and PdfURL)
 app.get('/api/admin/books', requireAdminAuth, async (req, res) => {
     try {
         const pool = await poolPromise;
-        const result = await pool.request().execute('sp_ViewAvailableBooks');
+        const result = await pool.request().query(`
+            SELECT b.BookID, b.ISBN, b.Title, b.Author,
+                   b.CategoryID,  c.Name AS CategoryName,
+                   b.Description,
+                   b.PhysicalPrice, b.EbookPrice,
+                   b.RentalPricePerDay, b.LateFeePerDay,
+                   b.AverageRating,
+                   b.ImageURL,   -- cover image URL stored in DB
+                   b.PdfURL,     -- PDF URL stored in DB
+                   i.StockLevel, i.LowStockThreshold
+            FROM Books b
+            LEFT JOIN Categories c ON c.CategoryID = b.CategoryID
+            LEFT JOIN Inventory  i ON i.BookID     = b.BookID
+            ORDER BY b.BookID DESC
+        `);
         res.json(result.recordset);
     } catch (error) {
         console.error('Error fetching admin books:', error);
@@ -737,88 +829,187 @@ app.get('/api/admin/books', requireAdminAuth, async (req, res) => {
     }
 });
 
-// Route: Add New Book (Admin)
-app.post('/api/admin/books', requireAdminAuth, async (req, res) => {
+// GET single book by ID
+app.get('/api/admin/books/:id', requireAdminAuth, async (req, res) => {
     try {
-        const {
-            isbn, title, author, categoryId, description,
-            physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay,
-            imageUrl, pdfUrl, stockLevel, lowStockThreshold
-        } = req.body;
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('BookID', sql.INT, req.params.id)
+            .query(`
+                SELECT b.BookID, b.ISBN, b.Title, b.Author,
+                       b.CategoryID, c.Name AS CategoryName,
+                       b.Description,
+                       b.PhysicalPrice, b.EbookPrice,
+                       b.RentalPricePerDay, b.LateFeePerDay,
+                       b.AverageRating,
+                       b.ImageURL, b.PdfURL,
+                       i.StockLevel, i.LowStockThreshold
+                FROM Books b
+                LEFT JOIN Categories c ON c.CategoryID = b.CategoryID
+                LEFT JOIN Inventory  i ON i.BookID     = b.BookID
+                WHERE b.BookID = @BookID
+            `);
+        if (!result.recordset.length) return res.status(404).json({ error: 'Book not found.' });
+        res.json(result.recordset[0]);
+    } catch (error) {
+        console.error('Error fetching book:', error);
+        res.status(500).json({ error: 'Failed to fetch book.' });
+    }
+});
 
-        if (!title || !author || !categoryId) {
-            return res.status(400).json({ error: 'title, author, and categoryId are required.' });
-        }
+// POST — add new book (multipart: coverImage + pdfFile)
+app.post('/api/admin/books', requireAdminAuth, (req, res, next) => {
+    bookUpload(req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.message });
+        next();
+    });
+}, async (req, res) => {
+    const coverFile = req.files?.coverImage?.[0];
+    const pdfFile   = req.files?.pdfFile?.[0];
 
+    const {
+        isbn, title, author, categoryId, description,
+        physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay,
+        stockLevel, lowStockThreshold
+    } = req.body;
+
+    if (!title || !author || !categoryId) {
+        if (coverFile) unlinkOldFile(IMGS_DIR, '/images/' + coverFile.filename);
+        if (pdfFile)   unlinkOldFile(PDFS_DIR, '/pdfs/'   + pdfFile.filename);
+        return res.status(400).json({ error: 'title, author, and categoryId are required.' });
+    }
+
+    const imgUrl = coverFile ? `/images/${coverFile.filename}` : null;
+    const pdfUrl = pdfFile   ? `/pdfs/${pdfFile.filename}`     : null;
+
+    try {
         const pool = await poolPromise;
         await pool.request()
-            .input('ISBN', sql.NVarChar, isbn || null)
-            .input('Title', sql.NVarChar, title)
-            .input('Author', sql.NVarChar, author)
-            .input('CategoryID', sql.INT, categoryId)
-            .input('Description', sql.NVarChar, description || null)
-            .input('PhysicalPrice', sql.Decimal(10, 2), physicalPrice || null)
-            .input('EbookPrice', sql.Decimal(10, 2), ebookPrice || null)
-            .input('RentalPricePerDay', sql.Decimal(10, 2), rentalPricePerDay || null)
-            .input('LateFeePerDay', sql.Decimal(10, 2), lateFeePerDay || 1.00)
-            .input('ImageURL', sql.NVarChar, imageUrl || null)
-            .input('PdfURL', sql.NVarChar, pdfUrl || null)
-            .input('StockLevel', sql.INT, stockLevel || 0)
-            .input('LowStockThreshold', sql.INT, lowStockThreshold || 5)
+            .input('ISBN',              sql.NVarChar,      isbn            || null)
+            .input('Title',             sql.NVarChar,      title)
+            .input('Author',            sql.NVarChar,      author)
+            .input('CategoryID',        sql.INT,           parseInt(categoryId))
+            .input('Description',       sql.NVarChar,      description     || null)
+            .input('PhysicalPrice',     sql.Decimal(10,2), physicalPrice     ? parseFloat(physicalPrice)     : null)
+            .input('EbookPrice',        sql.Decimal(10,2), ebookPrice        ? parseFloat(ebookPrice)        : null)
+            .input('RentalPricePerDay', sql.Decimal(10,2), rentalPricePerDay ? parseFloat(rentalPricePerDay) : null)
+            .input('LateFeePerDay',     sql.Decimal(10,2), lateFeePerDay     ? parseFloat(lateFeePerDay)     : 1.00)
+            .input('ImageURL',          sql.NVarChar,      imgUrl)
+            .input('PdfURL',            sql.NVarChar,      pdfUrl)
+            .input('StockLevel',        sql.INT,           stockLevel        ? parseInt(stockLevel)        : 0)
+            .input('LowStockThreshold', sql.INT,           lowStockThreshold ? parseInt(lowStockThreshold) : 5)
             .execute('sp_AddNewBook');
 
-        res.status(201).json({ message: 'Book added successfully.' });
+        res.status(201).json({ message: 'Book added successfully.', ImageURL: imgUrl, PdfURL: pdfUrl });
     } catch (error) {
         console.error('Error adding book:', error);
-        res.status(500).json({ error: 'Failed to add book.' });
+        if (coverFile) unlinkOldFile(IMGS_DIR, '/images/' + coverFile.filename);
+        if (pdfFile)   unlinkOldFile(PDFS_DIR, '/pdfs/'   + pdfFile.filename);
+        res.status(500).json({ error: 'Failed to add book. Uploaded files rolled back.' });
     }
 });
 
-// Route: Update Book Info (Admin)
-app.put('/api/admin/books/:id', requireAdminAuth, async (req, res) => {
-    try {
-        const {
-            title, author, isbn, categoryId, description,
-            physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay,
-            imageUrl, pdfUrl
-        } = req.body;
+// PUT — update book (multipart: optional new coverImage + pdfFile)
+app.put('/api/admin/books/:id', requireAdminAuth, (req, res, next) => {
+    bookUpload(req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.message });
+        next();
+    });
+}, async (req, res) => {
+    const bookId    = parseInt(req.params.id);
+    const coverFile = req.files?.coverImage?.[0];
+    const pdfFile   = req.files?.pdfFile?.[0];
 
+    const {
+        title, author, isbn, categoryId, description,
+        physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay
+    } = req.body;
+
+    // Fetch existing record for old file paths
+    let existing;
+    try {
+        const pool = await poolPromise;
+        const r = await pool.request()
+            .input('BookID', sql.INT, bookId)
+            .query('SELECT ImageURL, PdfURL FROM Books WHERE BookID = @BookID');
+        if (!r.recordset.length) {
+            if (coverFile) unlinkOldFile(IMGS_DIR, '/images/' + coverFile.filename);
+            if (pdfFile)   unlinkOldFile(PDFS_DIR, '/pdfs/'   + pdfFile.filename);
+            return res.status(404).json({ error: 'Book not found.' });
+        }
+        existing = r.recordset[0];
+    } catch (err) {
+        if (coverFile) unlinkOldFile(IMGS_DIR, '/images/' + coverFile.filename);
+        if (pdfFile)   unlinkOldFile(PDFS_DIR, '/pdfs/'   + pdfFile.filename);
+        return res.status(500).json({ error: 'Failed to retrieve existing book.' });
+    }
+
+    const finalImgUrl = coverFile ? `/images/${coverFile.filename}` : existing.ImageURL;
+    const finalPdfUrl = pdfFile   ? `/pdfs/${pdfFile.filename}`     : existing.PdfURL;
+
+    try {
         const pool = await poolPromise;
         await pool.request()
-            .input('BookID', sql.INT, req.params.id)
-            .input('Title', sql.NVarChar, title || null)
-            .input('Author', sql.NVarChar, author || null)
-            .input('ISBN', sql.NVarChar, isbn || null)
-            .input('CategoryID', sql.INT, categoryId || null)
-            .input('Description', sql.NVarChar, description || null)
-            .input('PhysicalPrice', sql.Decimal(10, 2), physicalPrice || null)
-            .input('EbookPrice', sql.Decimal(10, 2), ebookPrice || null)
-            .input('RentalPricePerDay', sql.Decimal(10, 2), rentalPricePerDay || null)
-            .input('LateFeePerDay', sql.Decimal(10, 2), lateFeePerDay || null)
-            .input('ImageURL', sql.NVarChar, imageUrl || null)
-            .input('PdfURL', sql.NVarChar, pdfUrl || null)
+            .input('BookID',            sql.INT,           bookId)
+            .input('Title',             sql.NVarChar,      title          || null)
+            .input('Author',            sql.NVarChar,      author         || null)
+            .input('ISBN',              sql.NVarChar,      isbn           || null)
+            .input('CategoryID',        sql.INT,           categoryId     ? parseInt(categoryId) : null)
+            .input('Description',       sql.NVarChar,      description    || null)
+            .input('PhysicalPrice',     sql.Decimal(10,2), physicalPrice     ? parseFloat(physicalPrice)     : null)
+            .input('EbookPrice',        sql.Decimal(10,2), ebookPrice        ? parseFloat(ebookPrice)        : null)
+            .input('RentalPricePerDay', sql.Decimal(10,2), rentalPricePerDay ? parseFloat(rentalPricePerDay) : null)
+            .input('LateFeePerDay',     sql.Decimal(10,2), lateFeePerDay     ? parseFloat(lateFeePerDay)     : null)
+            .input('ImageURL',          sql.NVarChar,      finalImgUrl)
+            .input('PdfURL',            sql.NVarChar,      finalPdfUrl)
             .execute('sp_UpdateBook');
 
-        res.json({ message: 'Book updated successfully.' });
+        // Delete old files AFTER successful DB update
+        if (coverFile && existing.ImageURL) unlinkOldFile(IMGS_DIR, existing.ImageURL);
+        if (pdfFile   && existing.PdfURL)   unlinkOldFile(PDFS_DIR, existing.PdfURL);
+
+        res.json({ message: 'Book updated successfully.', ImageURL: finalImgUrl, PdfURL: finalPdfUrl });
     } catch (error) {
         console.error('Error updating book:', error);
-        res.status(500).json({ error: 'Failed to update book.' });
+        if (coverFile) unlinkOldFile(IMGS_DIR, '/images/' + coverFile.filename);
+        if (pdfFile)   unlinkOldFile(PDFS_DIR, '/pdfs/'   + pdfFile.filename);
+        res.status(500).json({ error: 'Failed to update book. Uploaded files rolled back.' });
     }
 });
 
-// Route: Delete Book (Admin)
+// DELETE — remove book + delete its cover image and PDF from disk
 app.delete('/api/admin/books/:id', requireAdminAuth, async (req, res) => {
+    const bookId = parseInt(req.params.id);
+
+    // 1. Fetch file paths before deleting
+    let toDelete;
+    try {
+        const pool = await poolPromise;
+        const r = await pool.request()
+            .input('BookID', sql.INT, bookId)
+            .query('SELECT ImageURL, PdfURL FROM Books WHERE BookID = @BookID');
+        if (!r.recordset.length) return res.status(404).json({ error: 'Book not found.' });
+        toDelete = r.recordset[0];
+    } catch (err) {
+        return res.status(500).json({ error: 'Failed to retrieve book.' });
+    }
+
+    // 2. Delete DB record
     try {
         const pool = await poolPromise;
         await pool.request()
-            .input('BookID', sql.INT, req.params.id)
+            .input('BookID', sql.INT, bookId)
             .execute('sp_DeleteBook');
-
-        res.json({ message: 'Book deleted successfully.' });
     } catch (error) {
         console.error('Error deleting book:', error);
-        res.status(500).json({ error: 'Failed to delete book.' });
+        return res.status(500).json({ error: 'Failed to delete book.' });
     }
+
+    // 3. Delete files from disk
+    unlinkOldFile(IMGS_DIR, toDelete.ImageURL);
+    unlinkOldFile(PDFS_DIR, toDelete.PdfURL);
+
+    res.json({ message: 'Book and its files deleted successfully.' });
 });
 
 // Route: Get Full Inventory (Admin)

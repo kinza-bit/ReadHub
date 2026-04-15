@@ -29,9 +29,11 @@
             <button class="sidebar-close" id="sidebar-close">&times;</button>
         </div>
         <nav class="sidebar-nav">
-            <a href="/dashboard.html" class="sidebar-link">Dashboard</a>
-            <a href="/admin-dashboard.html" class="sidebar-link" style="color: var(--primary)">Admin Panel</a>
+            <a href="/admin-dashboard.html" class="sidebar-link" style="color: var(--primary)">Dashboard</a>
+            <a href="/admin-books.html" class="sidebar-link">Manage Books</a>
+            <a href="/admin-categories.html" class="sidebar-link">Manage Categories</a>
             <a href="/admin-users.html" class="sidebar-link">Manage Users</a>
+            <a href="/browse.html" class="sidebar-link">Browse Store</a>
             <a href="/login.html" class="sidebar-link">User Login</a>
         </nav>
     </aside>
@@ -87,10 +89,10 @@
 
         <div class="glass" style="margin-top: 3rem; padding: 2rem; border-radius: 1rem;">
             <h3>Quick Actions</h3>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                <a href="/admin-books.html" class="btn btn-primary" style="text-decoration: none;">Manage Books</a>
+                <a href="/admin-categories.html" class="btn btn-primary" style="text-decoration: none;">Manage Categories</a>
                 <a href="/admin-users.html" class="btn btn-primary" style="text-decoration: none;">Manage Users</a>
-                <button class="btn btn-primary">Manage Inventory</button>
-                <button class="btn btn-primary">View Requests</button>
             </div>
         </div>
 

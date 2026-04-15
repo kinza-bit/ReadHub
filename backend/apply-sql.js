@@ -25,7 +25,7 @@ async function runSqlFile() {
         const pool = await sql.connect(config);
         console.log('Connected to DB');
 
-        const sqlFilePath = path.join(__dirname, 'sql', 'features.sql');
+        const sqlFilePath = path.join(__dirname, 'sql', 'update_book_images.sql');
         const content = fs.readFileSync(sqlFilePath, 'utf8');
 
         // Split by GO (case insensitive, on its own line)

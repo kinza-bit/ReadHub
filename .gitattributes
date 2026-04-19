@@ -1,0 +1,24 @@
+# Handle line endings automatically
+* text=auto
+
+# JS, CSS, HTML, JSON → always LF in repo
+*.js   text eol=lf
+*.ts   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.sql  text eol=lf
+*.md   text eol=lf
+*.env  text eol=lf
+
+# Windows scripts → CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Binary files → no conversion
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.pdf  binary
+*.zip  binary

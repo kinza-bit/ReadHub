@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - READhub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/theme.js"></script>
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+        
+        .profile-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .profile-card {
+            padding: 2rem;
+            border-radius: 1.5rem;
+            text-align: center;
+        }
+        
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary-color);
+            margin: 0 auto 1rem auto;
+            display: block;
+        }
+
+        .profile-name-large {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-role {
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .profile-form-section {
+            padding: 2rem;
+            border-radius: 1.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+
+        .form-input {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            background: var(--surface-hover);
+            border: 1px solid rgba(124, 58, 237, 0.1);
+            color: var(--color-text);
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        
+        .section-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .btn-save {
+            margin-top: 1rem;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .btn-save:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Wishlist and Purchases specific styles */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Responsive overrides */
+        @media (max-width: 768px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="protected-user">
+    
+    <nav class="navbar glass">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div class="hamburger-container">
+                <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('show')">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="hamburger-menu glass">
+                    <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
+                    <a href="/browse.html" class="dropdown-item">Browse Books</a>
+                    <a href="/profile.html" class="dropdown-item">My Profile</a>
+                </div>
+            </div>
+            <a href="/dashboard.html" class="brand" style="text-decoration: none;">READhub</a>
+        </div>
+        <div class="nav-links">
+            <div class="theme-toggle-host"></div>
+            <button id="logout-btn" class="logoutButton" style="display: flex;">
+                <span class="button-text">Log Out</span>
+                <svg class="doorway" viewBox="0 0 16 16">
+                    <path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+                <svg class="door" viewBox="0 0 16 16">
+                    <path d="M3 1H13V15H3V1Z" />
+                    <circle cx="10" cy="8" r="1.2" fill="#fff" />
+                </svg>
+                <svg class="figure" viewBox="0 0 16 16">
+                    <circle cx="8" cy="3" r="2.5" />
+                    <path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="profile-container">
+        <!-- Left Sidebar: Avatar & Summary -->
+        <aside class="profile-sidebar">
+            <div class="profile-card glass">
+                <img src="" alt="Profile Avatar" class="profile-avatar-large" id="main-avatar">
+                <div class="profile-name-large" id="profile-display-name">Loading...</div>
+                <div class="profile-role" id="profile-email">Loading...</div>
+                
+                <div class="stat-content" style="margin-top: 2rem;">
+                    <span class="label">Joined</span>
+                    <strong class="value" style="font-size: 1.1rem;" id="profile-join-date">Member</strong>
+                </div>
+            </div>
+            
+            <div class="profile-card glass" style="padding: 1.5rem; cursor: pointer;" onclick="scrollToSection('purchases')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600;">My Library</span>
+                    <span style="background: var(--primary-color); color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;" id="badge-library">0</span>
+                </div>
+            </div>
+            
+            <div class="profile-card glass" style="padding: 1.5rem; cursor: pointer;" onclick="scrollToSection('wishlist')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600;">My Wishlist</span>
+                    <span style="background: #fbbf24; color: black; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600;" id="badge-wishlist">0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Main: Profile Form & Specific Sections -->
+        <div class="profile-main">
+            <!-- Edit Profile Form -->
+            <section class="profile-form-section glass">
+                <div class="section-header">
+                    <h2>Edit Profile</h2>
+                    <p style="color: var(--color-text-muted); font-size: 0.875rem; margin-top: 0.5rem;">Update your personal details below.</p>
+                </div>
+                
+                <form id="profile-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="input-fullname" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" id="input-phone" class="form-input" placeholder="+92 300 0000000">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Avatar URL</label>
+                            <input type="url" id="input-avatar-url" class="form-input" placeholder="https://example.com/my-avatar.png">
+                            <small style="color: var(--color-text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Leave empty to use auto-generated avatar.</small>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Address</label>
+                            <input type="text" id="input-address" class="form-input" placeholder="123 Main Street">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input type="text" id="input-city" class="form-input" placeholder="Lahore">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input type="text" id="input-country" class="form-input" placeholder="Pakistan">
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="submit" class="btn-save">Save Changes</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Purchases Section -->
+            <section id="purchases" class="profile-form-section glass">
+                <div class="section-header">
+                    <h2>My Library (Purchases)</h2>
+                </div>
+                <div class="items-grid" id="purchases-container">
+                    <div class="empty-state" style="grid-column: 1 / -1; padding: 2rem;">
+                        <p>Loading library...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Wishlist Section -->
+            <section id="wishlist" class="profile-form-section glass">
+                <div class="section-header">
+                    <h2>My Wishlist</h2>
+                </div>
+                <div class="items-grid" id="wishlist-container">
+                    <div class="empty-state" style="grid-column: 1 / -1; padding: 2rem;">
+                        <p>Loading wishlist...</p>
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/profile.js"></script>
+</body>
+</html>

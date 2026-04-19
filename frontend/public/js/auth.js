@@ -203,10 +203,33 @@ const checkAuth = async (requiredRole) => {
             return null;
         }
         
-        // Update UI with user name
-        const userNameEl = document.getElementById('user-name-display');
-        if (userNameEl && data.user) {
-            userNameEl.textContent = data.user.name;
+        // Fetch extended profile data from userdb for Customers
+        if (data.user.role === 'Customer') {
+            try {
+                const profileRes = await fetch(`${API_BASE_URL}/user/profile`);
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    
+                    const userNameEl = document.getElementById('user-name-display');
+                    if (userNameEl) userNameEl.textContent = profileData.FullName.includes(' ') ? profileData.FullName.split(' ')[0] : profileData.FullName;
+
+                    const userGreetingEl = document.getElementById('user-greeting-name');
+                    if (userGreetingEl) userGreetingEl.textContent = `${profileData.FullName.split(' ')[0]} 👋`;
+
+                    const navAvatar = document.getElementById('nav-avatar');
+                    if (navAvatar) {
+                        navAvatar.src = profileData.ProfileImageURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.FullName)}&background=7C3AED&color=fff&bold=true`;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch user profile from userdb", e);
+            }
+        } else {
+            // Admin fallback using session data
+            const userNameEl = document.getElementById('user-name-display');
+            if (userNameEl && data.user) {
+                userNameEl.textContent = data.user.name;
+            }
         }
         
         return data.user;

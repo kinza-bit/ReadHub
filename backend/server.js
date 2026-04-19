@@ -730,6 +730,129 @@ app.post('/api/books/:id/rate', requireUserAuth, async (req, res) => {
     }
 });
 
+// --- Profile Routes ---
+app.get('/api/profile', requireUserAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .query('SELECT Username, Email, FullName, PhoneNumber, AddressLine1, City, Country, ProfileImageURL FROM Users WHERE UserID = @UserID');
+            
+        if (result.recordset.length === 0) return res.status(404).json({ error: 'User not found.' });
+        res.json(result.recordset[0]);
+    } catch (error) {
+        console.error('Profile fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch profile.' });
+    }
+});
+
+app.put('/api/profile', requireUserAuth, async (req, res) => {
+    try {
+        const { fullName, phoneNumber, addressLine1, city, country, profileImageUrl } = req.body;
+        const pool = await poolPromise;
+        await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('FullName', sql.NVarChar, fullName)
+            .input('PhoneNumber', sql.NVarChar, phoneNumber || null)
+            .input('AddressLine1', sql.NVarChar, addressLine1 || null)
+            .input('City', sql.NVarChar, city || null)
+            .input('Country', sql.NVarChar, country || null)
+            .input('ProfileImageURL', sql.NVarChar, profileImageUrl || null)
+            .query(`
+                UPDATE Users 
+                SET FullName = @FullName, PhoneNumber = @PhoneNumber, AddressLine1 = @AddressLine1, 
+                    City = @City, Country = @Country, ProfileImageURL = @ProfileImageURL
+                WHERE UserID = @UserID
+            `);
+        res.json({ message: 'Profile updated successfully.' });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).json({ error: 'Failed to update profile.' });
+    }
+});
+
+// --- Purchases & Wishlist Routes ---
+app.get('/api/user/purchases', requireUserAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .query(`
+                SELECT o.OrderDate, oi.Quantity, oi.UnitPrice, b.Title, b.Author, b.ImageURL, b.BookID
+                FROM Orders o
+                JOIN OrderItems oi ON o.OrderID = oi.OrderID
+                JOIN Books b ON oi.BookID = b.BookID
+                WHERE o.UserID = @UserID
+                ORDER BY o.OrderDate DESC
+            `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Purchases fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch purchases.' });
+    }
+});
+
+app.get('/api/user/wishlist', requireUserAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .query(`
+                SELECT w.WishlistID, w.CreatedAt, b.Title, b.Author, b.ImageURL, b.BookID, b.AverageRating
+                FROM UserWishlist w
+                JOIN Books b ON w.BookID = b.BookID
+                WHERE w.UserID = @UserID
+                ORDER BY w.CreatedAt DESC
+            `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Wishlist fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch wishlist.' });
+    }
+});
+
+app.post('/api/user/wishlist', requireUserAuth, async (req, res) => {
+    try {
+        const { bookId } = req.body;
+        if (!bookId) return res.status(400).json({ error: 'bookId is required.' });
+        
+        const pool = await poolPromise;
+        const check = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('BookID', sql.INT, bookId)
+            .query('SELECT * FROM UserWishlist WHERE UserID = @UserID AND BookID = @BookID');
+            
+        if (check.recordset.length > 0) {
+            return res.status(400).json({ error: 'Book already in wishlist.' });
+        }
+        
+        await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('BookID', sql.INT, bookId)
+            .query('INSERT INTO UserWishlist (UserID, BookID) VALUES (@UserID, @BookID)');
+            
+        res.status(201).json({ message: 'Added to wishlist.' });
+    } catch (error) {
+        console.error('Wishlist add error:', error);
+        res.status(500).json({ error: 'Failed to add to wishlist.' });
+    }
+});
+
+app.delete('/api/user/wishlist/:bookId', requireUserAuth, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .input('BookID', sql.INT, req.params.bookId)
+            .query('DELETE FROM UserWishlist WHERE UserID = @UserID AND BookID = @BookID');
+            
+        res.json({ message: 'Removed from wishlist.' });
+    } catch (error) {
+        console.error('Wishlist remove error:', error);
+        res.status(500).json({ error: 'Failed to remove from wishlist.' });
+    }
+});
+
 // â”€â”€â”€ ADMIN ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Route: Get All Categories (Admin)

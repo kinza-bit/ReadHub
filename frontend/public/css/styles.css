@@ -2226,4 +2226,415 @@ body { cursor: default; }
     .rh-card-title {
         font-size: 0.875rem;
     }
+}
+
+/* ============================================================
+   NEW DASHBOARD REDESIGN (April 2026)
+   ============================================================ */
+
+/* Navbar Active Indicator */
+.active-indicator {
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--accent-gradient);
+    border-radius: 2px;
+    box-shadow: 0 0 8px var(--color-primary);
+}
+
+/* Notification Bell */
+.notification-bell {
+    position: relative;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+}
+.notification-bell:hover {
+    color: var(--color-primary);
+}
+.indicator-dot {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    border: 2px solid var(--color-bg);
+}
+
+/* Profile Dropdown */
+.profile-dropdown-container {
+    position: relative;
+}
+.profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+.profile-btn:hover {
+    background: var(--surface-hover);
+}
+.avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.profile-name {
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+.chevron {
+    color: var(--color-text-muted);
+    transition: transform 0.3s;
+}
+.profile-dropdown-container:hover .chevron {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    min-width: 200px;
+    border-radius: 1rem;
+    padding: 0.5rem;
+    display: none;
+    z-index: 100;
+    flex-direction: column;
+}
+.profile-dropdown-container:hover .dropdown-menu {
+    display: flex;
+    animation: slideDown 0.2s ease;
+}
+.dropdown-header {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: var(--color-text-body);
+    font-size: 0.875rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+.dropdown-item:hover {
+    background: var(--surface-hover);
+    color: var(--color-primary);
+}
+.dropdown-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 0.25rem 0;
+}
+.text-danger {
+    color: #ef4444 !important;
+}
+.dropdown-item.text-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Dashboard Headers */
+.dashboard-header {
+    margin-bottom: 2.5rem;
+}
+.dashboard-header h2 {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+}
+#user-greeting-name {
+    background: var(--headline-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.subtitle {
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+}
+
+/* Stat Cards Upgrade */
+.overview-cards {
+    gap: 1.5rem;
+}
+.stat-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+.stat-icon-wrapper {
+    background: var(--surface-hover);
+    padding: 0.75rem;
+    border-radius: 1rem;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+}
+[data-theme="dark"] .stat-icon-wrapper {
+    background: rgba(168, 85, 247, 0.15);
+}
+.stat-content {
+    flex: 1;
+}
+.stat-content h3 {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+.stat-content .value {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+}
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(124, 58, 237, 0.1);
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background: var(--accent-gradient);
+    border-radius: 3px;
+}
+.stat-detail {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+.text-success { color: #10b981; }
+
+/* Book Sections */
+.book-category-section {
+    margin-top: 3.5rem;
+}
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+}
+.section-title {
+    font-size: 1.35rem;
+}
+.see-all {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Horizontal Grid / Scroll */
+.book-grid {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+    scroll-snap-type: x mandatory;
+}
+.book-grid::-webkit-scrollbar { height: 6px; }
+.book-card {
+    width: 200px;
+    flex-shrink: 0;
+    border-radius: 1rem;
+    overflow: hidden;
+    scroll-snap-align: start;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .book-card {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.book-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(124, 58, 237, 0.15);
+}
+.book-cover {
+    width: 100%;
+    height: 280px;
+    background: var(--surface-hover);
+}
+.book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.book-info {
+    padding: 1rem;
+}
+.book-title {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.book-rating {
+    font-size: 0.875rem;
+    color: #fbbf24;
+}
+.rating-count {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    border-radius: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(124, 58, 237, 0.05);
+    color: var(--color-text-muted);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Hamburger Menu Component */
+.hamburger-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.hamburger-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: background 0.2s, transform 0.2s;
+}
+.hamburger-btn:hover {
+    background: rgba(124, 58, 237, 0.1);
+}
+.hamburger-btn:active {
+    transform: scale(0.95);
+}
+.hamburger-menu {
+    position: absolute;
+    top: 130%;
+    left: 0;
+    min-width: 200px;
+    display: none;
+    flex-direction: column;
+    padding: 0.5rem 0;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s, transform 0.2s;
+}
+.hamburger-menu.show {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+[data-theme="dark"] .empty-icon {
+    background: rgba(168, 85, 247, 0.1);
+}
+.empty-state h4 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.empty-state p {
+    color: var(--color-text-muted);
+}
+.mt-3 {
+    margin-top: 1rem;
+}
+
+/* Responsive Overrides for Redesign */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        align-items: center;
+    }
+    .navbar > div, .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        text-align: center;
+    }
+    .nav-links {
+        gap: 1rem;
+    }
+    .dashboard-container, .profile-container {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+    .dashboard-header h2 {
+        font-size: 1.5rem;
+    }
+    .overview-cards {
+        grid-template-columns: 1fr;
+    }
+    .book-card {
+        width: 160px;
+    }
+    .book-cover {
+        height: 230px;
+    }
+    .empty-icon {
+        width: 60px;
+        height: 60px;
+    }
+}
+@media (max-width: 480px) {
+    .book-card {
+        width: 140px;
+    }
+    .book-cover {
+        height: 200px;
+    }
+    .stat-content .value {
+        font-size: 1.5rem;
+    }
+    .profile-card, .profile-form-section {
+        padding: 1rem;
+    }
+    .profile-btn {
+        padding: 0.25rem 0.5rem;
+    }
+    .profile-name {
+        display: none; /* Hide name on very small screens to save space */
+    }
 }

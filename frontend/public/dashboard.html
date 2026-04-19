@@ -157,34 +157,17 @@
             </div>
         </section>
 
-        <section class="book-category-section">
+        <!-- ── Popular Books (dynamic — populated by dashboard.js) ── -->
+        <section class="book-category-section" id="popular-books-section">
             <div class="section-header">
-                <h3 class="section-title">Popular books</h3>
-                <a href="/browse.html" class="see-all">See all</a>
+                <h3 class="section-title">📚 Popular Books</h3>
+                <a href="/browse.html?sort=rating" class="see-all">See all</a>
             </div>
-            <div class="book-grid">
-                <div class="book-card glass">
-                    <div class="book-cover">
-                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80" alt="Book Cover">
-                    </div>
-                    <div class="book-info">
-                        <h4 class="book-title">Learn JavaScript</h4>
-                        <div class="book-rating">
-                            ★★★★★ <span class="rating-count">(340)</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="book-card glass">
-                    <div class="book-cover">
-                        <img src="https://images.unsplash.com/photo-1522204523234-8729aa6e3d5f?w=400&q=80" alt="Book Cover">
-                    </div>
-                    <div class="book-info">
-                        <h4 class="book-title">Team Dynamics</h4>
-                        <div class="book-rating">
-                            ★★★★☆ <span class="rating-count">(215)</span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Loading skeleton -->
+            <div class="pb-grid" id="popular-books-grid">
+                <div class="pb-skeleton glass"></div>
+                <div class="pb-skeleton glass"></div>
+                <div class="pb-skeleton glass"></div>
             </div>
         </section>
 

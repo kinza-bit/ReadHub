@@ -12,6 +12,7 @@ const { requireUserAuth } = require('../middleware/auth');
 
 // Public book routes
 router.get('/',                        books.getBooks);
+router.get('/popular',                 books.getPopularBooks);
 router.get('/search',                  books.searchBooks);
 router.get('/category/:categoryId',    books.getBooksByCategory);
 router.get('/:id',                     books.getBookById);

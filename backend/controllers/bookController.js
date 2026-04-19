@@ -80,6 +80,33 @@ const getBookById = async (req, res) => {
     }
 };
 
+// ─── GET /api/books/popular — top 3 highest-rated books (public) ────────────
+const getPopularBooks = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        const result = await pool.request().query(`
+            SELECT TOP 3
+                b.BookID, b.Title, b.Author, b.ImageURL, b.AverageRating,
+                b.CategoryID,
+                ISNULL(c.Name, 'General') AS CategoryName,
+                COUNT(br.Rating)          AS ReviewsCount
+            FROM Books b
+            LEFT JOIN Categories c  ON c.CategoryID = b.CategoryID
+            LEFT JOIN BookRating br ON br.BookID = b.BookID
+            GROUP BY b.BookID, b.Title, b.Author, b.ImageURL,
+                     b.AverageRating, b.CategoryID, c.Name
+            ORDER BY b.AverageRating DESC, COUNT(br.Rating) DESC
+        `);
+
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching popular books:', error);
+        res.status(500).json({ error: 'Failed to fetch popular books.' });
+    }
+};
+
 // ─── GET /api/categories — all categories (public) ───────────────────────────
 const getCategories = async (req, res) => {
     try {
@@ -142,4 +169,4 @@ const rateBook = async (req, res) => {
     }
 };
 
-module.exports = { getBooks, searchBooks, getBooksByCategory, getBookById, getCategories, getCategoriesWithCounts, rateBook };
+module.exports = { getBooks, searchBooks, getBooksByCategory, getBookById, getPopularBooks, getCategories, getCategoriesWithCounts, rateBook };

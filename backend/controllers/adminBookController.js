@@ -14,6 +14,9 @@
 const { sql, poolPromise } = require('../db');
 const { unlinkOldFile, IMGS_DIR, PDFS_DIR } = require('../middleware/upload');
 
+const fs = require('fs');
+const supabase = require('../supabaseClient');
+
 // ── Shared SQL query for the full book + inventory join ───────────────────────
 const BOOK_SELECT_QUERY = `
     SELECT b.BookID, b.ISBN, b.Title, b.Author,
@@ -24,6 +27,7 @@ const BOOK_SELECT_QUERY = `
            b.AverageRating,
            b.ImageURL,
            b.PdfURL,
+           b.SupabasePath,
            i.StockLevel, i.LowStockThreshold
     FROM Books b
     LEFT JOIN Categories c ON c.CategoryID = b.CategoryID
@@ -77,8 +81,27 @@ const addBook = async (req, res) => {
 
     const imgUrl = coverFile ? `/images/${coverFile.filename}` : null;
     const pdfUrl = pdfFile   ? `/pdfs/${pdfFile.filename}`     : null;
+    let supabasePath = null;
 
     try {
+        // Upload to Supabase if PDF is provided
+        if (pdfFile) {
+            const fileBuffer = fs.readFileSync(pdfFile.path);
+            supabasePath = pdfFile.filename; // Use local filename as Supabase path
+            
+            const { error: uploadError } = await supabase.storage
+                .from('ebooks')
+                .upload(supabasePath, fileBuffer, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                });
+
+            if (uploadError) {
+                console.error('Supabase upload error during addBook:', uploadError);
+                throw new Error('Failed to upload PDF to secure storage.');
+            }
+        }
+
         const pool = await poolPromise;
         await pool.request()
             .input('ISBN',              sql.NVarChar,      isbn             || null)
@@ -92,6 +115,7 @@ const addBook = async (req, res) => {
             .input('LateFeePerDay',     sql.Decimal(10,2), lateFeePerDay     ? parseFloat(lateFeePerDay)     : 1.00)
             .input('ImageURL',          sql.NVarChar,      imgUrl)
             .input('PdfURL',            sql.NVarChar,      pdfUrl)
+            .input('SupabasePath',      sql.NVarChar,      supabasePath)
             .input('StockLevel',        sql.INT,           stockLevel        ? parseInt(stockLevel)        : 0)
             .input('LowStockThreshold', sql.INT,           lowStockThreshold ? parseInt(lowStockThreshold) : 5)
             .execute('sp_AddNewBook');
@@ -122,7 +146,7 @@ const updateBook = async (req, res) => {
         const pool = await poolPromise;
         const r = await pool.request()
             .input('BookID', sql.INT, bookId)
-            .query('SELECT ImageURL, PdfURL FROM Books WHERE BookID = @BookID');
+            .query('SELECT ImageURL, PdfURL, SupabasePath FROM Books WHERE BookID = @BookID');
 
         if (!r.recordset.length) {
             if (coverFile) unlinkOldFile(IMGS_DIR, '/images/' + coverFile.filename);
@@ -138,8 +162,26 @@ const updateBook = async (req, res) => {
 
     const finalImgUrl = coverFile ? `/images/${coverFile.filename}` : existing.ImageURL;
     const finalPdfUrl = pdfFile   ? `/pdfs/${pdfFile.filename}`     : existing.PdfURL;
+    let finalSupabasePath = existing.SupabasePath;
 
     try {
+        if (pdfFile) {
+            const fileBuffer = fs.readFileSync(pdfFile.path);
+            finalSupabasePath = pdfFile.filename;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('ebooks')
+                .upload(finalSupabasePath, fileBuffer, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                });
+
+            if (uploadError) {
+                console.error('Supabase upload error during updateBook:', uploadError);
+                throw new Error('Failed to upload updated PDF to secure storage.');
+            }
+        }
+
         const pool = await poolPromise;
         await pool.request()
             .input('BookID',            sql.INT,           bookId)
@@ -154,11 +196,15 @@ const updateBook = async (req, res) => {
             .input('LateFeePerDay',     sql.Decimal(10,2), lateFeePerDay     ? parseFloat(lateFeePerDay)     : null)
             .input('ImageURL',          sql.NVarChar,      finalImgUrl)
             .input('PdfURL',            sql.NVarChar,      finalPdfUrl)
+            .input('SupabasePath',      sql.NVarChar,      finalSupabasePath)
             .execute('sp_UpdateBook');
 
         // Delete replaced files from disk AFTER the DB update succeeds
         if (coverFile && existing.ImageURL) unlinkOldFile(IMGS_DIR, existing.ImageURL);
         if (pdfFile   && existing.PdfURL)   unlinkOldFile(PDFS_DIR, existing.PdfURL);
+
+        // Optionally, we could delete the old file from Supabase here as well
+        // if (pdfFile && existing.SupabasePath) await supabase.storage.from('ebooks').remove([existing.SupabasePath]);
 
         res.json({ message: 'Book updated successfully.', ImageURL: finalImgUrl, PdfURL: finalPdfUrl });
     } catch (error) {

@@ -28,6 +28,8 @@ const adminUserRoutes      = require('./routes/adminUsers');
 const adminBookRoutes      = require('./routes/adminBooks');
 const adminCategoryRoutes  = require('./routes/adminCategories');
 const adminInventoryRoutes = require('./routes/adminInventory');
+const adminOrderRoutes     = require('./routes/adminOrders');
+const cartRoutes           = require('./routes/cart');
 const bookRequestRoutes    = require('./routes/bookRequestRoutes');
 
 // ── Static file paths (for serving uploaded files) ───────────────────────────
@@ -64,11 +66,13 @@ app.use('/api/books',    bookRoutes);           // /api/books, /api/books/search
 app.use('/api/categories', categoryRoutes);     // /api/categories, /api/categories/with-counts
 app.use('/api/orders',   orderRoutes);          // /api/orders/buy, /api/orders/rent
 app.use('/api/ebook',    orderRoutes);          // /api/ebook/download/:bookId
+app.use('/api/cart',     cartRoutes);           // /api/cart/*, /api/cart/checkout, /api/cart/orders
 app.use('/api',          profileRoutes);        // /api/profile, /api/user/*, /api/requests
 app.use('/api/admin',    adminUserRoutes);      // /api/admin/users/*, /api/admin/stats
 app.use('/api/admin/books',      adminBookRoutes);      // /api/admin/books/*
 app.use('/api/admin/categories', adminCategoryRoutes);  // /api/admin/categories/*
 app.use('/api/admin',    adminInventoryRoutes); // /api/admin/inventory/*, /api/admin/requests
+app.use('/api/admin/orders',     adminOrderRoutes);     // /api/admin/orders/*
 app.use('/api',          bookRequestRoutes);    // /api/book-request, /api/admin/book-requests
 
 // ── Start server ──────────────────────────────────────────────────────────────

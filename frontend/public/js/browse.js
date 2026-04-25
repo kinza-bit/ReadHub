@@ -181,6 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
                    </button>`
                 : '';
 
+            // Cart button — only for logged-in users on in-stock physical books
+            const cartBtn = currentUser && hasPhysical && book.PhysicalAvailability === 'Available'
+                ? `<button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="1" title="Add to cart">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        Add to Cart
+                   </button>`
+                : '';
+
             return `
                 <div class="rh-book-card glass">
                     <div class="rh-card-cover-wrap">
@@ -198,7 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="rh-card-price">${price}</span>
                             ${availability}
                         </div>
-                        ${rateBtn}
+                        <div class="rh-card-actions">
+                            ${rateBtn}
+                            ${cartBtn}
+                        </div>
                     </div>
                 </div>
             `;
@@ -207,6 +218,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Attach rate buttons
         document.querySelectorAll('.rh-rate-btn').forEach(btn => {
             btn.addEventListener('click', () => openRateModal(btn.dataset.id, btn.dataset.title));
+        });
+
+        // Attach cart buttons
+        document.querySelectorAll('.rh-cart-add-btn').forEach(btn => {
+            btn.addEventListener('click', () => addToCart(btn.dataset.id, parseInt(btn.dataset.format), btn));
         });
     }
 
@@ -323,5 +339,34 @@ document.addEventListener('DOMContentLoaded', () => {
         toastMsg.textContent = message;
         toast.className = `rh-toast rh-toast--${type} rh-toast--visible`;
         setTimeout(() => toast.classList.remove('rh-toast--visible'), 3500);
+    }
+
+    // ── Add to Cart ──
+    async function addToCart(bookId, formatId, btnEl) {
+        if (!currentUser) {
+            showToast('Please log in to add items to your cart.', 'error');
+            return;
+        }
+        const origText = btnEl.innerHTML;
+        btnEl.disabled = true;
+        btnEl.innerHTML = 'Adding...';
+        try {
+            const res = await fetch('/api/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookId: parseInt(bookId), formatId, quantity: 1 })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Failed');
+            }
+            showToast('Added to cart!', 'success');
+            btnEl.innerHTML = '✓ Added';
+            setTimeout(() => { btnEl.innerHTML = origText; btnEl.disabled = false; }, 2000);
+        } catch (err) {
+            showToast(err.message || 'Failed to add to cart.', 'error');
+            btnEl.innerHTML = origText;
+            btnEl.disabled = false;
+        }
     }
 });

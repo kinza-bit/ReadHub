@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders - READhub Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/theme.js"></script>
+    <style>.brand span{color:#ef4444;font-size:.8rem;text-transform:uppercase;vertical-align:super;margin-left:.2rem;}</style>
+</head>
+<body class="protected-admin">
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">READhub<span>Admin</span></div>
+            <button class="sidebar-close" id="sidebar-close">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin-dashboard.html" class="sidebar-link">Dashboard</a>
+            <a href="/admin-books.html" class="sidebar-link">Manage Books</a>
+            <a href="/admin-categories.html" class="sidebar-link">Manage Categories</a>
+            <a href="/admin-users.html" class="sidebar-link">Manage Users</a>
+            <a href="/admin-orders.html" class="sidebar-link" style="color: var(--primary)">Manage Orders</a>
+            <a href="/admin-book-requests.html" class="sidebar-link">Book Requests</a>
+            <a href="/browse.html" class="sidebar-link">Browse Store</a>
+        </nav>
+    </aside>
+    <nav class="navbar glass" style="border-bottom-color: rgba(239, 68, 68, 0.3);">
+        <div style="display: flex; align-items: center;">
+            <div class="hamburger-icon" id="hamburger-menu"><span></span><span></span><span></span></div>
+            <div class="brand">READhub<span>Admin</span></div>
+        </div>
+        <div class="nav-links">
+            <span>Logged in as: <strong id="user-name-display" style="color: #ef4444;">Admin</strong></span>
+            <div class="theme-toggle-host"></div>
+            <button id="logout-btn" class="logoutButton">
+                <span class="button-text">Log Out</span>
+                <svg class="doorway" viewBox="0 0 16 16"><path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" /></svg>
+                <svg class="door" viewBox="0 0 16 16"><path d="M3 1H13V15H3V1Z" /><circle cx="10" cy="8" r="1.2" fill="#fff" /></svg>
+                <svg class="figure" viewBox="0 0 16 16"><circle cx="8" cy="3" r="2.5" /><path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" /></svg>
+            </button>
+        </div>
+    </nav>
+    <main class="dashboard-container" style="max-width: 1400px;">
+        <div style="margin-bottom: 2rem;">
+            <h2>Order Management</h2>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">View and manage all customer orders.</p>
+        </div>
+        <div id="alert-container" class="alert" style="display: none;"></div>
+        <!-- Filters -->
+        <div class="admin-controls">
+            <input type="text" id="order-search" class="form-control search-input" placeholder="Search by order #, customer name, or email...">
+            <select id="type-filter" class="form-control filter-select">
+                <option value="">All Types</option>
+                <option value="physical">Physical</option>
+                <option value="ebook">Ebook</option>
+            </select>
+            <select id="status-filter" class="form-control filter-select">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Processing">Processing</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Refunded">Refunded</option>
+            </select>
+            <select id="payment-filter" class="form-control filter-select">
+                <option value="">All Payments</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Failed">Failed</option>
+            </select>
+        </div>
+        <div class="admin-table-container glass">
+            <table class="admin-table" id="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Type</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-table-body">
+                    <tr><td colspan="9" style="text-align:center;padding:2rem;">Loading orders...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <!-- Order Detail Modal -->
+    <div class="modal" id="order-detail-modal">
+        <div class="modal-content" style="max-width: 750px;">
+            <div class="modal-header">
+                <h3 id="modal-order-title">Order Details</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div id="modal-order-body"></div>
+        </div>
+    </div>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin-orders.js"></script>
+</body>
+</html>

@@ -363,11 +363,13 @@ BEGIN
     SELECT oi.OrderItemID, oi.BookID, oi.FormatID, oi.Quantity, oi.UnitPrice, oi.RentalDays,
            b.Title, b.Author, b.ImageURL,
            pf.FormatName,
-           ISNULL(inv.StockLevel, 0) AS CurrentStock
+           ISNULL(inv.StockLevel, 0) AS CurrentStock,
+           er.DueDate
     FROM OrderItems oi
     INNER JOIN Books b ON oi.BookID = b.BookID
     INNER JOIN PurchaseFormat pf ON oi.FormatID = pf.FormatID
     LEFT JOIN Inventory inv ON inv.BookID = b.BookID
+    LEFT JOIN EbookRentals er ON oi.OrderID = er.OrderID AND oi.BookID = er.BookID
     WHERE oi.OrderID = @OrderID;
 END;
 GO

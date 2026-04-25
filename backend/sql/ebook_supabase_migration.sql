@@ -41,13 +41,14 @@ GO
 CREATE PROCEDURE sp_GetEbookAccess
     @UserID INT,
     @OrderID INT,
-    @BookID INT
+    @BookID INT,
+    @FormatID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
     
     DECLARE @PaymentStatusID INT;
-    DECLARE @FormatID INT;
+    DECLARE @ActualFormatID INT;
     DECLARE @DownloadCount INT;
     DECLARE @MaxDownloads INT;
     DECLARE @DueDate DATETIME2;
@@ -62,11 +63,19 @@ BEGIN
         THROW 50030, 'Payment not completed for this order.', 1;
     END
 
-    -- Get item info
-    SELECT @FormatID = FormatID, @DownloadCount = DownloadCount, @MaxDownloads = MaxDownloads
-    FROM OrderItems WHERE OrderID = @OrderID AND BookID = @BookID;
+    -- Get item info (Use FormatID if provided, otherwise fallback to finding the first match for backward compatibility)
+    IF @FormatID IS NOT NULL
+    BEGIN
+        SELECT @ActualFormatID = FormatID, @DownloadCount = DownloadCount, @MaxDownloads = MaxDownloads
+        FROM OrderItems WHERE OrderID = @OrderID AND BookID = @BookID AND FormatID = @FormatID;
+    END
+    ELSE
+    BEGIN
+        SELECT TOP 1 @ActualFormatID = FormatID, @DownloadCount = DownloadCount, @MaxDownloads = MaxDownloads
+        FROM OrderItems WHERE OrderID = @OrderID AND BookID = @BookID;
+    END
 
-    IF @FormatID IS NULL
+    IF @ActualFormatID IS NULL
     BEGIN
         THROW 50031, 'Book not found in this order.', 1;
     END
@@ -79,7 +88,7 @@ BEGIN
     END
 
     -- Download Logic
-    IF @FormatID = 2 -- Permanent Download
+    IF @ActualFormatID = 2 -- Permanent Download
     BEGIN
         IF @DownloadCount >= @MaxDownloads
         BEGIN
@@ -89,11 +98,11 @@ BEGIN
         -- Increment count
         UPDATE OrderItems 
         SET DownloadCount = DownloadCount + 1 
-        WHERE OrderID = @OrderID AND BookID = @BookID;
+        WHERE OrderID = @OrderID AND BookID = @BookID AND FormatID = 2;
         
         SELECT @SupabasePath AS SupabasePath, 'Download' AS AccessType, @DownloadCount + 1 AS DownloadCount;
     END
-    ELSE IF @FormatID = 3 -- Rental
+    ELSE IF @ActualFormatID = 3 -- Rental
     BEGIN
         SELECT @DueDate = DueDate FROM EbookRentals WHERE OrderID = @OrderID AND BookID = @BookID AND UserID = @UserID;
         

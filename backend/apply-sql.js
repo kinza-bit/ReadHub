@@ -25,7 +25,13 @@ async function runSqlFile() {
         const pool = await sql.connect(config);
         console.log('Connected to DB');
 
-        const sqlFilePath = path.join(__dirname, 'sql', 'update_book_images.sql');
+        const sqlFileArg = process.argv[2];
+        if (!sqlFileArg) {
+            console.error('Please provide a path to a SQL file as an argument.');
+            process.exit(1);
+        }
+        
+        const sqlFilePath = path.resolve(__dirname, '..', sqlFileArg);
         const content = fs.readFileSync(sqlFilePath, 'utf8');
 
         // Split by GO (case insensitive, on its own line)

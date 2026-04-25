@@ -196,36 +196,52 @@ GO
 IF OBJECT_ID('sp_AddNewBook', 'P') IS NOT NULL DROP PROCEDURE sp_AddNewBook;
 GO
 CREATE PROCEDURE sp_AddNewBook
-    @ISBN NVARCHAR(20),
-    @Title NVARCHAR(200),
-    @Author NVARCHAR(100),
+    @ISBN NVARCHAR(50),
+    @Title NVARCHAR(255),
+    @Author NVARCHAR(255),
     @CategoryID INT,
     @Description NVARCHAR(MAX),
     @PhysicalPrice DECIMAL(10,2),
     @EbookPrice DECIMAL(10,2),
     @RentalPricePerDay DECIMAL(10,2),
     @LateFeePerDay DECIMAL(10,2),
-    @ImageURL NVARCHAR(500),
-    @PdfURL NVARCHAR(500),
+    @ImageURL NVARCHAR(255),
+    @PdfURL NVARCHAR(255),
+    @SupabasePath NVARCHAR(255) = NULL,
     @StockLevel INT,
     @LowStockThreshold INT
 AS
 BEGIN
     SET NOCOUNT ON;
-    BEGIN TRANSACTION;
     BEGIN TRY
-        INSERT INTO Books (ISBN, Title, Author, CategoryID, Description, PhysicalPrice, EbookPrice, RentalPricePerDay, LateFeePerDay, ImageURL, PdfURL)
-        VALUES (@ISBN, @Title, @Author, @CategoryID, @Description, @PhysicalPrice, @EbookPrice, @RentalPricePerDay, @LateFeePerDay, @ImageURL, @PdfURL);
-
-        DECLARE @NewBookID INT = SCOPE_IDENTITY();
-
-        INSERT INTO Inventory (BookID, StockLevel, LowStockThreshold, LastRestockDate)
-        VALUES (@NewBookID, @StockLevel, @LowStockThreshold, SYSUTCDATETIME());
-
+        BEGIN TRANSACTION;
+        
+        DECLARE @NewBookID INT;
+        
+        INSERT INTO Books (ISBN, Title, Author, CategoryID, Description, PhysicalPrice, EbookPrice, RentalPricePerDay, LateFeePerDay, ImageURL, PdfURL, SupabasePath)
+        VALUES (@ISBN, @Title, @Author, @CategoryID, @Description, @PhysicalPrice, @EbookPrice, @RentalPricePerDay, @LateFeePerDay, @ImageURL, @PdfURL, @SupabasePath);
+        
+        SET @NewBookID = SCOPE_IDENTITY();
+        
+        -- Update the automatically created Inventory row (if a trigger exists)
+        -- Or insert it if it doesn't exist
+        IF EXISTS (SELECT 1 FROM Inventory WHERE BookID = @NewBookID)
+        BEGIN
+            UPDATE Inventory 
+            SET StockLevel = @StockLevel, LowStockThreshold = @LowStockThreshold, LastRestockDate = GETDATE()
+            WHERE BookID = @NewBookID;
+        END
+        ELSE
+        BEGIN
+            INSERT INTO Inventory (BookID, StockLevel, LowStockThreshold, LastRestockDate)
+            VALUES (@NewBookID, @StockLevel, @LowStockThreshold, GETDATE());
+        END
+        
         COMMIT TRANSACTION;
+        SELECT @NewBookID AS BookID;
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         THROW;
     END CATCH
 END;
@@ -238,20 +254,22 @@ IF OBJECT_ID('sp_UpdateBook', 'P') IS NOT NULL DROP PROCEDURE sp_UpdateBook;
 GO
 CREATE PROCEDURE sp_UpdateBook
     @BookID INT,
-    @Title NVARCHAR(200) = NULL,
-    @Author NVARCHAR(100) = NULL,
-    @ISBN NVARCHAR(20) = NULL,
-    @CategoryID INT = NULL,
-    @Description NVARCHAR(MAX) = NULL,
-    @PhysicalPrice DECIMAL(10,2) = NULL,
-    @EbookPrice DECIMAL(10,2) = NULL,
-    @RentalPricePerDay DECIMAL(10,2) = NULL,
-    @LateFeePerDay DECIMAL(10,2) = NULL,
-    @ImageURL NVARCHAR(500) = NULL,
-    @PdfURL NVARCHAR(500) = NULL
+    @Title NVARCHAR(255),
+    @Author NVARCHAR(255),
+    @ISBN NVARCHAR(50),
+    @CategoryID INT,
+    @Description NVARCHAR(MAX),
+    @PhysicalPrice DECIMAL(10,2),
+    @EbookPrice DECIMAL(10,2),
+    @RentalPricePerDay DECIMAL(10,2),
+    @LateFeePerDay DECIMAL(10,2),
+    @ImageURL NVARCHAR(255),
+    @PdfURL NVARCHAR(255),
+    @SupabasePath NVARCHAR(255) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+    
     UPDATE Books
     SET Title = ISNULL(@Title, Title),
         Author = ISNULL(@Author, Author),
@@ -263,7 +281,8 @@ BEGIN
         RentalPricePerDay = ISNULL(@RentalPricePerDay, RentalPricePerDay),
         LateFeePerDay = ISNULL(@LateFeePerDay, LateFeePerDay),
         ImageURL = ISNULL(@ImageURL, ImageURL),
-        PdfURL = ISNULL(@PdfURL, PdfURL)
+        PdfURL = ISNULL(@PdfURL, PdfURL),
+        SupabasePath = ISNULL(@SupabasePath, SupabasePath)
     WHERE BookID = @BookID;
 END;
 GO

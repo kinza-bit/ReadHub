@@ -28,6 +28,7 @@ const adminUserRoutes      = require('./routes/adminUsers');
 const adminBookRoutes      = require('./routes/adminBooks');
 const adminCategoryRoutes  = require('./routes/adminCategories');
 const adminInventoryRoutes = require('./routes/adminInventory');
+const bookRequestRoutes    = require('./routes/bookRequestRoutes');
 
 // ── Static file paths (for serving uploaded files) ───────────────────────────
 const IMGS_DIR = path.join(__dirname, '..', 'frontend', 'BooksIMG');
@@ -68,6 +69,7 @@ app.use('/api/admin',    adminUserRoutes);      // /api/admin/users/*, /api/admi
 app.use('/api/admin/books',      adminBookRoutes);      // /api/admin/books/*
 app.use('/api/admin/categories', adminCategoryRoutes);  // /api/admin/categories/*
 app.use('/api/admin',    adminInventoryRoutes); // /api/admin/inventory/*, /api/admin/requests
+app.use('/api',          bookRequestRoutes);    // /api/book-request, /api/admin/book-requests
 
 // ── Start server ──────────────────────────────────────────────────────────────
 app.listen(PORT, () => {

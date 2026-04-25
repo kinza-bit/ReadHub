@@ -86,14 +86,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('modal-order-title').textContent = `Order: ${order.OrderNumber}`;
 
-            const itemsHTML = (order.items || []).map(item => `
+            const itemsHTML = (order.items || []).map(item => {
+                const isRental = item.FormatID === 3;
+                const dueDateHtml = isRental && item.DueDate 
+                    ? `<br><small style="color:var(--color-primary)">Due: ${new Date(item.DueDate).toLocaleDateString()}</small>` 
+                    : '';
+                
+                return `
                 <tr>
                     <td>${item.Title}</td>
-                    <td>${item.FormatName}</td>
+                    <td>${item.FormatName} ${dueDateHtml}</td>
                     <td>${item.Quantity}</td>
                     <td>PKR ${parseFloat(item.UnitPrice).toLocaleString()}</td>
                     <td>${item.CurrentStock}</td>
-                </tr>`).join('');
+                </tr>`;
+            }).join('');
 
             modalBody.innerHTML = `
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">

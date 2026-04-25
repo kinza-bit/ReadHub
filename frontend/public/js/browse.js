@@ -181,11 +181,29 @@ document.addEventListener('DOMContentLoaded', () => {
                    </button>`
                 : '';
 
-            // Cart button — only for logged-in users on in-stock physical books
-            const cartBtn = currentUser && hasPhysical && book.PhysicalAvailability === 'Available'
-                ? `<button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="1" title="Add to cart">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                        Add to Cart
+            // Physical Cart button
+            const physicalCartBtn = currentUser && hasPhysical && book.PhysicalAvailability === 'Available'
+                ? `<button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="1" title="Add Physical Book">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Buy Physical
+                   </button>`
+                : '';
+
+            // Ebook Download Cart button
+            const ebookCartBtn = currentUser && hasEbook
+                ? `<button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="2" title="Buy Ebook (Permanent)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Buy Ebook
+                   </button>`
+                : '';
+
+            // Ebook Rent dropdown and button
+            const rentSelectHTML = currentUser && hasEbook
+                ? `<select class="rh-rent-select" id="rent-days-${book.BookID}">
+                     <option value="7">7 Days</option>
+                     <option value="14">14 Days</option>
+                     <option value="30">30 Days</option>
+                   </select>
+                   <button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="3" onclick="this.dataset.rental=document.getElementById('rent-days-${book.BookID}').value" title="Rent Ebook">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Rent
                    </button>`
                 : '';
 
@@ -206,9 +224,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="rh-card-price">${price}</span>
                             ${availability}
                         </div>
-                        <div class="rh-card-actions">
+                        <div class="rh-card-actions" style="flex-wrap: wrap; gap: 0.5rem; justify-content: start;">
                             ${rateBtn}
-                            ${cartBtn}
+                            ${physicalCartBtn}
+                            ${ebookCartBtn}
+                            ${rentSelectHTML ? `<div style="display:flex; gap:0.25rem; align-items:center; width: 100%; margin-top: 0.25rem;">${rentSelectHTML}</div>` : ''}
                         </div>
                     </div>
                 </div>
@@ -347,6 +367,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Please log in to add items to your cart.', 'error');
             return;
         }
+        
+        let rentalDays = null;
+        if (btnEl.dataset.rental) {
+            rentalDays = parseInt(btnEl.dataset.rental);
+        }
+
         const origText = btnEl.innerHTML;
         btnEl.disabled = true;
         btnEl.innerHTML = 'Adding...';
@@ -354,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/cart', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bookId: parseInt(bookId), formatId, quantity: 1 })
+                body: JSON.stringify({ bookId: parseInt(bookId), formatId, quantity: 1, rentalDays })
             });
             if (!res.ok) {
                 const err = await res.json();

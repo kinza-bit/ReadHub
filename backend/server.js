@@ -31,6 +31,7 @@ const adminInventoryRoutes = require('./routes/adminInventory');
 const adminOrderRoutes     = require('./routes/adminOrders');
 const cartRoutes           = require('./routes/cart');
 const bookRequestRoutes    = require('./routes/bookRequestRoutes');
+const ebookRoutes          = require('./routes/ebook');
 
 // ── Static file paths (for serving uploaded files) ───────────────────────────
 const IMGS_DIR = path.join(__dirname, '..', 'frontend', 'BooksIMG');
@@ -65,7 +66,7 @@ app.use('/api',          authRoutes);           // /api/register, /api/login/*, 
 app.use('/api/books',    bookRoutes);           // /api/books, /api/books/search, …
 app.use('/api/categories', categoryRoutes);     // /api/categories, /api/categories/with-counts
 app.use('/api/orders',   orderRoutes);          // /api/orders/buy, /api/orders/rent
-app.use('/api/ebook',    orderRoutes);          // /api/ebook/download/:bookId
+app.use('/api/ebook',    ebookRoutes);          // /api/ebook/access/:orderId/:bookId
 app.use('/api/cart',     cartRoutes);           // /api/cart/*, /api/cart/checkout, /api/cart/orders
 app.use('/api',          profileRoutes);        // /api/profile, /api/user/*, /api/requests
 app.use('/api/admin',    adminUserRoutes);      // /api/admin/users/*, /api/admin/stats
@@ -76,6 +77,9 @@ app.use('/api/admin/orders',     adminOrderRoutes);     // /api/admin/orders/*
 app.use('/api',          bookRequestRoutes);    // /api/book-request, /api/admin/book-requests
 
 // ── Start server ──────────────────────────────────────────────────────────────
+const { startCronJobs } = require('./cron/expiryChecker');
+startCronJobs();
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

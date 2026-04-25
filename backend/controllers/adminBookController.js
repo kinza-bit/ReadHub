@@ -100,6 +100,10 @@ const addBook = async (req, res) => {
                 console.error('Supabase upload error during addBook:', uploadError);
                 throw new Error('Failed to upload PDF to secure storage.');
             }
+
+            // After successful Supabase upload, we can remove the local file
+            // We set pdfUrl to null because we now rely on SupabasePath
+            unlinkOldFile(PDFS_DIR, '/pdfs/' + pdfFile.filename);
         }
 
         const pool = await poolPromise;
@@ -114,13 +118,13 @@ const addBook = async (req, res) => {
             .input('RentalPricePerDay', sql.Decimal(10,2), rentalPricePerDay ? parseFloat(rentalPricePerDay) : null)
             .input('LateFeePerDay',     sql.Decimal(10,2), lateFeePerDay     ? parseFloat(lateFeePerDay)     : 1.00)
             .input('ImageURL',          sql.NVarChar,      imgUrl)
-            .input('PdfURL',            sql.NVarChar,      pdfUrl)
+            .input('PdfURL',            sql.NVarChar,      null) // Set to null since we use Supabase
             .input('SupabasePath',      sql.NVarChar,      supabasePath)
             .input('StockLevel',        sql.INT,           stockLevel        ? parseInt(stockLevel)        : 0)
             .input('LowStockThreshold', sql.INT,           lowStockThreshold ? parseInt(lowStockThreshold) : 5)
             .execute('sp_AddNewBook');
 
-        res.status(201).json({ message: 'Book added successfully.', ImageURL: imgUrl, PdfURL: pdfUrl });
+        res.status(201).json({ message: 'Book added successfully.', ImageURL: imgUrl, PdfURL: null });
     } catch (error) {
         console.error('Error adding book:', error);
         if (coverFile) unlinkOldFile(IMGS_DIR, '/images/' + coverFile.filename);
@@ -180,6 +184,9 @@ const updateBook = async (req, res) => {
                 console.error('Supabase upload error during updateBook:', uploadError);
                 throw new Error('Failed to upload updated PDF to secure storage.');
             }
+
+            // Delete the local file after upload
+            unlinkOldFile(PDFS_DIR, '/pdfs/' + pdfFile.filename);
         }
 
         const pool = await poolPromise;
@@ -195,7 +202,7 @@ const updateBook = async (req, res) => {
             .input('RentalPricePerDay', sql.Decimal(10,2), rentalPricePerDay ? parseFloat(rentalPricePerDay) : null)
             .input('LateFeePerDay',     sql.Decimal(10,2), lateFeePerDay     ? parseFloat(lateFeePerDay)     : null)
             .input('ImageURL',          sql.NVarChar,      finalImgUrl)
-            .input('PdfURL',            sql.NVarChar,      finalPdfUrl)
+            .input('PdfURL',            sql.NVarChar,      pdfFile ? null : existing.PdfURL) // If new upload, set local path to null
             .input('SupabasePath',      sql.NVarChar,      finalSupabasePath)
             .execute('sp_UpdateBook');
 

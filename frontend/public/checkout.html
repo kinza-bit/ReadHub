@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - READhub</title>
+    <meta name="description" content="Complete your purchase on READhub. Enter delivery details and select payment method.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/theme.js"></script>
+</head>
+
+<body class="protected-user">
+    <nav class="navbar glass">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="/dashboard.html" class="brand" style="text-decoration: none;">READhub</a>
+        </div>
+        <div class="nav-links">
+            <a href="/cart.html" style="color: var(--color-text-muted); font-size: 0.9rem; text-decoration: none;">← Back to Cart</a>
+            <div class="theme-toggle-host"></div>
+        </div>
+    </nav>
+
+    <main class="dashboard-container" style="max-width: 1100px;">
+        <div class="rh-page-header">
+            <h1>Secure <span class="headline-gradient-text">Checkout</span></h1>
+            <p class="rh-page-subtitle">Complete your order details below</p>
+        </div>
+
+        <!-- Checkout Steps Indicator -->
+        <div class="rh-checkout-steps">
+            <div class="rh-step active" id="step-1-indicator">
+                <div class="rh-step-num">1</div>
+                <span>Delivery</span>
+            </div>
+            <div class="rh-step-line"></div>
+            <div class="rh-step" id="step-2-indicator">
+                <div class="rh-step-num">2</div>
+                <span>Payment</span>
+            </div>
+            <div class="rh-step-line"></div>
+            <div class="rh-step" id="step-3-indicator">
+                <div class="rh-step-num">3</div>
+                <span>Confirm</span>
+            </div>
+        </div>
+
+        <div class="rh-checkout-layout">
+            <!-- Main Form Area -->
+            <div class="rh-checkout-form-area">
+
+                <!-- Step 1: Delivery Address -->
+                <div class="rh-checkout-step glass" id="step-1">
+                    <h2 class="rh-step-title">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        Delivery Information
+                    </h2>
+                    <form id="delivery-form">
+                        <div class="rh-form-grid">
+                            <div class="form-group">
+                                <label for="shipping-name">Full Name *</label>
+                                <input type="text" id="shipping-name" class="form-control" placeholder="Enter recipient name" required>
+                                <span class="error-message" id="shipping-name-error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="shipping-phone">Phone Number *</label>
+                                <input type="tel" id="shipping-phone" class="form-control" placeholder="e.g., 03001234567" required>
+                                <span class="error-message" id="shipping-phone-error"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="shipping-address">Delivery Address *</label>
+                            <input type="text" id="shipping-address" class="form-control" placeholder="Street address, apartment, suite" required>
+                            <span class="error-message" id="shipping-address-error"></span>
+                        </div>
+                        <div class="rh-form-grid">
+                            <div class="form-group">
+                                <label for="shipping-city">City *</label>
+                                <input type="text" id="shipping-city" class="form-control" placeholder="Enter city name" required>
+                                <span class="error-message" id="shipping-city-error"></span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="next-to-payment" style="margin-top: 1rem;">
+                            Continue to Payment →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 2: Payment Method -->
+                <div class="rh-checkout-step glass" id="step-2" style="display: none;">
+                    <h2 class="rh-step-title">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                        Payment Method
+                    </h2>
+                    <div class="rh-payment-options">
+                        <label class="rh-payment-card glass" id="payment-card-option">
+                            <input type="radio" name="payment-method" value="2" checked>
+                            <div class="rh-payment-card-inner">
+                                <div class="rh-payment-icon">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                </div>
+                                <div>
+                                    <strong>Credit / Debit Card</strong>
+                                    <p>Pay securely with your card</p>
+                                </div>
+                                <div class="rh-payment-check">✓</div>
+                            </div>
+                        </label>
+                        <label class="rh-payment-card glass" id="payment-cod-option">
+                            <input type="radio" name="payment-method" value="1">
+                            <div class="rh-payment-card-inner">
+                                <div class="rh-payment-icon">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                </div>
+                                <div>
+                                    <strong>Cash on Delivery</strong>
+                                    <p>Pay when you receive your order</p>
+                                </div>
+                                <div class="rh-payment-check">✓</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary" id="back-to-delivery" style="flex: 1;">← Back</button>
+                        <button type="button" class="btn btn-primary" id="next-to-confirm" style="flex: 2;">Review Order →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Order Review & Confirm -->
+                <div class="rh-checkout-step glass" id="step-3" style="display: none;">
+                    <h2 class="rh-step-title">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        Review & Confirm
+                    </h2>
+
+                    <div class="rh-review-section">
+                        <h4>Delivery Address</h4>
+                        <div class="rh-review-box" id="review-address"></div>
+                    </div>
+
+                    <div class="rh-review-section">
+                        <h4>Payment Method</h4>
+                        <div class="rh-review-box" id="review-payment"></div>
+                    </div>
+
+                    <div class="rh-review-section">
+                        <h4>Order Items</h4>
+                        <div id="review-items"></div>
+                    </div>
+
+                    <div class="rh-review-section">
+                        <div class="rh-summary-row rh-summary-total" style="font-size: 1.25rem;">
+                            <span>Total Amount</span>
+                            <span id="review-total">PKR 0</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary" id="back-to-payment" style="flex: 1;">← Back</button>
+                        <button type="button" class="btn btn-primary" id="place-order-btn" style="flex: 2;">
+                            🛒 Place Order
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Order Confirmation (shown after successful checkout) -->
+                <div class="rh-order-confirmation glass" id="order-confirmation" style="display: none;">
+                    <div class="rh-confirm-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <h2>Order Placed Successfully! 🎉</h2>
+                    <p class="rh-confirm-subtitle">Thank you for your purchase</p>
+                    <div class="rh-confirm-details glass">
+                        <div class="rh-confirm-row">
+                            <span>Order Number</span>
+                            <strong id="confirm-order-number">—</strong>
+                        </div>
+                        <div class="rh-confirm-row">
+                            <span>Total Amount</span>
+                            <strong id="confirm-total">—</strong>
+                        </div>
+                        <div class="rh-confirm-row">
+                            <span>Payment Method</span>
+                            <strong id="confirm-payment">—</strong>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; justify-content: center;">
+                        <a href="/order-history.html" class="btn btn-primary" style="width: auto; text-decoration: none;">View Order History</a>
+                        <a href="/browse.html" class="btn btn-secondary" style="width: auto; text-decoration: none;">Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary Sidebar -->
+            <div class="rh-checkout-sidebar glass" id="checkout-sidebar">
+                <h3>Your Order</h3>
+                <div id="checkout-items-list" class="rh-checkout-items"></div>
+                <div class="rh-summary-divider"></div>
+                <div class="rh-summary-row rh-summary-total">
+                    <span>Total</span>
+                    <span id="checkout-total">PKR 0</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="rh-toast" id="toast-notification">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/checkout.js"></script>
+</body>
+
+</html>

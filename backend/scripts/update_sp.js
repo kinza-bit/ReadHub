@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require('./backend/db');
+const { sql, poolPromise } = require('../db');
 
 async function test() {
   try {

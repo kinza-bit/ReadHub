@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require('./backend/db');
+const { sql, poolPromise } = require('../db');
 async function check() {
   const pool = await poolPromise;
   const result = await pool.request().query("SELECT object_definition(object_id('sp_GetUserLibrary')) AS def");

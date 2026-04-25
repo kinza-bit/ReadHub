@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { sql, poolPromise } = require('./backend/db');
+const { sql, poolPromise } = require('../db');
 
 async function applyMigration() {
   try {

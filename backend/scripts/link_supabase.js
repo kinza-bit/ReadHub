@@ -1,5 +1,5 @@
-const supabase = require('./backend/supabaseClient');
-const { sql, poolPromise } = require('./backend/db');
+const supabase = require('../supabaseClient');
+const { sql, poolPromise } = require('../db');
 
 async function linkDatabaseToSupabase() {
     try {

@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require('./backend/db');
+const { sql, poolPromise } = require('../db');
 async function test() {
   const pool = await poolPromise;
   const result = await pool.request().query("SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE'");

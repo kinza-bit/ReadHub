@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require('./backend/db');
+const { sql, poolPromise } = require('../db');
 
 async function updateBookSPs() {
   const pool = await poolPromise;

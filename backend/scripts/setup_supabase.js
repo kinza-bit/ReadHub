@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const supabase = require('./backend/supabaseClient');
-const { sql, poolPromise } = require('./backend/db');
+const supabase = require('../supabaseClient');
+const { sql, poolPromise } = require('../db');
 
 async function setupSupabase() {
     try {

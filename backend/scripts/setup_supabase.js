@@ -24,9 +24,11 @@ async function setupSupabase() {
         }
 
         // 2. Upload files from local BooksPDF folder
-        const pdfDir = path.join(__dirname, 'frontend', 'BooksPDF');
+        const pdfDir = path.join(__dirname, '..', '..', 'frontend', 'BooksPDF');
         if (!fs.existsSync(pdfDir)) {
             console.log('No local BooksPDF directory found. Skipping upload.');
+            const poolToClose = await poolPromise;
+            if (poolToClose) await poolToClose.close();
             process.exit(0);
         }
 
@@ -68,9 +70,13 @@ async function setupSupabase() {
         }
 
         console.log('Supabase setup and upload complete.');
+        const poolToClose = await poolPromise;
+        if (poolToClose) await poolToClose.close();
         process.exit(0);
     } catch (err) {
         console.error('Setup failed:', err);
+        const poolToClose = await poolPromise;
+        if (poolToClose) await poolToClose.close();
         process.exit(1);
     }
 }

@@ -79,6 +79,26 @@ const getPurchases = async (req, res) => {
     }
 };
 
+// ─── GET /api/user/rentals — active rentals for current user ──────────────────
+const getRentals = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .query(`
+                SELECT er.DueDate, b.Title, b.Author, b.ImageURL, b.BookID
+                FROM EbookRentals er
+                JOIN Books b ON er.BookID = b.BookID
+                WHERE er.UserID = @UserID AND er.ActualReturnDate IS NULL AND er.DueDate > SYSUTCDATETIME()
+                ORDER BY er.DueDate ASC
+            `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Rentals fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch rentals.' });
+    }
+};
+
 // ─── GET /api/user/wishlist — wishlist for current user ──────────────────────
 const getWishlist = async (req, res) => {
     try {
@@ -186,6 +206,7 @@ const getRequests = async (req, res) => {
 module.exports = {
     getProfile, updateProfile,
     getPurchases,
+    getRentals,
     getWishlist, addToWishlist, removeFromWishlist,
     submitRequest, getRequests,
 };

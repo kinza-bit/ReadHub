@@ -65,7 +65,7 @@ async function setupSupabase() {
                 .query(`
                     UPDATE Books 
                     SET SupabasePath = @SupabasePath 
-                    WHERE EbookURL LIKE @FileName
+                    WHERE PdfURL LIKE @FileName
                 `);
         }
 

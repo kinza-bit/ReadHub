@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data.isAuthenticated || data.user.role !== 'Admin') {
                 window.location.href = '/admin-login.html';
             } else {
-                document.getElementById('admin-name').textContent = data.user.name;
+                const nameEl = document.getElementById('user-name-display') || document.getElementById('admin-name');
+                if (nameEl) nameEl.textContent = data.user.name;
             }
         } catch (error) {
             console.error('Auth check failed:', error);
@@ -31,12 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    logoutBtn.addEventListener('click', async () => {
-        const response = await fetch('/api/logout', { method: 'POST' });
-        if (response.ok) {
-            window.location.href = '/index.html';
-        }
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            const response = await fetch('/api/logout', { method: 'POST' });
+            if (response.ok) {
+                window.location.href = '/index.html';
+            }
+        });
+    }
 
     // --- User Loading & Rendering ---
     async function loadUsers() {

@@ -7,6 +7,8 @@
     <title>Admin Dashboard - READhub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/admin-shell.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="/js/theme.js"></script>
     <style>
         .brand span {
@@ -16,124 +18,256 @@
             vertical-align: super;
             margin-left: 0.2rem;
         }
+
+        /* Adjustments for stats to match soft minimalist */
+        .overview-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card-soft {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .stat-icon i {
+            width: 28px;
+            height: 28px;
+        }
+
+        .stat-details h3 {
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-details .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .action-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            text-decoration: none;
+            gap: 12px;
+            color: var(--color-text);
+        }
+
+        .action-card i {
+            color: var(--color-primary);
+            width: 32px;
+            height: 32px;
+        }
     </style>
 </head>
-<!-- The class protected-admin triggers the auth check in auth.js -->
 
 <body class="protected-admin">
-    <!-- Sidebar -->
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="brand">READhub<span>Admin</span></div>
-            <button class="sidebar-close" id="sidebar-close">&times;</button>
-        </div>
-        <nav class="sidebar-nav">
-            <a href="/admin-dashboard.html" class="sidebar-link" style="color: var(--primary)">Dashboard</a>
-            <a href="/admin-books.html" class="sidebar-link">Manage Books</a>
-            <a href="/admin-categories.html" class="sidebar-link">Manage Categories</a>
-            <a href="/admin-users.html" class="sidebar-link">Manage Users</a>
-            <a href="/admin-orders.html" class="sidebar-link">Manage Orders</a>
-            <a href="/admin-book-requests.html" class="sidebar-link">Book Requests</a>
-            <a href="/browse.html" class="sidebar-link">Browse Store</a>
-            <a href="/login.html" class="sidebar-link">User Login</a>
-        </nav>
-    </aside>
-
-    <nav class="navbar glass" style="border-bottom-color: rgba(239, 68, 68, 0.3);">
-        <div style="display: flex; align-items: center;">
-            <div class="hamburger-icon" id="hamburger-menu">
-                <span></span><span></span><span></span>
+    <div class="admin-shell">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="brand">READhub<span>Admin</span></div>
             </div>
-            <div class="brand">READhub<span>Admin</span></div>
-        </div>
-        <div class="nav-links">
-            <span>Logged in as: <strong id="user-name-display" style="color: #ef4444;">Admin</strong></span>
-            <div class="theme-toggle-host"></div>
-            <button id="logout-btn" class="logoutButton">
-                <span class="button-text">Log Out</span>
-                <svg class="doorway" viewBox="0 0 16 16">
-                    <path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" />
-                </svg>
-                <svg class="door" viewBox="0 0 16 16">
-                    <path d="M3 1H13V15H3V1Z" />
-                    <circle cx="10" cy="8" r="1.2" fill="#fff" />
-                </svg>
-                <svg class="figure" viewBox="0 0 16 16">
-                    <circle cx="8" cy="3" r="2.5" />
-                    <path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" />
-                </svg>
-            </button>
-        </div>
-    </nav>
+            
+            <nav class="admin-sidebar-nav">
+                <a href="/admin-dashboard.html" class="admin-nav-item active">
+                    <i data-lucide="layout-dashboard"></i>
+                    Dashboard
+                </a>
+                <a href="/admin-books.html" class="admin-nav-item">
+                    <i data-lucide="book-open"></i>
+                    Books
+                </a>
+                <a href="/admin-users.html" class="admin-nav-item">
+                    <i data-lucide="users"></i>
+                    Manage Users
+                </a>
+                <a href="/admin-orders.html" class="admin-nav-item">
+                    <i data-lucide="shopping-bag"></i>
+                    Manage Orders
+                </a>
+                <a href="/admin-book-requests.html" class="admin-nav-item">
+                    <i data-lucide="bell"></i>
+                    Manage Requests
+                </a>
+                <a href="/admin-categories.html" class="admin-nav-item">
+                    <i data-lucide="grid"></i>
+                    Manage Categories
+                </a>
+            </nav>
 
-    <main class="dashboard-container">
-
-        <div style="margin-bottom: 2rem;">
-            <h2>Platform Management Panel</h2>
-            <p style="color: var(--text-muted); margin-top: 0.5rem;">System overview and administrative controls.</p>
-        </div>
-
-        <div class="overview-cards">
-            <div class="stat-card glass" style="border-top: 3px solid var(--primary);">
-                <h3>Total Users</h3>
-                <div class="value" id="stat-total-users">—</div>
+            <!-- Bottom Profile Section -->
+            <div class="admin-profile">
+                <div class="profile-avatar">
+                    <i data-lucide="user"></i>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-name" id="user-name-display">Admin User</div>
+                    <div class="profile-role">System Administrator</div>
+                </div>
             </div>
-            <div class="stat-card glass" style="border-top: 3px solid var(--success);">
-                <h3>Books in Catalog</h3>
-                <div class="value" id="stat-total-books">—</div>
-            </div>
-            <div class="stat-card glass" style="border-top: 3px solid var(--error);">
-                <h3>Total Orders</h3>
-                <div class="value" id="stat-total-orders">—</div>
-            </div>
-        </div>
+        </aside>
 
-        <div class="glass" style="margin-top: 3rem; padding: 2rem; border-radius: 1rem;">
-            <h3>Quick Actions</h3>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-                <a href="/admin-books.html" class="btn btn-primary" style="text-decoration: none;">Manage Books</a>
-                <a href="/admin-categories.html" class="btn btn-primary" style="text-decoration: none;">Manage Categories</a>
-                <a href="/admin-users.html" class="btn btn-primary" style="text-decoration: none;">Manage Users</a>
-                <a href="/admin-orders.html" class="btn btn-primary" style="text-decoration: none;">Manage Orders</a>
-                <a href="/admin-book-requests.html" class="btn btn-primary" style="text-decoration: none;">Book Requests</a>
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Top Header -->
+            <header class="admin-header">
+                <div>
+                    <!-- Hamburger for mobile (optional) -->
+                    <div class="hamburger-icon" id="hamburger-menu" style="display: none;">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+                
+                <div class="admin-header-actions">
+                    <div class="theme-toggle-host"></div>
+                    <button id="logout-btn" class="logoutButton">
+                        <span class="button-text">Log Out</span>
+                        <svg class="doorway" viewBox="0 0 16 16">
+                            <path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" />
+                        </svg>
+                        <svg class="door" viewBox="0 0 16 16">
+                            <path d="M3 1H13V15H3V1Z" />
+                            <circle cx="10" cy="8" r="1.2" fill="#fff" />
+                        </svg>
+                        <svg class="figure" viewBox="0 0 16 16">
+                            <circle cx="8" cy="3" r="2.5" />
+                            <path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="admin-content">
+                <div style="margin-bottom: 2rem;">
+                    <h2>Platform Overview</h2>
+                    <p>Welcome back! Here's what's happening with your store today.</p>
+                </div>
+
+                <div class="overview-cards">
+                    <div class="soft-card stat-card-soft">
+                        <div class="stat-icon" style="background: var(--accent-gradient);">
+                            <i data-lucide="users"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Total Users</h3>
+                            <div class="value" id="stat-total-users">—</div>
+                        </div>
+                    </div>
+                    
+                    <div class="soft-card stat-card-soft">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <i data-lucide="book-open"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Books in Catalog</h3>
+                            <div class="value" id="stat-total-books">—</div>
+                        </div>
+                    </div>
+
+                    <div class="soft-card stat-card-soft">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                            <i data-lucide="shopping-bag"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Total Orders</h3>
+                            <div class="value" id="stat-total-orders">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="soft-card" style="margin-top: 2.5rem;">
+                    <h3>Quick Actions</h3>
+                    <div class="quick-actions-grid">
+                        <a href="/admin-books.html" class="soft-card action-card admin-nav-item">
+                            <i data-lucide="book-open"></i>
+                            <span style="font-weight: 500;">Add New Book</span>
+                        </a>
+                        <a href="/admin-users.html" class="soft-card action-card admin-nav-item">
+                            <i data-lucide="users"></i>
+                            <span style="font-weight: 500;">Manage Users</span>
+                        </a>
+                        <a href="/admin-orders.html" class="soft-card action-card admin-nav-item">
+                            <i data-lucide="truck"></i>
+                            <span style="font-weight: 500;">View Orders</span>
+                        </a>
+                        <a href="/admin-book-requests.html" class="soft-card action-card admin-nav-item">
+                            <i data-lucide="message-square-plus"></i>
+                            <span style="font-weight: 500;">Review Requests</span>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-    </main>
-
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
     <script src="/js/auth.js"></script>
+    <script src="/js/admin-app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const hamburger = document.getElementById('hamburger-menu');
-            const closeBtn = document.getElementById('sidebar-close');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-            }
-
-            if (hamburger) hamburger.addEventListener('click', toggleSidebar);
-            if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
-            if (overlay) overlay.addEventListener('click', toggleSidebar);
-
             // Load admin stats
             async function loadStats() {
                 try {
                     const res = await fetch('/api/admin/stats');
                     if (!res.ok) throw new Error('Failed to load stats');
                     const data = await res.json();
-                    document.getElementById('stat-total-users').textContent = data.totalUsers;
-                    document.getElementById('stat-total-books').textContent = data.totalBooks;
-                    document.getElementById('stat-total-orders').textContent = data.totalOrders;
+                    const usersEl = document.getElementById('stat-total-users');
+                    const booksEl = document.getElementById('stat-total-books');
+                    const ordersEl = document.getElementById('stat-total-orders');
+                    
+                    if (usersEl) usersEl.textContent = data.totalUsers;
+                    if (booksEl) booksEl.textContent = data.totalBooks;
+                    if (ordersEl) ordersEl.textContent = data.totalOrders;
                 } catch (err) {
                     console.error('Stats error:', err);
                 }
             }
 
             loadStats();
+
+            // Mobile sidebar toggle
+            const hamburger = document.getElementById('hamburger-menu');
+            const sidebar = document.getElementById('admin-sidebar');
+            
+            if (window.innerWidth <= 1024 && hamburger) {
+                hamburger.style.display = 'block';
+                hamburger.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+            }
         });
     </script>
 </body>

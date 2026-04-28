@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.getElementById('sidebar-close');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
-    function toggleSidebar() { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
+    function toggleSidebar() { if (sidebar) sidebar.classList.toggle('active'); if (overlay) overlay.classList.toggle('active'); }
     if (hamburger) hamburger.addEventListener('click', toggleSidebar);
     if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
     if (overlay) overlay.addEventListener('click', toggleSidebar);

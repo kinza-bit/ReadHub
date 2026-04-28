@@ -1,0 +1,184 @@
+/* Admin App Shell - Soft Minimalist */
+.admin-shell {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-gradient);
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Sidebar */
+.admin-sidebar {
+    width: 280px;
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    z-index: 100;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+    transition: transform 0.3s ease;
+}
+
+.admin-sidebar-header {
+    margin-bottom: 40px;
+    padding: 0 12px;
+}
+
+.admin-sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: 20px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.admin-nav-item i {
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.5px;
+}
+
+.admin-nav-item:hover {
+    background: var(--color-surface);
+    color: var(--color-text);
+    transform: translateX(4px);
+}
+
+.admin-nav-item.active {
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .admin-nav-item.active {
+    background: rgba(168, 85, 247, 0.12);
+}
+
+/* Profile Section */
+.admin-profile {
+    margin-top: auto;
+    padding: 16px;
+    background: var(--color-surface);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.profile-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.profile-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.profile-role {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+/* Main Area */
+.admin-main {
+    flex: 1;
+    margin-left: 280px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    min-width: 0; /* Prevents flex items from pushing width */
+    overflow-x: hidden;
+}
+
+.admin-header {
+    height: 80px;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+}
+
+.admin-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.admin-content {
+    flex: 1;
+    padding: 0 40px 40px 40px;
+    max-width: 1400px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Soft Minimalist Cards */
+.soft-card {
+    background: var(--color-bg);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.soft-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+    }
+    .admin-sidebar.open {
+        transform: translateX(0);
+    }
+    .admin-main {
+        margin-left: 0;
+    }
+    .admin-header {
+        padding: 0 20px;
+    }
+    .admin-content {
+        padding: 0 20px 20px 20px;
+    }
+}

@@ -18,6 +18,7 @@ router.get('/category/:categoryId',    books.getBooksByCategory);
 router.get('/:id',                     books.getBookById);
 
 // User-protected rating — requires active Customer session
-router.post('/:id/rate', requireUserAuth, books.rateBook);
+router.post('/:id/rate',    requireUserAuth, books.rateBook);
+router.get('/:id/reviews',                   books.getBookReviews);
 
 module.exports = router;

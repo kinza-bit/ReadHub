@@ -197,6 +197,10 @@ const checkAuth = async (requiredRole) => {
             window.location.href = 'login.html';
             return null;
         }
+
+        // Global Logout Button Visibility
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.style.display = 'inline-flex';
         
         if (requiredRole && data.user.role !== requiredRole) {
             window.location.href = data.user.role === 'Admin' ? 'admin-dashboard.html' : 'dashboard.html';

@@ -145,7 +145,7 @@ const getCategoriesWithCounts = async (req, res) => {
 // ─── POST /api/books/:id/rate — submit a 1–5 star rating (user only) ─────────
 const rateBook = async (req, res) => {
     try {
-        const { rating } = req.body;
+        const { rating, review } = req.body;
         if (!rating || rating < 1 || rating > 5) {
             return res.status(400).json({ error: 'Rating must be an integer between 1 and 5.' });
         }
@@ -157,6 +157,7 @@ const rateBook = async (req, res) => {
             .input('UserID', sql.INT, req.session.userId)
             .input('BookID', sql.INT, req.params.id)
             .input('Rating', sql.INT, rating)
+            .input('Review', sql.NVarChar, review || null)
             .execute('sp_RateBook');
 
         res.json({ message: 'Rating submitted successfully.' });
@@ -169,4 +170,21 @@ const rateBook = async (req, res) => {
     }
 };
 
-module.exports = { getBooks, searchBooks, getBooksByCategory, getBookById, getPopularBooks, getCategories, getCategoriesWithCounts, rateBook };
+// ─── GET /api/books/:id/reviews — fetch all reviews for a book ───────────────
+const getBookReviews = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        const result = await pool.request()
+            .input('BookID', sql.INT, req.params.id)
+            .execute('sp_GetBookReviews');
+
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        res.status(500).json({ error: 'Failed to fetch reviews.' });
+    }
+};
+
+module.exports = { getBooks, searchBooks, getBooksByCategory, getBookById, getPopularBooks, getCategories, getCategoriesWithCounts, rateBook, getBookReviews };

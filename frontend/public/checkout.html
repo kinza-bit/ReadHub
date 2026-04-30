@@ -359,12 +359,28 @@ label {
 <!-- ── NAVBAR ── -->
 <nav class="navbar">
   <div class="nav-left">
+    <div class="hamburger-container">
+      <button class="hamburger-btn" id="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('show')" aria-label="Menu">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none">
+          <line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="14" x2="21" y2="14"/>
+        </svg>
+      </button>
+      <div class="hamburger-menu">
+        <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
+        <a href="/browse.html" class="dropdown-item">Browse Books</a>
+        <a href="/library.html" class="dropdown-item">My Library</a>
+        <a href="/cart.html" class="dropdown-item">My Cart</a>
+        <a href="/order-history.html" class="dropdown-item">Order History</a>
+        <a href="/profile.html" class="dropdown-item">My Profile</a>
+        <a href="/book-request.html" class="dropdown-item">Request a Book</a>
+      </div>
+    </div>
     <a href="/dashboard.html" class="brand">READhub</a>
   </div>
   <div class="nav-right">
-    <a href="/cart.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none; margin-right:1rem;">← Back to Cart</a>
+    <a href="/cart.html" class="nav-link">← Back to Cart</a>
     <div class="theme-toggle-host"></div>
-    <button id="logout-btn" class="logoutButton">
+    <button id="logout-btn" class="logoutButton" style="display: none;">
       <span class="button-text">Log Out</span>
       <svg class="doorway" viewBox="0 0 16 16"><path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" /></svg>
       <svg class="door" viewBox="0 0 16 16"><path d="M3 1H13V15H3V1Z" /><circle cx="10" cy="8" r="1.2" fill="#fff" /></svg>

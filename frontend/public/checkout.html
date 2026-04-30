@@ -1,108 +1,459 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - READhub</title>
     <meta name="description" content="Complete your purchase on READhub. Enter delivery details and select payment method.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/theme.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg-prism: #0F0A1A;
+  --surface: rgba(30, 20, 64, 0.5);
+  --surface-hover: rgba(30, 20, 64, 0.8);
+  --border: rgba(168, 85, 247, 0.2);
+  --border-bright: rgba(168, 85, 247, 0.35);
+  --text: #F3F0FA;
+  --text-muted: #A99CC0;
+  --text-dim: rgba(169, 156, 192, 0.3);
+  --prism-1: #A855F7;
+  --prism-2: #9333EA;
+  --prism-3: #EC4899;
+  --prism-4: #34d399;
+  --prism-5: #fb923c;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --nav-bg: rgba(15, 10, 26, 0.85);
+  --dash-bg-gradient: linear-gradient(135deg, #0F0A1A 0%, #1A1035 40%, #2D1B69 100%);
+  --brand-gradient: linear-gradient(135deg, #c4b5fd, #7dd3fc, #f9a8d4);
+  --facet-opacity: 0.028;
+  --ray-opacity: 0.18;
+}
+
+[data-theme="light"] {
+  --bg-prism: #FFFFFF;
+  --surface: #F3F0FA;
+  --surface-hover: #EDE8F7;
+  --border: rgba(124, 58, 237, 0.15);
+  --border-bright: rgba(124, 58, 237, 0.25);
+  --text: #0F0A1A;
+  --text-muted: #3D3558;
+  --text-dim: #6B6080;
+  --prism-1: #7C3AED;
+  --prism-2: #8B5CF6;
+  --prism-3: #D946EF;
+  --nav-bg: rgba(243, 240, 250, 0.92);
+  --dash-bg-gradient: linear-gradient(135deg, #FFFFFF 0%, #F3F0FA 40%, #EDE8F7 100%);
+  --brand-gradient: linear-gradient(135deg, #7C3AED, #D946EF);
+  --facet-opacity: 0.012;
+  --ray-opacity: 0.06;
+}
+
+html{background:var(--bg-prism);color:var(--text)}
+body{
+  font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:300;
+  line-height:1.6;min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── AMBIENT BACKGROUND ── */
+.bg-scene{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background: var(--dash-bg-gradient);
+}
+.facets{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.facet{position:absolute;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)}
+.facet-a{
+  width:440px;height:440px;top:-120px;right:-100px;
+  background:rgba(167,139,250,var(--facet-opacity));
+  border:1px solid rgba(167,139,250,0.07);
+  animation:spin 32s linear infinite;
+}
+.facet-b{
+  width:320px;height:320px;bottom:-90px;left:-80px;
+  background:rgba(56,189,248,calc(var(--facet-opacity) * 0.8));
+  border:1px solid rgba(56,189,248,0.06);
+  animation:spin 44s linear infinite reverse;
+}
+.facet-c{
+  width:560px;height:560px;top:38%;left:28%;
+  background:rgba(244,114,182,calc(var(--facet-opacity) * 0.5));
+  border:1px solid rgba(244,114,182,0.04);
+  animation:spin 60s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.prism-ray{
+  position:fixed;width:1px;top:0;bottom:0;z-index:0;
+  background:linear-gradient(to bottom,transparent 0%,rgba(167,139,250,var(--ray-opacity)) 30%,rgba(56,189,248,calc(var(--ray-opacity) * 0.6)) 60%,transparent 100%);
+  filter:blur(1px);pointer-events:none;
+  transition:left 1s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.cursor-glow{
+  position:fixed;
+  width:350px;height:350px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(167,139,250,0.07) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+  transform:translate(-50%,-50%);
+  transition:left 0.12s ease-out,top 0.12s ease-out;
+}
+
+/* ── NAVBAR ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 62px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.navbar::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: var(--prism-1); opacity: 0.2; pointer-events: none;
+}
+.nav-left{display:flex;align-items:center;gap:1.25rem;position:relative;z-index:1}
+.brand{
+  font-family:'DM Serif Display',serif;font-style:italic;
+  font-size:1.4rem;letter-spacing:-0.02em;text-decoration:none;
+  background: var(--brand-gradient);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.nav-right{display:flex;align-items:center;gap:1rem;position:relative;z-index:1}
+.nav-link{
+  color:var(--text-muted);text-decoration:none;
+  font-size:13px;font-weight:400;letter-spacing:0.01em;
+  transition:color 0.15s;
+}
+.nav-link:hover{color:var(--text);}
+
+.logoutButton {
+  --background: var(--prism-1);
+  --background-hover: var(--prism-2);
+  --color: #ffffff;
+  --icon-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  border: none;
+  background: var(--background);
+  color: var(--color);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+  font-size: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  min-width: 130px;
+}
+.logoutButton:hover {
+  background: var(--background-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.logoutButton .button-text {
+  z-index: 10;
+  position: relative;
+  margin-right: 2.2rem;
+  transition: transform 0.3s ease, opacity 0.2s;
+}
+.logoutButton:hover .button-text { transform: translateX(-3px); }
+.logoutButton.logging-out .button-text { opacity: 0.5; transform: translateX(-5px); }
+.logoutButton svg {
+  display: block;
+  position: absolute;
+  fill: var(--icon-color);
+  right: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.3s ease;
+}
+.logoutButton .doorway { width: 18px; height: 22px; opacity: 0.9; z-index: 1; }
+.logoutButton .door {
+  width: 14px; height: 18px; right: 1.2rem;
+  transform-origin: 0% 50%;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+.logoutButton:hover .door { transform: translateY(-50%) rotateY(-35deg); }
+.logoutButton.logging-out .door { transform: translateY(-50%) rotateY(0deg); transition-delay: 0.5s; }
+.logoutButton .figure { width: 10px; height: 14px; right: 2.4rem; z-index: 4; opacity: 1; transition: opacity 0.2s; }
+.logoutButton.logging-out .figure { animation: walkThrough 0.6s ease-in-out forwards; }
+@keyframes walkThrough {
+  0%   { transform: translateY(-50%) translateX(0); }
+  30%  { transform: translateY(-55%) translateX(10px); }
+  60%  { transform: translateY(-50%) translateX(20px); }
+  100% { transform: translateY(-50%) translateX(32px); opacity: 0; }
+}
+
+/* ── MAIN ── */
+main {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+}
+
+/* ── HEADER ── */
+.dash-header { margin-bottom: 2.5rem; }
+.dash-header h1 {
+  font-family:'DM Serif Display',serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 400; letter-spacing: -0.03em;
+  line-height: 1.2; margin-bottom: 0.5rem;
+  font-style:italic;
+  background:linear-gradient(135deg,#e8e4f8 20%,#c4b5fd 55%,#7dd3fc 90%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.dash-header p { color: var(--text-muted); font-size: 15px; }
+
+.prism-divider {
+  height: 1px; margin: 2rem 0;
+  background: linear-gradient(90deg, transparent, var(--prism-1), var(--prism-2), transparent);
+  opacity: 0.3;
+}
+
+/* ── CARDS ── */
+.gem-card {
+  position: relative; overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--c-accent-border, var(--border));
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.3s;
+}
+.gem-card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+}
+.gem-shimmer {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%);
+  transition: opacity 0.3s;
+}
+.facet-corner {
+  position: absolute; top: 0; right: 0;
+  width: 40px; height: 40px;
+  background: var(--c-accent, var(--prism-1));
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+  opacity: 0.15;
+}
+
+/* ── BUTTONS ── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;
+  padding: 0.65rem 1.5rem; border: none; border-radius: 20px; cursor: pointer;
+  background: linear-gradient(135deg, var(--prism-1), var(--prism-2));
+  color: #fff; font-size: 13px; font-weight: 500; letter-spacing: 0.02em;
+  text-decoration: none; transition: opacity 0.15s, transform 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-2px); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;
+  padding: 0.65rem 1.5rem; border: 1px solid var(--border); border-radius: 20px; cursor: pointer;
+  background: rgba(255,255,255,0.05); color: var(--text); font-size: 13px; font-weight: 500; letter-spacing: 0.02em;
+  text-decoration: none; transition: background 0.15s, border-color 0.15s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--prism-2); }
+
+/* ── FORMS & INPUTS ── */
+input, textarea, select {
+  width: 100%; padding: 0.7rem 1rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  transition: border-color 0.2s;
+  outline: none;
+  margin-bottom: 1rem;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--prism-1);
+  box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+}
+label {
+  display: block; font-size: 12px; font-weight: 500;
+  color: var(--text-muted); letter-spacing: 0.04em;
+  text-transform: uppercase; margin-bottom: 0.4rem;
+}
+
+/* ── CHECKOUT SPECIFIC ── */
+.rh-checkout-steps {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;
+  background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border);
+}
+.rh-step {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: var(--text-muted);
+  font-size: 13px; font-weight: 500; transition: color 0.2s;
+}
+.rh-step.active { color: var(--prism-1); }
+.rh-step.completed { color: var(--prism-4); }
+.rh-step-num {
+  width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+  transition: all 0.2s;
+}
+.rh-step.active .rh-step-num { background: var(--prism-1); color: #fff; border-color: var(--prism-1); box-shadow: 0 0 16px rgba(168,85,247,0.4); }
+.rh-step.completed .rh-step-num { background: var(--prism-4); color: #fff; border-color: var(--prism-4); }
+.rh-step-line {
+  flex: 1; height: 2px; background: rgba(255,255,255,0.05); margin: 0 1rem; position: relative; top: -10px;
+}
+.rh-checkout-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start; }
+.rh-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.rh-payment-options { display: flex; flex-direction: column; gap: 1rem; }
+.rh-payment-card {
+  display: flex; align-items: center; padding: 1.25rem; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; gap: 1rem;
+}
+.rh-payment-card:hover { border-color: var(--border-bright); background: var(--surface-hover); }
+.rh-payment-card input[type="radio"] { display: none; }
+.rh-payment-card input[type="radio"]:checked + .rh-payment-card-inner { border-color: var(--prism-1); }
+.rh-payment-card-inner {
+  display: flex; align-items: center; width: 100%; justify-content: space-between;
+}
+.rh-payment-icon {
+  width: 48px; height: 48px; background: rgba(168,85,247,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--prism-1); margin-right: 1rem;
+}
+.rh-payment-card-inner strong { color: var(--text); font-size: 15px; display: block; margin-bottom: 0.2rem; }
+.rh-payment-card-inner p { color: var(--text-muted); font-size: 13px; margin: 0; }
+.rh-payment-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.2s; font-size: 12px; }
+.rh-payment-card input[type="radio"]:checked ~ * .rh-payment-check { background: var(--prism-1); border-color: var(--prism-1); color: #fff; }
+
+.rh-review-section { margin-bottom: 1.5rem; }
+.rh-review-section h4 { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+.rh-review-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-sm); font-size: 14px; line-height: 1.5; }
+.rh-summary-row { display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-muted); font-size: 14px; }
+.rh-summary-divider { height: 1px; background: var(--border); margin: 1rem 0; }
+.rh-summary-total { color: var(--text); font-weight: 600; font-size: 16px; }
+.rh-step-title { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+
+.error-message { color: var(--prism-3); font-size: 12px; display: block; margin-top: -0.5rem; margin-bottom: 1rem; }
+
+@media (max-width: 768px) {
+  .rh-checkout-layout { grid-template-columns: 1fr; }
+  .rh-form-grid { grid-template-columns: 1fr; }
+  main { padding: 2rem 1.25rem 4rem; }
+}
+</style>
 </head>
 
 <body class="protected-user">
-    <nav class="navbar glass">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="/dashboard.html" class="brand" style="text-decoration: none;">READhub</a>
-        </div>
-        <div class="nav-links">
-            <a href="/cart.html" style="color: var(--color-text-muted); font-size: 0.9rem; text-decoration: none;">← Back to Cart</a>
-            <div class="theme-toggle-host"></div>
-            <button id="logout-btn" class="logoutButton">
-                <span class="button-text">Log Out</span>
-                <svg class="doorway" viewBox="0 0 16 16"><path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" /></svg>
-                <svg class="door" viewBox="0 0 16 16"><path d="M3 1H13V15H3V1Z" /><circle cx="10" cy="8" r="1.2" fill="#fff" /></svg>
-                <svg class="figure" viewBox="0 0 16 16"><circle cx="8" cy="3" r="2.5" /><path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" /></svg>
-            </button>
-        </div>
-    </nav>
 
-    <main class="dashboard-container" style="max-width: 1100px;">
-        <div class="rh-page-header">
-            <h1>Secure <span class="headline-gradient-text">Checkout</span></h1>
-            <p class="rh-page-subtitle">Complete your order details below</p>
+<!-- Ambient layers -->
+<div class="bg-scene"></div>
+<div class="facets">
+  <div class="facet facet-a"></div>
+  <div class="facet facet-b"></div>
+  <div class="facet facet-c"></div>
+</div>
+<div class="prism-ray" id="prism-ray" style="left:50%"></div>
+<div class="cursor-glow" id="cursor-glow" style="left:-500px;top:-500px"></div>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/dashboard.html" class="brand">READhub</a>
+  </div>
+  <div class="nav-right">
+    <a href="/cart.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none; margin-right:1rem;">← Back to Cart</a>
+    <div class="theme-toggle-host"></div>
+    <button id="logout-btn" class="logoutButton">
+      <span class="button-text">Log Out</span>
+      <svg class="doorway" viewBox="0 0 16 16"><path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" /></svg>
+      <svg class="door" viewBox="0 0 16 16"><path d="M3 1H13V15H3V1Z" /><circle cx="10" cy="8" r="1.2" fill="#fff" /></svg>
+      <svg class="figure" viewBox="0 0 16 16"><circle cx="8" cy="3" r="2.5" /><path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" /></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<main>
+    <div class="dash-header">
+        <h1>Secure <span style="background:linear-gradient(135deg,var(--prism-1),var(--prism-3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Checkout</span></h1>
+        <p>Complete your order details below</p>
+    </div>
+
+    <!-- Checkout Steps Indicator -->
+    <div class="rh-checkout-steps">
+        <div class="rh-step active" id="step-1-indicator">
+            <div class="rh-step-num">1</div>
+            <span>Delivery</span>
         </div>
-
-        <!-- Checkout Steps Indicator -->
-        <div class="rh-checkout-steps">
-            <div class="rh-step active" id="step-1-indicator">
-                <div class="rh-step-num">1</div>
-                <span>Delivery</span>
-            </div>
-            <div class="rh-step-line"></div>
-            <div class="rh-step" id="step-2-indicator">
-                <div class="rh-step-num">2</div>
-                <span>Payment</span>
-            </div>
-            <div class="rh-step-line"></div>
-            <div class="rh-step" id="step-3-indicator">
-                <div class="rh-step-num">3</div>
-                <span>Confirm</span>
-            </div>
+        <div class="rh-step-line"></div>
+        <div class="rh-step" id="step-2-indicator">
+            <div class="rh-step-num">2</div>
+            <span>Payment</span>
         </div>
+        <div class="rh-step-line"></div>
+        <div class="rh-step" id="step-3-indicator">
+            <div class="rh-step-num">3</div>
+            <span>Confirm</span>
+        </div>
+    </div>
 
-        <div class="rh-checkout-layout">
-            <!-- Main Form Area -->
-            <div class="rh-checkout-form-area">
+    <div class="rh-checkout-layout">
+        <!-- Main Form Area -->
+        <div class="rh-checkout-form-area">
 
-                <!-- Step 1: Delivery Address -->
-                <div class="rh-checkout-step glass" id="step-1">
-                    <h2 class="rh-step-title">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        Delivery Information
-                    </h2>
-                    <form id="delivery-form">
-                        <div class="rh-form-grid">
-                            <div class="form-group">
-                                <label for="shipping-name">Full Name *</label>
-                                <input type="text" id="shipping-name" class="form-control" placeholder="Enter recipient name" required>
-                                <span class="error-message" id="shipping-name-error"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="shipping-phone">Phone Number *</label>
-                                <input type="tel" id="shipping-phone" class="form-control" placeholder="e.g., 03001234567" required>
-                                <span class="error-message" id="shipping-phone-error"></span>
-                            </div>
+            <!-- Step 1: Delivery Address -->
+            <div class="gem-card" id="step-1" style="--c-accent:#A855F7; --c-accent-bg:rgba(168,85,247,0.1); --c-accent-border:rgba(168,85,247,0.2);">
+                <div class="gem-shimmer"></div>
+                <div class="facet-corner"></div>
+                <h2 class="rh-step-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--prism-1);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Delivery Information
+                </h2>
+                <form id="delivery-form" style="position:relative; z-index:1;">
+                    <div class="rh-form-grid">
+                        <div class="form-group">
+                            <label for="shipping-name">Full Name *</label>
+                            <input type="text" id="shipping-name" placeholder="Enter recipient name" required>
+                            <span class="error-message" id="shipping-name-error"></span>
                         </div>
                         <div class="form-group">
-                            <label for="shipping-address">Delivery Address *</label>
-                            <input type="text" id="shipping-address" class="form-control" placeholder="Street address, apartment, suite" required>
-                            <span class="error-message" id="shipping-address-error"></span>
+                            <label for="shipping-phone">Phone Number *</label>
+                            <input type="tel" id="shipping-phone" placeholder="e.g., 03001234567" required>
+                            <span class="error-message" id="shipping-phone-error"></span>
                         </div>
-                        <div class="rh-form-grid">
-                            <div class="form-group">
-                                <label for="shipping-city">City *</label>
-                                <input type="text" id="shipping-city" class="form-control" placeholder="Enter city name" required>
-                                <span class="error-message" id="shipping-city-error"></span>
-                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipping-address">Delivery Address *</label>
+                        <input type="text" id="shipping-address" placeholder="Street address, apartment, suite" required>
+                        <span class="error-message" id="shipping-address-error"></span>
+                    </div>
+                    <div class="rh-form-grid">
+                        <div class="form-group">
+                            <label for="shipping-city">City *</label>
+                            <input type="text" id="shipping-city" placeholder="Enter city name" required>
+                            <span class="error-message" id="shipping-city-error"></span>
                         </div>
-                        <button type="button" class="btn btn-primary" id="next-to-payment" style="margin-top: 1rem;">
-                            Continue to Payment →
-                        </button>
-                    </form>
-                </div>
+                    </div>
+                    <button type="button" class="btn-primary" id="next-to-payment" style="margin-top: 1rem;">
+                        Continue to Payment →
+                    </button>
+                </form>
+            </div>
 
-                <!-- Step 2: Payment Method -->
-                <div class="rh-checkout-step glass" id="step-2" style="display: none;">
-                    <h2 class="rh-step-title">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                        Payment Method
-                    </h2>
-                    <div class="rh-payment-options">
-                        <label class="rh-payment-card glass" id="payment-card-option">
-                            <input type="radio" name="payment-method" value="2" checked>
-                            <div class="rh-payment-card-inner">
+            <!-- Step 2: Payment Method -->
+            <div class="gem-card" id="step-2" style="display: none; --c-accent:#38bdf8; --c-accent-bg:rgba(56,189,248,0.1); --c-accent-border:rgba(56,189,248,0.2);">
+                <div class="gem-shimmer"></div>
+                <div class="facet-corner" style="background:#38bdf8;"></div>
+                <h2 class="rh-step-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--prism-4);"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    Payment Method
+                </h2>
+                <div class="rh-payment-options" style="position:relative; z-index:1;">
+                    <label class="rh-payment-card" id="payment-card-option">
+                        <input type="radio" name="payment-method" value="2" checked>
+                        <div class="rh-payment-card-inner">
+                            <div style="display:flex; align-items:center;">
                                 <div class="rh-payment-icon">
                                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                                 </div>
@@ -110,12 +461,14 @@
                                     <strong>Credit / Debit Card</strong>
                                     <p>Pay securely with your card</p>
                                 </div>
-                                <div class="rh-payment-check">✓</div>
                             </div>
-                        </label>
-                        <label class="rh-payment-card glass" id="payment-cod-option">
-                            <input type="radio" name="payment-method" value="1">
-                            <div class="rh-payment-card-inner">
+                            <div class="rh-payment-check">✓</div>
+                        </div>
+                    </label>
+                    <label class="rh-payment-card" id="payment-cod-option">
+                        <input type="radio" name="payment-method" value="1">
+                        <div class="rh-payment-card-inner">
+                            <div style="display:flex; align-items:center;">
                                 <div class="rh-payment-icon">
                                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                 </div>
@@ -123,23 +476,27 @@
                                     <strong>Cash on Delivery</strong>
                                     <p>Pay when you receive your order</p>
                                 </div>
-                                <div class="rh-payment-check">✓</div>
                             </div>
-                        </label>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <button type="button" class="btn btn-secondary" id="back-to-delivery" style="flex: 1;">← Back</button>
-                        <button type="button" class="btn btn-primary" id="next-to-confirm" style="flex: 2;">Review Order →</button>
-                    </div>
+                            <div class="rh-payment-check">✓</div>
+                        </div>
+                    </label>
                 </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem; position:relative; z-index:1;">
+                    <button type="button" class="btn-secondary" id="back-to-delivery" style="flex: 1;">← Back</button>
+                    <button type="button" class="btn-primary" id="next-to-confirm" style="flex: 2;">Review Order →</button>
+                </div>
+            </div>
 
-                <!-- Step 3: Order Review & Confirm -->
-                <div class="rh-checkout-step glass" id="step-3" style="display: none;">
-                    <h2 class="rh-step-title">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        Review & Confirm
-                    </h2>
+            <!-- Step 3: Order Review & Confirm -->
+            <div class="gem-card" id="step-3" style="display: none; --c-accent:#f472b6; --c-accent-bg:rgba(244,114,182,0.1); --c-accent-border:rgba(244,114,182,0.2);">
+                <div class="gem-shimmer"></div>
+                <div class="facet-corner" style="background:#f472b6;"></div>
+                <h2 class="rh-step-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--prism-3);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    Review & Confirm
+                </h2>
 
+                <div style="position:relative; z-index:1;">
                     <div class="rh-review-section">
                         <h4>Delivery Address</h4>
                         <div class="rh-review-box" id="review-address"></div>
@@ -163,61 +520,95 @@
                     </div>
 
                     <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <button type="button" class="btn btn-secondary" id="back-to-payment" style="flex: 1;">← Back</button>
-                        <button type="button" class="btn btn-primary" id="place-order-btn" style="flex: 2;">
+                        <button type="button" class="btn-secondary" id="back-to-payment" style="flex: 1;">← Back</button>
+                        <button type="button" class="btn-primary" id="place-order-btn" style="flex: 2;">
                             🛒 Place Order
                         </button>
                     </div>
                 </div>
-
-                <!-- Order Confirmation (shown after successful checkout) -->
-                <div class="rh-order-confirmation glass" id="order-confirmation" style="display: none;">
-                    <div class="rh-confirm-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    </div>
-                    <h2>Order Placed Successfully! 🎉</h2>
-                    <p class="rh-confirm-subtitle">Thank you for your purchase</p>
-                    <div class="rh-confirm-details glass">
-                        <div class="rh-confirm-row">
-                            <span>Order Number</span>
-                            <strong id="confirm-order-number">—</strong>
-                        </div>
-                        <div class="rh-confirm-row">
-                            <span>Total Amount</span>
-                            <strong id="confirm-total">—</strong>
-                        </div>
-                        <div class="rh-confirm-row">
-                            <span>Payment Method</span>
-                            <strong id="confirm-payment">—</strong>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; justify-content: center;">
-                        <a href="/order-history.html" class="btn btn-primary" style="width: auto; text-decoration: none;">View Order History</a>
-                        <a href="/browse.html" class="btn btn-secondary" style="width: auto; text-decoration: none;">Continue Shopping</a>
-                    </div>
-                </div>
             </div>
 
-            <!-- Order Summary Sidebar -->
-            <div class="rh-checkout-sidebar glass" id="checkout-sidebar">
-                <h3>Your Order</h3>
-                <div id="checkout-items-list" class="rh-checkout-items"></div>
-                <div class="rh-summary-divider"></div>
-                <div class="rh-summary-row rh-summary-total">
-                    <span>Total</span>
-                    <span id="checkout-total">PKR 0</span>
+            <!-- Order Confirmation -->
+            <div class="gem-card" id="order-confirmation" style="display: none; text-align:center; padding: 4rem 2rem; --c-accent:#34d399; --c-accent-bg:rgba(52,211,153,0.1); --c-accent-border:rgba(52,211,153,0.2);">
+                <div class="gem-shimmer"></div>
+                <div class="facet-corner" style="background:#34d399;"></div>
+                <div style="width:80px; height:80px; border-radius:50%; background:rgba(52,211,153,0.1); display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem; position:relative; z-index:1;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--prism-4)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <h2 style="font-family:'DM Serif Display',serif; font-style:italic; font-size:2rem; margin-bottom:0.5rem; position:relative; z-index:1;">Order Placed Successfully! 🎉</h2>
+                <p style="color:var(--text-muted); margin-bottom:2rem; position:relative; z-index:1;">Thank you for your purchase</p>
+                <div class="rh-review-box" style="text-align:left; max-width:400px; margin:0 auto 2rem; position:relative; z-index:1;">
+                    <div class="rh-summary-row">
+                        <span>Order Number</span>
+                        <strong id="confirm-order-number" style="color:var(--text);">—</strong>
+                    </div>
+                    <div class="rh-summary-row">
+                        <span>Total Amount</span>
+                        <strong id="confirm-total" style="color:var(--text);">—</strong>
+                    </div>
+                    <div class="rh-summary-row">
+                        <span>Payment Method</span>
+                        <strong id="confirm-payment" style="color:var(--text);">—</strong>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: center; position:relative; z-index:1;">
+                    <a href="/order-history.html" class="btn-primary">View Order History</a>
+                    <a href="/browse.html" class="btn-secondary">Continue Shopping</a>
                 </div>
             </div>
         </div>
-    </main>
 
-    <!-- Toast Notification -->
-    <div class="rh-toast" id="toast-notification">
-        <span id="toast-message"></span>
+        <!-- Order Summary Sidebar -->
+        <div class="gem-card" id="checkout-sidebar" style="height: fit-content; --c-accent:#fb923c; --c-accent-bg:rgba(251,146,60,0.1); --c-accent-border:rgba(251,146,60,0.2);">
+            <div class="gem-shimmer"></div>
+            <div class="facet-corner" style="background:#fb923c;"></div>
+            <h3 style="margin-bottom: 1.5rem; font-family:'DM Serif Display',serif; font-style:italic; font-size:1.4rem; position:relative; z-index:1;">Your Order</h3>
+            <div id="checkout-items-list" style="position:relative; z-index:1; display:flex; flex-direction:column; gap:1rem;"></div>
+            <div class="rh-summary-divider" style="position:relative; z-index:1;"></div>
+            <div class="rh-summary-row rh-summary-total" style="position:relative; z-index:1;">
+                <span>Total</span>
+                <span id="checkout-total">PKR 0</span>
+            </div>
+        </div>
     </div>
+</main>
 
-    <script src="/js/auth.js"></script>
-    <script src="/js/checkout.js"></script>
+<!-- Toast Notification -->
+<div class="rh-toast" id="toast-notification" style="display:none; position:fixed; bottom:20px; right:20px; background:var(--surface); border:1px solid var(--border); padding:1rem; border-radius:var(--radius-sm); z-index:300;">
+    <span id="toast-message" style="color:var(--text);"></span>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/checkout.js"></script>
+
+<script>
+// ── CURSOR TRACKING ──
+const glow = document.getElementById('cursor-glow');
+const ray  = document.getElementById('prism-ray');
+document.addEventListener('mousemove', e => {
+  if (glow) { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; }
+  if (ray)  { ray.style.left  = e.clientX + 'px'; }
+});
+
+// ── 3D TILT ON [data-tilt] CARDS ──
+const MAX_TILT = 12;
+document.querySelectorAll('[data-tilt]').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r  = card.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width  / 2)) / (r.width  / 2);
+    const dy = (e.clientY - (r.top  + r.height / 2)) / (r.height / 2);
+    card.style.transform = `perspective(700px) rotateX(${dy * MAX_TILT}deg) rotateY(${-dx * MAX_TILT}deg) scale3d(1.03,1.03,1.03)`;
+    card.style.transition = 'transform 0.08s ease';
+    const shimmer = card.querySelector('.gem-shimmer');
+    if (shimmer) { shimmer.style.opacity = '1'; }
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform  = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
+    card.style.transition = 'transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)';
+    const shimmer = card.querySelector('.gem-shimmer');
+    if (shimmer) shimmer.style.opacity = '0';
+  });
+});
+</script>
 </body>
-
 </html>

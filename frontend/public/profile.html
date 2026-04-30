@@ -4,284 +4,553 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - READhub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/theme.js"></script>
-    <style>
-        .profile-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
-        }
-        
-        .profile-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-        .profile-card {
-            padding: 2rem;
-            border-radius: 1.5rem;
-            text-align: center;
-        }
-        
-        .profile-avatar-large {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--primary-color);
-            margin: 0 auto 1rem auto;
-            display: block;
-        }
+:root {
+  --bg-prism: #0F0A1A;
+  --surface: rgba(30, 20, 64, 0.5);
+  --surface-hover: rgba(30, 20, 64, 0.8);
+  --border: rgba(168, 85, 247, 0.2);
+  --border-bright: rgba(168, 85, 247, 0.35);
+  --text: #F3F0FA;
+  --text-muted: #A99CC0;
+  --text-dim: rgba(169, 156, 192, 0.3);
+  --prism-1: #A855F7;
+  --prism-2: #9333EA;
+  --prism-3: #EC4899;
+  --prism-4: #34d399;
+  --prism-5: #fb923c;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --nav-bg: rgba(15, 10, 26, 0.85);
+  --dash-bg-gradient: linear-gradient(135deg, #0F0A1A 0%, #1A1035 40%, #2D1B69 100%);
+  --brand-gradient: linear-gradient(135deg, #c4b5fd, #7dd3fc, #f9a8d4);
+  --facet-opacity: 0.028;
+  --ray-opacity: 0.18;
+}
 
-        .profile-name-large {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
+[data-theme="light"] {
+  --bg-prism: #FFFFFF;
+  --surface: #F3F0FA;
+  --surface-hover: #EDE8F7;
+  --border: rgba(124, 58, 237, 0.15);
+  --border-bright: rgba(124, 58, 237, 0.25);
+  --text: #0F0A1A;
+  --text-muted: #3D3558;
+  --text-dim: #6B6080;
+  --prism-1: #7C3AED;
+  --prism-2: #8B5CF6;
+  --prism-3: #D946EF;
+  --nav-bg: rgba(243, 240, 250, 0.92);
+  --dash-bg-gradient: linear-gradient(135deg, #FFFFFF 0%, #F3F0FA 40%, #EDE8F7 100%);
+  --brand-gradient: linear-gradient(135deg, #7C3AED, #D946EF);
+  --facet-opacity: 0.012;
+  --ray-opacity: 0.06;
+}
 
-        .profile-role {
-            color: var(--color-text-muted);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 1.5rem;
-        }
+html{background:var(--bg-prism);color:var(--text);scroll-behavior:smooth;}
+body{
+  font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:300;
+  line-height:1.6;min-height:100vh;
+  overflow-x:hidden;
+}
 
-        .profile-main {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
+/* ── AMBIENT BACKGROUND ── */
+.bg-scene{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background: var(--dash-bg-gradient);
+}
+.facets{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.facet{position:absolute;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)}
+.facet-a{
+  width:440px;height:440px;top:-120px;right:-100px;
+  background:rgba(167,139,250,var(--facet-opacity));
+  border:1px solid rgba(167,139,250,0.07);
+  animation:spin 32s linear infinite;
+}
+.facet-b{
+  width:320px;height:320px;bottom:-90px;left:-80px;
+  background:rgba(56,189,248,calc(var(--facet-opacity) * 0.8));
+  border:1px solid rgba(56,189,248,0.06);
+  animation:spin 44s linear infinite reverse;
+}
+.facet-c{
+  width:560px;height:560px;top:38%;left:28%;
+  background:rgba(244,114,182,calc(var(--facet-opacity) * 0.5));
+  border:1px solid rgba(244,114,182,0.04);
+  animation:spin 60s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-        .profile-form-section {
-            padding: 2rem;
-            border-radius: 1.5rem;
-        }
+.prism-ray{
+  position:fixed;width:1px;top:0;bottom:0;z-index:0;
+  background:linear-gradient(to bottom,transparent 0%,rgba(167,139,250,var(--ray-opacity)) 30%,rgba(56,189,248,calc(var(--ray-opacity) * 0.6)) 60%,transparent 100%);
+  filter:blur(1px);pointer-events:none;
+  transition:left 1s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.cursor-glow{
+  position:fixed;
+  width:350px;height:350px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(167,139,250,0.07) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+  transform:translate(-50%,-50%);
+  transition:left 0.12s ease-out,top 0.12s ease-out;
+}
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
+/* ── NAVBAR ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 62px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.navbar::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: var(--prism-1); opacity: 0.2; pointer-events: none;
+}
+.nav-left{display:flex;align-items:center;gap:1.25rem;position:relative;z-index:1}
+.brand{
+  font-family:'DM Serif Display',serif;font-style:italic;
+  font-size:1.4rem;letter-spacing:-0.02em;text-decoration:none;
+  background: var(--brand-gradient);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.nav-right{display:flex;align-items:center;gap:1rem;position:relative;z-index:1}
+.nav-link{
+  color:var(--text-muted);text-decoration:none;
+  font-size:13px;font-weight:400;letter-spacing:0.01em;
+  transition:color 0.15s;
+}
+.nav-link:hover{color:var(--text);}
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
+.hamburger-container{position:relative}
+.hamburger-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--text-muted);padding:6px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;transition:color 0.15s,background 0.15s;
+}
+.hamburger-btn:hover{color:var(--text);background:var(--surface-hover)}
+.hamburger-menu{
+  display:none;position:absolute;top:calc(100% + 10px);left:0;
+  background:rgba(12,8,28,0.95);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--border-bright);
+  border-radius:var(--radius);padding:6px;
+  min-width:200px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.05);
+}
+.hamburger-menu.show{display:block}
+.dropdown-item{
+  display:block;padding:8px 12px;
+  color:var(--text-muted);text-decoration:none;
+  font-size:13px;border-radius:8px;
+  transition:color 0.15s,background 0.15s;
+}
+.dropdown-item:hover{color:var(--text);background:var(--surface-hover)}
 
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
+.logoutButton {
+  --background: var(--prism-1);
+  --background-hover: var(--prism-2);
+  --color: #ffffff;
+  --icon-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  border: none;
+  background: var(--background);
+  color: var(--color);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+  font-size: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  min-width: 130px;
+}
+.logoutButton:hover {
+  background: var(--background-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.logoutButton .button-text {
+  z-index: 10;
+  position: relative;
+  margin-right: 2.2rem;
+  transition: transform 0.3s ease, opacity 0.2s;
+}
+.logoutButton:hover .button-text { transform: translateX(-3px); }
+.logoutButton.logging-out .button-text { opacity: 0.5; transform: translateX(-5px); }
+.logoutButton svg {
+  display: block;
+  position: absolute;
+  fill: var(--icon-color);
+  right: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.3s ease;
+}
+.logoutButton .doorway { width: 18px; height: 22px; opacity: 0.9; z-index: 1; }
+.logoutButton .door {
+  width: 14px; height: 18px; right: 1.2rem;
+  transform-origin: 0% 50%;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+.logoutButton:hover .door { transform: translateY(-50%) rotateY(-35deg); }
+.logoutButton.logging-out .door { transform: translateY(-50%) rotateY(0deg); transition-delay: 0.5s; }
+.logoutButton .figure { width: 10px; height: 14px; right: 2.4rem; z-index: 4; opacity: 1; transition: opacity 0.2s; }
+.logoutButton.logging-out .figure { animation: walkThrough 0.6s ease-in-out forwards; }
+@keyframes walkThrough {
+  0%   { transform: translateY(-50%) translateX(0); }
+  30%  { transform: translateY(-55%) translateX(10px); }
+  60%  { transform: translateY(-50%) translateX(20px); }
+  100% { transform: translateY(-50%) translateX(32px); opacity: 0; }
+}
 
-        .form-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--color-text-muted);
-        }
+/* ── MAIN ── */
+main {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+}
 
-        .form-input {
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            background: var(--surface-hover);
-            border: 1px solid rgba(124, 58, 237, 0.1);
-            color: var(--color-text);
-            font-family: inherit;
-            transition: all 0.2s;
-        }
+/* ── HEADER ── */
+.dash-header { margin-bottom: 2.5rem; }
+.dash-header h1 {
+  font-family:'DM Serif Display',serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 400; letter-spacing: -0.03em;
+  line-height: 1.2; margin-bottom: 0.5rem;
+  font-style:italic;
+  background:linear-gradient(135deg,#e8e4f8 20%,#c4b5fd 55%,#7dd3fc 90%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.dash-header p { color: var(--text-muted); font-size: 15px; }
 
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-        }
-        
-        .section-header {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
-        }
+/* ── CARDS ── */
+.gem-card {
+  position: relative; overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--c-accent-border, var(--border));
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.3s;
+  margin-bottom: 1.5rem;
+}
+.gem-card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+}
+.gem-shimmer {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%);
+  transition: opacity 0.3s;
+}
+.facet-corner {
+  position: absolute; top: 0; right: 0;
+  width: 40px; height: 40px;
+  background: var(--c-accent, var(--prism-1));
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+  opacity: 0.15;
+}
 
-        .btn-save {
-            margin-top: 1rem;
-            padding: 0.75rem 2rem;
-            border-radius: 0.75rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-        }
+/* ── BUTTONS ── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;
+  padding: 0.65rem 1.5rem; border: none; border-radius: 20px; cursor: pointer;
+  background: linear-gradient(135deg, var(--prism-1), var(--prism-2));
+  color: #fff; font-size: 13px; font-weight: 500; letter-spacing: 0.02em;
+  text-decoration: none; transition: opacity 0.15s, transform 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-2px); }
 
-        .btn-save:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-        }
+/* ── FORMS & INPUTS ── */
+input, textarea, select {
+  width: 100%; padding: 0.7rem 1rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  transition: border-color 0.2s;
+  outline: none;
+  margin-bottom: 1rem;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--prism-1);
+  box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+}
+label {
+  display: block; font-size: 12px; font-weight: 500;
+  color: var(--text-muted); letter-spacing: 0.04em;
+  text-transform: uppercase; margin-bottom: 0.4rem;
+}
 
-        /* Wishlist and Purchases specific styles */
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
+/* ── PROFILE LAYOUT ── */
+.profile-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+}
+.profile-avatar-large {
+  width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+  border: 4px solid var(--prism-1); margin: 0 auto 1rem auto; display: block;
+}
+.profile-name-large { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; font-family:'DM Serif Display',serif; font-style:italic;}
+.profile-role { color: var(--text-muted); font-size: 13px; margin-bottom: 1.5rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group.full-width { grid-column: 1 / -1; }
+.section-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.section-header h2 { font-family:'DM Serif Display',serif; font-style:italic; font-size: 1.4rem; }
 
-        /* Responsive overrides */
-        @media (max-width: 768px) {
-            .profile-container {
-                grid-template-columns: 1fr;
-            }
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .profile-container { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  main { padding: 2rem 1.25rem 4rem; }
+}
+
+/* BOOK CARD (for wishlist and purchases) */
+.book-card-gem {
+  position: relative; overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transform-style: preserve-3d; will-change: transform;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.book-card-gem::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--prism-2), transparent);
+  opacity: 0.5;
+}
+.book-card-gem:hover {
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+.book-cover-wrap {
+  aspect-ratio: 3/4; overflow: hidden; background: rgba(255,255,255,0.03);
+}
+.book-cover-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.book-card-gem:hover .book-cover-wrap img { transform: scale(1.05); }
+
+</style>
 </head>
 <body class="protected-user">
-    
-    <nav class="navbar glass">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <div class="hamburger-container">
-                <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('show')">
-                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                </button>
-                <div class="hamburger-menu glass">
-                    <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
-                    <a href="/browse.html" class="dropdown-item">Browse Books</a>
-                    <a href="/library.html" class="dropdown-item">My Library</a>
-                    <a href="/cart.html" class="dropdown-item">My Cart</a>
-                    <a href="/order-history.html" class="dropdown-item">Order History</a>
-                    <a href="/profile.html" class="dropdown-item">My Profile</a>
-                    <a href="/book-request.html" class="dropdown-item">Request a Book</a>
-                </div>
-            </div>
-            <a href="/dashboard.html" class="brand" style="text-decoration: none;">READhub</a>
-        </div>
-        <div class="nav-links">
-            <div class="theme-toggle-host"></div>
-            <button id="logout-btn" class="logoutButton" style="display: flex;">
-                <span class="button-text">Log Out</span>
-                <svg class="doorway" viewBox="0 0 16 16">
-                    <path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" />
-                </svg>
-                <svg class="door" viewBox="0 0 16 16">
-                    <path d="M3 1H13V15H3V1Z" />
-                    <circle cx="10" cy="8" r="1.2" fill="#fff" />
-                </svg>
-                <svg class="figure" viewBox="0 0 16 16">
-                    <circle cx="8" cy="3" r="2.5" />
-                    <path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" />
-                </svg>
-            </button>
-        </div>
-    </nav>
 
-    <main class="profile-container">
-        <!-- Left Sidebar: Avatar & Summary -->
-        <aside class="profile-sidebar">
-            <div class="profile-card glass">
-                <img src="" alt="Profile Avatar" class="profile-avatar-large" id="main-avatar">
-                <div class="profile-name-large" id="profile-display-name">Loading...</div>
-                <div class="profile-role" id="profile-email">Loading...</div>
-                
-                <div class="stat-content" style="margin-top: 2rem;">
-                    <span class="label">Joined</span>
-                    <strong class="value" style="font-size: 1.1rem;" id="profile-join-date">Member</strong>
-                </div>
+<!-- Ambient layers -->
+<div class="bg-scene"></div>
+<div class="facets">
+  <div class="facet facet-a"></div>
+  <div class="facet facet-b"></div>
+  <div class="facet facet-c"></div>
+</div>
+<div class="prism-ray" id="prism-ray" style="left:50%"></div>
+<div class="cursor-glow" id="cursor-glow" style="left:-500px;top:-500px"></div>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+  <div class="nav-left">
+    <div class="hamburger-container">
+      <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('show')">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <div class="hamburger-menu">
+        <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
+        <a href="/browse.html" class="dropdown-item">Browse Books</a>
+        <a href="/library.html" class="dropdown-item">My Library</a>
+        <a href="/cart.html" class="dropdown-item">My Cart</a>
+        <a href="/order-history.html" class="dropdown-item">Order History</a>
+        <a href="/profile.html" class="dropdown-item">My Profile</a>
+        <a href="/book-request.html" class="dropdown-item">Request a Book</a>
+      </div>
+    </div>
+    <a href="/dashboard.html" class="brand">READhub</a>
+  </div>
+  <div class="nav-right">
+    <div class="theme-toggle-host"></div>
+    <button id="logout-btn" class="logoutButton">
+      <span class="button-text">Log Out</span>
+      <svg class="doorway" viewBox="0 0 16 16"><path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" /></svg>
+      <svg class="door" viewBox="0 0 16 16"><path d="M3 1H13V15H3V1Z" /><circle cx="10" cy="8" r="1.2" fill="#fff" /></svg>
+      <svg class="figure" viewBox="0 0 16 16"><circle cx="8" cy="3" r="2.5" /><path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" /></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<main class="profile-container">
+    <!-- Left Sidebar: Avatar & Summary -->
+    <aside style="display:flex; flex-direction:column; gap:1.5rem;">
+        <div class="gem-card" style="text-align:center; padding:2rem; --c-accent:#A855F7; --c-accent-bg:rgba(168,85,247,0.1); --c-accent-border:rgba(168,85,247,0.2);">
+            <div class="gem-shimmer"></div>
+            <div class="facet-corner"></div>
+            <img src="" alt="Profile Avatar" class="profile-avatar-large" id="main-avatar" style="position:relative; z-index:1;">
+            <div class="profile-name-large" id="profile-display-name" style="position:relative; z-index:1;">Loading...</div>
+            <div class="profile-role" id="profile-email" style="position:relative; z-index:1;">Loading...</div>
+            
+            <div style="margin-top: 2rem; position:relative; z-index:1;">
+                <span style="display:block; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Joined</span>
+                <strong style="font-size: 1.1rem; color:var(--text);" id="profile-join-date">Member</strong>
+            </div>
+        </div>
+        
+        <div class="gem-card" style="padding:1.5rem; cursor:pointer; --c-accent:#38bdf8; --c-accent-bg:rgba(56,189,248,0.1); --c-accent-border:rgba(56,189,248,0.2);" onclick="document.getElementById('purchases').scrollIntoView({behavior:'smooth'})" data-tilt>
+            <div class="gem-shimmer"></div>
+            <div class="facet-corner" style="background:#38bdf8;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; position:relative; z-index:1;">
+                <span style="font-weight: 500;">My Library</span>
+                <span style="background: var(--prism-1); color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;" id="badge-library">0</span>
+            </div>
+        </div>
+        
+        <div class="gem-card" style="padding:1.5rem; cursor:pointer; --c-accent:#f472b6; --c-accent-bg:rgba(244,114,182,0.1); --c-accent-border:rgba(244,114,182,0.2);" onclick="document.getElementById('wishlist').scrollIntoView({behavior:'smooth'})" data-tilt>
+            <div class="gem-shimmer"></div>
+            <div class="facet-corner" style="background:#f472b6;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; position:relative; z-index:1;">
+                <span style="font-weight: 500;">My Wishlist</span>
+                <span style="background: var(--prism-3); color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;" id="badge-wishlist">0</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Right Main: Profile Form & Specific Sections -->
+    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+        
+        <!-- Edit Profile Form -->
+        <div class="gem-card" style="padding:2rem;">
+            <div class="gem-shimmer"></div>
+            <div class="section-header" style="position:relative; z-index:1;">
+                <h2>Edit Profile</h2>
+                <p style="color: var(--text-muted); font-size: 13px; margin-top: 0.5rem;">Update your personal details below.</p>
             </div>
             
-            <div class="profile-card glass" style="padding: 1.5rem; cursor: pointer;" onclick="scrollToSection('purchases')">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600;">My Library</span>
-                    <span style="background: var(--primary-color); color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;" id="badge-library">0</span>
-                </div>
-            </div>
-            
-            <div class="profile-card glass" style="padding: 1.5rem; cursor: pointer;" onclick="scrollToSection('wishlist')">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600;">My Wishlist</span>
-                    <span style="background: #fbbf24; color: black; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600;" id="badge-wishlist">0</span>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Right Main: Profile Form & Specific Sections -->
-        <div class="profile-main">
-            <!-- Edit Profile Form -->
-            <section class="profile-form-section glass">
-                <div class="section-header">
-                    <h2>Edit Profile</h2>
-                    <p style="color: var(--color-text-muted); font-size: 0.875rem; margin-top: 0.5rem;">Update your personal details below.</p>
-                </div>
-                
-                <form id="profile-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Full Name</label>
-                            <input type="text" id="input-fullname" class="form-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input type="text" id="input-phone" class="form-input" placeholder="+92 300 0000000">
-                        </div>
-                        <div class="form-group full-width">
-                            <label class="form-label">Avatar URL</label>
-                            <input type="url" id="input-avatar-url" class="form-input" placeholder="https://example.com/my-avatar.png">
-                            <small style="color: var(--color-text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Leave empty to use auto-generated avatar.</small>
-                        </div>
-                        <div class="form-group full-width">
-                            <label class="form-label">Address</label>
-                            <input type="text" id="input-address" class="form-input" placeholder="123 Main Street">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">City</label>
-                            <input type="text" id="input-city" class="form-input" placeholder="Lahore">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Country</label>
-                            <input type="text" id="input-country" class="form-input" placeholder="Pakistan">
-                        </div>
+            <form id="profile-form" style="position:relative; z-index:1;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="input-fullname" required>
                     </div>
-                    <div style="text-align: right;">
-                        <button type="submit" class="btn-save">Save Changes</button>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="input-phone" placeholder="+92 300 0000000">
                     </div>
-                </form>
-            </section>
-
-            <!-- Purchases Section -->
-            <section id="purchases" class="profile-form-section glass">
-                <div class="section-header">
-                    <h2>My Library (Purchases)</h2>
-                </div>
-                <div class="items-grid" id="purchases-container">
-                    <div class="empty-state" style="grid-column: 1 / -1; padding: 2rem;">
-                        <p>Loading library...</p>
+                    <div class="form-group full-width">
+                        <label>Avatar URL</label>
+                        <input type="url" id="input-avatar-url" placeholder="https://example.com/my-avatar.png">
+                        <small style="color: var(--text-muted); font-size: 12px; margin-top: -0.5rem; display:block; margin-bottom:1rem;">Leave empty to use auto-generated avatar.</small>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Address</label>
+                        <input type="text" id="input-address" placeholder="123 Main Street">
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="input-city" placeholder="Lahore">
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" id="input-country" placeholder="Pakistan">
                     </div>
                 </div>
-            </section>
-
-            <!-- Wishlist Section -->
-            <section id="wishlist" class="profile-form-section glass">
-                <div class="section-header">
-                    <h2>My Wishlist</h2>
+                <div style="text-align: right; margin-top:1rem;">
+                    <button type="submit" class="btn-primary">Save Changes</button>
                 </div>
-                <div class="items-grid" id="wishlist-container">
-                    <div class="empty-state" style="grid-column: 1 / -1; padding: 2rem;">
-                        <p>Loading wishlist...</p>
-                    </div>
-                </div>
-            </section>
-            
+            </form>
         </div>
-    </main>
 
-    <script src="/js/auth.js"></script>
-    <script src="/js/profile.js"></script>
+        <!-- Purchases Section -->
+        <div id="purchases" class="gem-card" style="padding:2rem; --c-accent:#38bdf8; --c-accent-bg:rgba(56,189,248,0.1); --c-accent-border:rgba(56,189,248,0.2);">
+            <div class="gem-shimmer"></div>
+            <div class="facet-corner" style="background:#38bdf8;"></div>
+            <div class="section-header" style="position:relative; z-index:1;">
+                <h2>My Library (Purchases)</h2>
+            </div>
+            <div class="items-grid" id="purchases-container" style="position:relative; z-index:1;">
+                <div style="grid-column: 1 / -1; padding: 2rem; text-align:center; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);">
+                    <p>Loading library...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wishlist Section -->
+        <div id="wishlist" class="gem-card" style="padding:2rem; --c-accent:#f472b6; --c-accent-bg:rgba(244,114,182,0.1); --c-accent-border:rgba(244,114,182,0.2);">
+            <div class="gem-shimmer"></div>
+            <div class="facet-corner" style="background:#f472b6;"></div>
+            <div class="section-header" style="position:relative; z-index:1;">
+                <h2>My Wishlist</h2>
+            </div>
+            <div class="items-grid" id="wishlist-container" style="position:relative; z-index:1;">
+                <div style="grid-column: 1 / -1; padding: 2rem; text-align:center; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);">
+                    <p>Loading wishlist...</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</main>
+
+<!-- Toast Notification -->
+<div class="rh-toast" id="toast-notification" style="display:none; position:fixed; bottom:20px; right:20px; background:var(--surface); border:1px solid var(--border); padding:1rem; border-radius:var(--radius-sm); z-index:300;">
+    <span id="toast-message" style="color:var(--text);"></span>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/profile.js"></script>
+
+<script>
+// ── CURSOR TRACKING ──
+const glow = document.getElementById('cursor-glow');
+const ray  = document.getElementById('prism-ray');
+document.addEventListener('mousemove', e => {
+  if (glow) { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; }
+  if (ray)  { ray.style.left  = e.clientX + 'px'; }
+});
+
+// ── 3D TILT ON [data-tilt] CARDS ──
+const MAX_TILT = 12;
+document.querySelectorAll('[data-tilt]').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r  = card.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width  / 2)) / (r.width  / 2);
+    const dy = (e.clientY - (r.top  + r.height / 2)) / (r.height / 2);
+    card.style.transform = `perspective(700px) rotateX(${dy * MAX_TILT}deg) rotateY(${-dx * MAX_TILT}deg) scale3d(1.03,1.03,1.03)`;
+    card.style.transition = 'transform 0.08s ease';
+    const shimmer = card.querySelector('.gem-shimmer');
+    if (shimmer) { shimmer.style.opacity = '1'; }
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform  = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
+    card.style.transition = 'transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)';
+    const shimmer = card.querySelector('.gem-shimmer');
+    if (shimmer) shimmer.style.opacity = '0';
+  });
+});
+
+// ── CLOSE HAMBURGER ON OUTSIDE CLICK ──
+document.addEventListener('click', e => {
+  if (!e.target.closest('.hamburger-container'))
+    document.querySelectorAll('.hamburger-menu').forEach(m => m.classList.remove('show'));
+});
+</script>
 </body>
 </html>

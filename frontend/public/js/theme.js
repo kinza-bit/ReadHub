@@ -13,6 +13,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         const hosts = document.querySelectorAll('.theme-toggle-host');
         hosts.forEach(host => {
+            if (host.querySelector('.theme-toggle-btn')) return; // Prevent duplicate injection
+            
             const btn = document.createElement('button');
             btn.id = 'theme-toggle-btn';
             btn.className = 'theme-toggle-btn';

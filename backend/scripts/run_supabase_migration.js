@@ -11,14 +11,14 @@ async function applyMigration() {
     const batches = sqlFile.split(/^GO\s*$/im).filter(b => b.trim().length > 0);
 
     for (let i = 0; i < batches.length; i++) {
-        try {
-            await pool.request().query(batches[i]);
-            console.log(`Executed batch ${i + 1}/${batches.length}`);
-        } catch (err) {
-            console.error(`Error executing batch ${i + 1}:`, err.message);
-        }
+      try {
+        await pool.request().query(batches[i]);
+        console.log(`Executed batch ${i + 1}/${batches.length}`);
+      } catch (err) {
+        console.error(`Error executing batch ${i + 1}:`, err.message);
+      }
     }
-    
+
     console.log("Supabase Migration applied successfully!");
     process.exit(0);
   } catch (e) {

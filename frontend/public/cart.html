@@ -378,8 +378,10 @@ main {
 <nav class="navbar">
   <div class="nav-left">
     <div class="hamburger-container">
-      <button class="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('show')">
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      <button class="hamburger-btn" id="hamburger-btn" onclick="this.nextElementSibling.classList.toggle('show')" aria-label="Menu">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none">
+          <line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="14" x2="21" y2="14"/>
+        </svg>
       </button>
       <div class="hamburger-menu">
         <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
@@ -394,27 +396,21 @@ main {
     <a href="/dashboard.html" class="brand">READhub</a>
   </div>
   <div class="nav-right">
+    <a href="/browse.html" class="nav-link">Browse</a>
+    <a href="/library.html" class="nav-link">Library</a>
     <a href="/cart.html" class="cart-nav-link" id="cart-nav-link" title="Shopping Cart">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
         </svg>
         <span class="cart-badge-count" id="cart-badge" style="display: none;">0</span>
     </a>
     <div class="theme-toggle-host"></div>
-    <button id="logout-btn" class="logoutButton" style="display: flex;">
+    <button id="logout-btn" class="logoutButton" style="display: none;">
       <span class="button-text">Log Out</span>
-      <svg class="doorway" viewBox="0 0 16 16">
-        <path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" />
-      </svg>
-      <svg class="door" viewBox="0 0 16 16">
-        <path d="M3 1H13V15H3V1Z" />
-        <circle cx="10" cy="8" r="1.2" fill="#fff" />
-      </svg>
-      <svg class="figure" viewBox="0 0 16 16">
-        <circle cx="8" cy="3" r="2.5" />
-        <path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" />
-      </svg>
+      <svg class="doorway" viewBox="0 0 16 16"><path d="M3 14V1H13V14M13 8H15" stroke="currentColor" stroke-width="2" fill="none" /></svg>
+      <svg class="door" viewBox="0 0 16 16"><path d="M3 1H13V15H3V1Z" /><circle cx="10" cy="8" r="1.2" fill="#fff" /></svg>
+      <svg class="figure" viewBox="0 0 16 16"><circle cx="8" cy="3" r="2.5" /><path d="M8 6C5 6 4 8 4 11V15H12V11C12 8 11 6 8 6Z" /></svg>
     </button>
   </div>
 </nav>

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ratingLabel = document.getElementById('rating-label');
 
     let allBooks = [];
-    let categories = [];
+    let userWishlist = [];
     let currentCategory = 'all';
     let currentUser = null;
     let selectedRating = 0;
@@ -31,36 +31,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (data.isAuthenticated) {
                 currentUser = data.user;
-                const greetEl = document.getElementById('user-greeting');
-                const loginLink = document.getElementById('login-link');
-                const logoutBtn = document.getElementById('logout-btn');
-                const nameDisplay = document.getElementById('user-name-display');
-
-                if (greetEl) greetEl.style.display = '';
-                if (loginLink) loginLink.style.display = 'none';
-                if (logoutBtn) logoutBtn.style.display = '';
-                if (nameDisplay) nameDisplay.textContent = data.user.name;
+                document.getElementById('logout-btn').style.display = '';
+                fetchWishlist();
             }
-        } catch (err) {
-            console.log('Not logged in');
-        }
+        } catch (err) { console.log('Not logged in'); }
+    }
+
+    async function fetchWishlist() {
+        try {
+            const res = await fetch('/api/user/wishlist');
+            userWishlist = await res.json();
+            renderBooks(); // Re-render to show hearts
+        } catch (err) {}
     }
 
     // ── Load Categories ──
     async function loadCategories() {
         try {
             const res = await fetch('/api/categories/with-counts');
-            if (!res.ok) throw new Error('Failed');
-            categories = await res.json();
-
-            // Build pills
-            let pillsHTML = '<button class="genre-pill active" data-category="all">All Books</button>';
+            const categories = await res.json();
+            let html = '<button class="genre-pill active" data-category="all">All Books</button>';
             categories.forEach(c => {
-                pillsHTML += `<button class="genre-pill" data-category="${c.CategoryID}">${c.Name} <span class="rh-pill-count">${c.BookCount}</span></button>`;
+                html += `<button class="genre-pill" data-category="${c.CategoryID}">${c.Name} <span class="rh-pill-count">${c.BookCount}</span></button>`;
             });
-            categoryPills.innerHTML = pillsHTML;
-
-            // Attach events
+            categoryPills.innerHTML = html;
             categoryPills.querySelectorAll('.genre-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
                     categoryPills.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
@@ -69,330 +63,151 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderBooks();
                 });
             });
-        } catch (err) {
-            console.error('Error loading categories:', err);
-        }
+        } catch (err) {}
     }
 
     // ── Load Books ──
     async function loadBooks() {
         try {
             const res = await fetch('/api/books');
-            if (!res.ok) throw new Error('Failed');
             allBooks = await res.json();
             renderBooks();
         } catch (err) {
-            console.error('Error loading books:', err);
-            bookGrid.innerHTML = `<div class="rh-loading-state"><p style="color: var(--text-muted);">Failed to load books. Please try again later.</p></div>`;
+            bookGrid.innerHTML = `<p style="color: var(--text-muted); text-align: center;">Failed to load books.</p>`;
         }
     }
 
     // ── Render Books ──
     function renderBooks() {
         let filtered = [...allBooks];
-
-        // Search
         const search = searchInput.value.toLowerCase().trim();
         if (search) {
-            filtered = filtered.filter(b =>
-                b.Title.toLowerCase().includes(search) ||
-                b.Author.toLowerCase().includes(search) ||
-                (b.CategoryName && b.CategoryName.toLowerCase().includes(search))
-            );
+            filtered = filtered.filter(b => b.Title.toLowerCase().includes(search) || b.Author.toLowerCase().includes(search));
         }
-
-        // Category
         if (currentCategory !== 'all') {
             filtered = filtered.filter(b => b.CategoryID == currentCategory);
         }
 
-        // Type
-        const typeVal = typeFilter.value;
-        if (typeVal === 'physical') {
-            filtered = filtered.filter(b => b.PhysicalPrice > 0);
-        } else if (typeVal === 'ebook') {
-            filtered = filtered.filter(b => b.EbookPrice > 0);
-        }
-
-        // Sort
         const sortVal = sortSelect.value;
-        switch (sortVal) {
-            case 'rating':
-                filtered.sort((a, b) => (b.AverageRating || 0) - (a.AverageRating || 0));
-                break;
-            case 'price-low':
-                filtered.sort((a, b) => (a.PhysicalPrice || a.EbookPrice || 0) - (b.PhysicalPrice || b.EbookPrice || 0));
-                break;
-            case 'price-high':
-                filtered.sort((a, b) => (b.PhysicalPrice || b.EbookPrice || 0) - (a.PhysicalPrice || a.EbookPrice || 0));
-                break;
-            default:
-                filtered.sort((a, b) => a.Title.localeCompare(b.Title));
-        }
+        if (sortVal === 'rating') filtered.sort((a,b) => (b.AverageRating || 0) - (a.AverageRating || 0));
+        else if (sortVal === 'price-low') filtered.sort((a,b) => (a.PhysicalPrice || a.EbookPrice) - (b.PhysicalPrice || b.EbookPrice));
+        else if (sortVal === 'price-high') filtered.sort((a,b) => (b.PhysicalPrice || b.EbookPrice) - (a.PhysicalPrice || a.EbookPrice));
 
-        // Update count
-        bookCountEl.textContent = `${filtered.length} book${filtered.length !== 1 ? 's' : ''} found`;
+        bookCountEl.textContent = `${filtered.length} books found`;
 
-        // Empty state
         if (!filtered.length) {
             bookGrid.style.display = 'none';
             emptyState.style.display = 'flex';
             return;
         }
 
-        bookGrid.style.display = '';
+        bookGrid.style.display = 'grid';
         emptyState.style.display = 'none';
 
         bookGrid.innerHTML = filtered.map(book => {
-            const rating = parseFloat(book.AverageRating) || 0;
-            const stars = renderStars(rating);
-            const price = book.PhysicalPrice
-                ? `PKR ${book.PhysicalPrice.toLocaleString()}`
-                : (book.EbookPrice ? `PKR ${book.EbookPrice.toLocaleString()}` : 'Free');
-
-            const hasPhysical = book.PhysicalPrice > 0;
-            const hasEbook = book.EbookPrice > 0;
-            const typeBadge = hasPhysical && hasEbook
-                ? '<span class="rh-type-badge">Physical + eBook</span>'
-                : hasEbook
-                    ? '<span class="rh-type-badge rh-type-badge--ebook">eBook</span>'
-                    : '<span class="rh-type-badge">Physical</span>';
-
-            const availability = book.PhysicalAvailability === 'Available'
-                ? '<span class="rh-avail rh-avail--yes">In Stock</span>'
-                : (hasEbook ? '<span class="rh-avail rh-avail--yes">eBook Available</span>'
-                    : '<span class="rh-avail rh-avail--no">Out of Stock</span>');
-
-            const coverImg = book.ImageURL
-                ? `<img src="${book.ImageURL}" alt="${book.Title}" class="rh-card-cover" loading="lazy">`
-                : `<div class="rh-card-cover rh-card-cover--placeholder">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                        </svg>
-                   </div>`;
-
-            const rateBtn = currentUser
-                ? `<button class="rh-rate-btn" data-id="${book.BookID}" data-title="${book.Title}" title="Rate this book">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                        </svg>
-                        Rate
-                   </button>`
-                : '';
-
-            // Physical Cart button
-            const physicalCartBtn = currentUser && hasPhysical && book.PhysicalAvailability === 'Available'
-                ? `<button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="1" title="Add Physical Book">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Buy Physical
-                   </button>`
-                : '';
-
-            // Ebook Download Cart button
-            const ebookCartBtn = currentUser && hasEbook
-                ? `<button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="2" title="Buy Ebook (Permanent)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Buy Ebook
-                   </button>`
-                : '';
-
-            // Ebook Rent dropdown and button
-            const rentSelectHTML = currentUser && hasEbook
-                ? `<select class="rh-rent-select" id="rent-days-${book.BookID}">
-                     <option value="7">7 Days</option>
-                     <option value="14">14 Days</option>
-                     <option value="30">30 Days</option>
-                   </select>
-                   <button class="rh-cart-add-btn" data-id="${book.BookID}" data-format="3" onclick="this.dataset.rental=document.getElementById('rent-days-${book.BookID}').value" title="Rent Ebook">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Rent
-                   </button>`
-                : '';
-
+            const isInWishlist = userWishlist.some(item => item.BookID === book.BookID);
+            const price = book.PhysicalPrice ? `PKR ${book.PhysicalPrice.toLocaleString()}` : (book.EbookPrice ? `PKR ${book.EbookPrice.toLocaleString()}` : 'Free');
+            const isAvailable = book.PhysicalAvailability === 'Available';
+            
             return `
-                <div class="rh-book-card glass">
+                <div class="rh-book-card glass" onclick="window.location.href='/book-details.html?id=${book.BookID}'">
                     <div class="rh-card-cover-wrap">
-                        ${coverImg}
-                        ${typeBadge}
+                        <img src="${book.ImageURL || 'https://via.placeholder.com/300x450?text=No+Cover'}" class="rh-card-cover" loading="lazy">
+                        <div class="rh-card-overlay-actions">
+                            <button class="rh-action-icon-btn rh-wishlist-btn ${isInWishlist ? 'active' : ''}" 
+                                    onclick="event.stopPropagation(); toggleWishlist(${book.BookID}, this)"
+                                    title="Add to Wishlist">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.94-8.94 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
+                            <button class="rh-action-icon-btn rh-rate-btn-oncard" 
+                                    onclick="event.stopPropagation(); openRateModal(${book.BookID}, '${book.Title.replace(/'/g, "\\'")}')"
+                                    title="Rate this book">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="rh-card-body">
                         <h3 class="rh-card-title">${book.Title}</h3>
                         <p class="rh-card-author">by ${book.Author}</p>
-                        <div class="rh-card-meta">
-                            <div class="rh-card-stars">${stars} <span class="rh-card-rating-num">${rating > 0 ? rating.toFixed(1) : '—'}</span></div>
-                            <span class="rh-card-category">${book.CategoryName || ''}</span>
-                        </div>
                         <div class="rh-card-footer">
                             <span class="rh-card-price">${price}</span>
-                            ${availability}
-                        </div>
-                        <div class="rh-card-actions" style="flex-wrap: wrap; gap: 0.5rem; justify-content: start;">
-                            ${rateBtn}
-                            ${physicalCartBtn}
-                            ${ebookCartBtn}
-                            ${rentSelectHTML ? `<div style="display:flex; gap:0.25rem; align-items:center; width: 100%; margin-top: 0.25rem;">${rentSelectHTML}</div>` : ''}
+                            <span class="rh-card-avail ${isAvailable ? 'rh-avail--yes' : 'rh-avail--no'}">${isAvailable ? 'In Stock' : 'Out of Stock'}</span>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
-
-        // Attach rate buttons
-        document.querySelectorAll('.rh-rate-btn').forEach(btn => {
-            btn.addEventListener('click', () => openRateModal(btn.dataset.id, btn.dataset.title));
-        });
-
-        // Attach cart buttons
-        document.querySelectorAll('.rh-cart-add-btn').forEach(btn => {
-            btn.addEventListener('click', () => addToCart(btn.dataset.id, parseInt(btn.dataset.format), btn));
-        });
     }
 
-    // ── Star Rendering ──
-    function renderStars(rating) {
-        let html = '';
-        for (let i = 1; i <= 5; i++) {
-            if (i <= Math.floor(rating)) {
-                html += '<span class="rh-star rh-star--filled">★</span>';
-            } else if (i - 0.5 <= rating) {
-                html += '<span class="rh-star rh-star--half">★</span>';
-            } else {
-                html += '<span class="rh-star rh-star--empty">★</span>';
-            }
-        }
-        return html;
-    }
+    // Wishlist logic
+    window.toggleWishlist = async (id, btn) => {
+        if (!currentUser) { showToast('Please log in first', 'error'); return; }
+        const isActive = btn.classList.contains('active');
+        try {
+            const method = isActive ? 'DELETE' : 'POST';
+            const url = isActive ? `/api/user/wishlist/${id}` : '/api/user/wishlist';
+            const body = isActive ? null : JSON.stringify({ bookId: id });
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body });
+            if (!res.ok) throw new Error('Failed');
+            btn.classList.toggle('active');
+            btn.querySelector('svg').setAttribute('fill', isActive ? 'none' : 'currentColor');
+            showToast(isActive ? 'Removed from wishlist' : 'Added to wishlist');
+            if (isActive) userWishlist = userWishlist.filter(item => item.BookID !== id);
+            else userWishlist.push({ BookID: id });
+        } catch (err) { showToast(err.message, 'error'); }
+    };
 
-    // ── Rating Modal ──
-    function openRateModal(bookId, bookTitle) {
+    // Rating Modal Logic
+    window.openRateModal = (bookId, title) => {
+        if (!currentUser) { showToast('Please log in first', 'error'); return; }
         document.getElementById('rate-book-id').value = bookId;
-        document.getElementById('rate-book-title').textContent = bookTitle;
+        document.getElementById('rate-book-title').textContent = title;
         selectedRating = 0;
         submitRatingBtn.disabled = true;
-        ratingLabel.textContent = 'Select a rating';
-        starInput.querySelectorAll('.rh-star-btn').forEach(s => s.classList.remove('rh-star-btn--active'));
-        rateModal.classList.add('active');
-    }
+        starInput.querySelectorAll('.rh-star-btn').forEach(s => s.style.color = 'var(--color-border)');
+        rateModal.style.display = 'flex';
+    };
 
-    // Star interaction
-    const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
     starInput.querySelectorAll('.rh-star-btn').forEach(star => {
         star.addEventListener('click', () => {
             selectedRating = parseInt(star.dataset.value);
             submitRatingBtn.disabled = false;
-            ratingLabel.textContent = ratingLabels[selectedRating];
             starInput.querySelectorAll('.rh-star-btn').forEach(s => {
-                s.classList.toggle('rh-star-btn--active', parseInt(s.dataset.value) <= selectedRating);
-            });
-        });
-
-        star.addEventListener('mouseenter', () => {
-            const val = parseInt(star.dataset.value);
-            starInput.querySelectorAll('.rh-star-btn').forEach(s => {
-                s.classList.toggle('rh-star-btn--hover', parseInt(s.dataset.value) <= val);
-            });
-        });
-
-        star.addEventListener('mouseleave', () => {
-            starInput.querySelectorAll('.rh-star-btn').forEach(s => {
-                s.classList.remove('rh-star-btn--hover');
+                s.style.color = parseInt(s.dataset.value) <= selectedRating ? '#FFD700' : 'var(--color-border)';
             });
         });
     });
 
-    // Submit rating
     submitRatingBtn.addEventListener('click', async () => {
-        if (!selectedRating) return;
-        const bookId = document.getElementById('rate-book-id').value;
-
-        submitRatingBtn.disabled = true;
-        submitRatingBtn.textContent = 'Submitting...';
-
+        const id = document.getElementById('rate-book-id').value;
         try {
-            const res = await fetch(`/api/books/${bookId}/rate`, {
+            const res = await fetch(`/api/books/${id}/rate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rating: selectedRating })
             });
-
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || 'Failed');
-            }
-
-            closeModal(rateModal);
-            showToast('Rating submitted successfully!', 'success');
-            loadBooks(); // Refresh to show updated rating
-        } catch (err) {
-            showToast(err.message || 'Failed to submit rating.', 'error');
-        } finally {
-            submitRatingBtn.disabled = false;
-            submitRatingBtn.textContent = 'Submit Rating';
-        }
+            if (!res.ok) throw new Error('Failed');
+            showToast('Rating submitted!');
+            rateModal.style.display = 'none';
+            loadBooks();
+        } catch (err) { showToast(err.message, 'error'); }
     });
 
-    // ── Search with debounce ──
-    let searchTimeout;
-    searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(renderBooks, 300);
-    });
+    document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => rateModal.style.display = 'none'));
 
-    typeFilter.addEventListener('change', renderBooks);
-    sortSelect.addEventListener('change', renderBooks);
+    // Search & Filters
+    searchInput.addEventListener('input', () => renderBooks());
+    typeFilter.addEventListener('change', () => renderBooks());
+    sortSelect.addEventListener('change', () => renderBooks());
 
-    // ── Modal Helpers ──
-    function closeModal(modal) {
-        modal.classList.remove('active');
-    }
-
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => closeModal(rateModal));
-    });
-
-    window.addEventListener('click', (e) => {
-        if (e.target === rateModal) closeModal(rateModal);
-    });
-
-    // ── Toast ──
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast-notification');
-        const toastMsg = document.getElementById('toast-message');
-        toastMsg.textContent = message;
-        toast.className = `rh-toast rh-toast--${type} rh-toast--visible`;
-        setTimeout(() => toast.classList.remove('rh-toast--visible'), 3500);
-    }
-
-    // ── Add to Cart ──
-    async function addToCart(bookId, formatId, btnEl) {
-        if (!currentUser) {
-            showToast('Please log in to add items to your cart.', 'error');
-            return;
-        }
-        
-        let rentalDays = null;
-        if (btnEl.dataset.rental) {
-            rentalDays = parseInt(btnEl.dataset.rental);
-        }
-
-        const origText = btnEl.innerHTML;
-        btnEl.disabled = true;
-        btnEl.innerHTML = 'Adding...';
-        try {
-            const res = await fetch('/api/cart', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bookId: parseInt(bookId), formatId, quantity: 1, rentalDays })
-            });
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || 'Failed');
-            }
-            showToast('Added to cart!', 'success');
-            btnEl.innerHTML = '✓ Added';
-            setTimeout(() => { btnEl.innerHTML = origText; btnEl.disabled = false; }, 2000);
-        } catch (err) {
-            showToast(err.message || 'Failed to add to cart.', 'error');
-            btnEl.innerHTML = origText;
-            btnEl.disabled = false;
-        }
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast-notification');
+        document.getElementById('toast-message').textContent = msg;
+        t.className = `rh-toast rh-toast--${type} rh-toast--visible`;
+        setTimeout(() => t.classList.remove('rh-toast--visible'), 3000);
     }
 });

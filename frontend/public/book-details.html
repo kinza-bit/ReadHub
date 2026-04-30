@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Books - READhub</title>
-    <meta name="description" content="Browse, search, and discover books on READhub. Filter by category, type, and ratings.">
+    <title>Book Details - READhub</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/theme.js"></script>
@@ -53,7 +52,7 @@
   --ray-opacity: 0.06;
 }
 
-html{background:var(--bg-prism);color:var(--text)}
+html{background:var(--bg-prism);color:var(--text);scroll-behavior:smooth;}
 body{
   font-family:'Outfit',sans-serif;
   font-size:14px;font-weight:300;
@@ -105,17 +104,19 @@ body{
 }
 
 /* ── NAVBAR ── */
-.navbar {
-  position: sticky; top: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 2rem; height: 62px;
+.navbar{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:62px;
   background: var(--nav-bg);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  position:relative;z-index:100;
 }
-.navbar::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: var(--prism-1); opacity: 0.2; pointer-events: none;
+.navbar::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:var(--prism-1);
+  opacity:0.2;pointer-events:none;
 }
 .nav-left{display:flex;align-items:center;gap:1.25rem;position:relative;z-index:1}
 .brand{
@@ -132,6 +133,7 @@ body{
 }
 .nav-link:hover{color:var(--text);}
 
+/* Hamburger */
 .hamburger-container{position:relative}
 .hamburger-btn{
   background:none;border:none;cursor:pointer;
@@ -158,6 +160,7 @@ body{
 }
 .dropdown-item:hover{color:var(--text);background:var(--surface-hover)}
 
+/* ── LOGOUT BUTTON ── */
 .logoutButton {
   --background: var(--prism-1);
   --background-hover: var(--prism-2);
@@ -226,139 +229,9 @@ main {
   max-width: 1100px; margin: 0 auto;
   padding: 3rem 2rem 5rem;
 }
-
-/* ── HEADER ── */
-.dash-header { margin-bottom: 2.5rem; }
-.dash-header h1 {
-  font-family:'DM Serif Display',serif;
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  font-weight: 400; letter-spacing: -0.03em;
-  line-height: 1.2; margin-bottom: 0.5rem;
-  font-style:italic;
-  background:linear-gradient(135deg,#e8e4f8 20%,#c4b5fd 55%,#7dd3fc 90%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.dash-header p { color: var(--text-muted); font-size: 15px; }
-
-.prism-divider {
-  height: 1px; margin: 2rem 0;
-  background: linear-gradient(90deg, transparent, var(--prism-1), var(--prism-2), transparent);
-  opacity: 0.3;
-}
-
-/* ── CARDS ── */
-.gem-card {
-  position: relative; overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--c-accent-border, var(--border));
-  border-radius: var(--radius);
-  padding: 1.5rem 1.75rem;
-  transition: box-shadow 0.2s, border-color 0.2s, transform 0.3s;
-}
-.gem-card:hover {
-  border-color: var(--border-bright);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
-}
-.gem-shimmer {
-  position: absolute; inset: 0; pointer-events: none; opacity: 0;
-  background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%);
-  transition: opacity 0.3s;
-}
-.facet-corner {
-  position: absolute; top: 0; right: 0;
-  width: 40px; height: 40px;
-  background: var(--c-accent, var(--prism-1));
-  clip-path: polygon(100% 0, 100% 100%, 0 0);
-  opacity: 0.15;
-}
-
-/* ── SECTION ── */
-.section { margin-top: 3rem; }
-.section-header {
-  display: flex; align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-}
-.section-title {
-  font-size: 1rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
-  color: var(--text-muted);
-}
-.see-all {
-  font-size: 12px; color: var(--prism-1); text-decoration: none;
-  letter-spacing: 0.02em; transition: color 0.15s;
-}
-.see-all:hover { color: var(--prism-3); }
-
-/* ── BUTTONS ── */
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  padding: 0.65rem 1.5rem; border: none; border-radius: 20px; cursor: pointer;
-  background: linear-gradient(135deg, var(--prism-1), var(--prism-2));
-  color: #fff; font-size: 13px; font-weight: 500; letter-spacing: 0.02em;
-  text-decoration: none; transition: opacity 0.15s, transform 0.15s;
-}
-.btn-primary:hover { opacity: 0.88; transform: translateY(-2px); }
-
-/* ── EMPTY STATE ── */
-.empty-state {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 3rem 2rem; text-align: center;
-}
-.empty-icon {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: rgba(168,85,247,0.12);
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 1.25rem;
-}
-.empty-icon svg { width: 26px; height: 26px; color: var(--prism-1); }
-.empty-state h4 { font-size: 16px; font-weight: 600; margin-bottom: 0.5rem; }
-.empty-state p  { color: var(--text-muted); font-size: 13px; margin-bottom: 1.25rem; }
-
-/* ── FORMS & INPUTS ── */
-input, textarea, select {
-  width: 100%; padding: 0.7rem 1rem;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text);
-  font-family: 'Outfit', sans-serif; font-size: 14px;
-  transition: border-color 0.2s;
-  outline: none;
-}
-input:focus, textarea:focus, select:focus {
-  border-color: var(--prism-1);
-  box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
-}
-label {
-  display: block; font-size: 12px; font-weight: 500;
-  color: var(--text-muted); letter-spacing: 0.04em;
-  text-transform: uppercase; margin-bottom: 0.4rem;
-}
-
-@media (max-width: 720px) {
-  main { padding: 2rem 1.25rem 4rem; }
-}
-
-/* ── RESPONSIVE BOOK GRID ── */
-.rh-book-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 260px);
-  justify-content: center;
-  gap: 2rem;
-}
-@media (max-width: 900px) {
-  .rh-book-grid {
-    grid-template-columns: repeat(2, 260px);
-  }
-}
-@media (max-width: 600px) {
-  .rh-book-grid {
-    grid-template-columns: minmax(240px, 340px);
-  }
-}
 </style>
 </head>
-
-<body>
+<body class="protected-user">
 
 <!-- Ambient layers -->
 <div class="bg-scene"></div>
@@ -412,94 +285,102 @@ label {
 </nav>
 
 <main>
-    <div class="dash-header">
-        <h1>Discover Your Next <span style="background:linear-gradient(135deg,var(--prism-1),var(--prism-3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Great Read</span></h1>
-        <p>Explore our curated collection of engineering, horror, mystery, self-help and more.</p>
-        <div style="position:relative; margin-top:1.5rem; max-width:600px;">
-            <svg style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-muted);" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="search-input" style="padding-left:3rem; border-radius:24px;" placeholder="Search by title, author, or genre...">
+    <div id="book-details-content" class="rh-details-container" style="display: none;">
+        <!-- Cover -->
+        <div class="rh-details-cover-wrap">
+            <img id="book-cover" src="" alt="Book Cover" class="rh-details-cover">
+        </div>
+
+        <!-- Info -->
+        <div class="rh-details-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1 id="book-title">Loading...</h1>
+                    <p id="book-author" class="rh-details-author"></p>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button id="open-rate-btn" class="rh-action-icon-btn" title="Rate this book">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </button>
+                    <button id="wishlist-btn" class="rh-action-icon-btn rh-wishlist-btn" title="Add to Wishlist">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.94-8.94 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="rh-details-meta glass">
+                <div>
+                    <span style="display: block; font-size: 0.8rem; color: var(--color-text-muted);">Rating</span>
+                    <div id="book-rating-stars" class="rh-star-rating-widget" style="margin-bottom: 0;"></div>
+                    <span id="rating-text" style="font-weight: 600;">0.0 (0 reviews)</span>
+                </div>
+                <div style="width: 1px; height: 40px; background: var(--color-border);"></div>
+                <div>
+                    <span style="display: block; font-size: 0.8rem; color: var(--color-text-muted);">Category</span>
+                    <span id="book-category" style="font-weight: 600;">—</span>
+                </div>
+                <div style="width: 1px; height: 40px; background: var(--color-border);"></div>
+                <div>
+                    <span style="display: block; font-size: 0.8rem; color: var(--color-text-muted);">Status</span>
+                    <span id="book-status" class="rh-card-avail">Checking...</span>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Description</h3>
+            <div id="book-description" class="rh-details-description"></div>
+
+            <h3 style="margin-top: 2rem;">Purchase Options</h3>
+            <div id="purchase-options" class="rh-purchase-options">
+                <!-- Options injected by JS -->
+            </div>
         </div>
     </div>
 
-    <div class="prism-divider"></div>
+    <!-- Loading State -->
+    <div id="loading-state" style="text-align: center; padding: 5rem 0;">
+        <p>Loading book details...</p>
+    </div>
 
-    <section class="section" style="margin-top:0;">
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:2rem;" id="category-pills">
-            <button class="genre-pill active" data-category="all" style="background:var(--prism-1); color:#fff; border:1px solid var(--prism-1); padding:0.5rem 1rem; border-radius:20px; cursor:pointer;">All Books</button>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
-            <div style="display:flex; align-items:center; gap:1rem;">
-                <span id="book-count" style="color:var(--text-muted); font-size:14px;">Loading...</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                <select id="type-filter" style="width:auto; min-width:140px;">
-                    <option value="">All Types</option>
-                    <option value="physical">Physical</option>
-                    <option value="ebook">eBook</option>
-                </select>
-                <select id="sort-select" style="width:auto; min-width:160px;">
-                    <option value="title">Sort by Title</option>
-                    <option value="rating">Sort by Rating ★</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Book Grid -->
-        <div class="rh-book-grid" id="book-grid">
-            <div style="grid-column: 1 / -1; text-align:center; color:var(--text-muted); padding:3rem 0;">
-                <p>Loading books...</p>
-            </div>
-        </div>
-
-        <!-- Empty State -->
-        <div class="empty-state" id="empty-state" style="display: none; margin-top:2rem;">
-            <div class="empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                </svg>
-            </div>
-            <h4>No books found</h4>
-            <p>Try adjusting your search or filters to find what you're looking for.</p>
-        </div>
-    </section>
+    <!-- Error State -->
+    <div id="error-state" style="display: none; text-align: center; padding: 5rem 0;">
+        <h2>Oops!</h2>
+        <p id="error-message">We couldn't find the book you're looking for.</p>
+        <a href="/browse.html" class="btn-primary" style="margin-top: 2rem; display: inline-flex;">Back to Browse</a>
+    </div>
 </main>
 
 <!-- Rating Modal -->
 <div class="modal" id="rate-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-    <div class="gem-card" style="width:90%; max-width:400px; text-align:center;" data-tilt>
+    <div class="gem-card glass" style="width:90%; max-width:500px; padding: 2rem;" data-tilt>
         <div style="display:flex; justify-content:flex-end;">
             <button class="close-modal" style="background:none; border:none; color:var(--text); font-size:1.5rem; cursor:pointer;">&times;</button>
         </div>
-        <h3 style="margin-bottom: 0.5rem; font-size:1.2rem; font-family:'DM Serif Display',serif; font-style:italic;">Rate this Book</h3>
-        <p id="rate-book-title" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size:13px;"></p>
-        <input type="hidden" id="rate-book-id">
-        <div id="star-input" style="font-size:2rem; color:var(--border-bright); cursor:pointer; display:flex; justify-content:center; gap:0.5rem;">
+        <h3 style="margin-bottom: 0.5rem; text-align:center;">Rate this Book</h3>
+        <p id="rate-book-title-modal" style="color: var(--text-muted); text-align:center; margin-bottom: 1.5rem;"></p>
+        
+        <div id="star-input" style="font-size:2.5rem; color:var(--color-border); cursor:pointer; display:flex; justify-content:center; gap:0.5rem; margin-bottom: 1.5rem;">
             <span class="rh-star-btn" data-value="1">★</span>
             <span class="rh-star-btn" data-value="2">★</span>
             <span class="rh-star-btn" data-value="3">★</span>
             <span class="rh-star-btn" data-value="4">★</span>
             <span class="rh-star-btn" data-value="5">★</span>
         </div>
-        <p id="rating-label" style="color: var(--text-muted); margin-top: 0.75rem; font-size: 13px;">Select a rating</p>
-        <button class="btn-primary" id="submit-rating-btn" style="margin-top: 1.5rem;" disabled>Submit Rating</button>
+        
+        <button class="btn-primary" id="submit-rating-btn" style="width: 100%;" disabled>Submit Rating</button>
     </div>
 </div>
 
-<!-- Toast Notification -->
-<div class="rh-toast" id="toast-notification" style="display:none; position:fixed; bottom:20px; right:20px; background:var(--surface); border:1px solid var(--border); padding:1rem; border-radius:var(--radius-sm); z-index:300;">
-    <span id="toast-message" style="color:var(--text);"></span>
+<!-- Toast -->
+<div class="rh-toast" id="toast-notification">
+    <span id="toast-message"></span>
 </div>
 
 <script src="/js/auth.js"></script>
-<script src="/js/browse.js"></script>
+<script src="/js/book-details.js"></script>
 
 <script>
 // ── CURSOR TRACKING ──
@@ -510,32 +391,12 @@ document.addEventListener('mousemove', e => {
   if (ray)  { ray.style.left  = e.clientX + 'px'; }
 });
 
-// ── 3D TILT ON [data-tilt] CARDS ──
-const MAX_TILT = 12;
-document.querySelectorAll('[data-tilt]').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const r  = card.getBoundingClientRect();
-    const dx = (e.clientX - (r.left + r.width  / 2)) / (r.width  / 2);
-    const dy = (e.clientY - (r.top  + r.height / 2)) / (r.height / 2);
-    card.style.transform = `perspective(700px) rotateX(${dy * MAX_TILT}deg) rotateY(${-dx * MAX_TILT}deg) scale3d(1.03,1.03,1.03)`;
-    card.style.transition = 'transform 0.08s ease';
-    const shimmer = card.querySelector('.gem-shimmer');
-    if (shimmer) { shimmer.style.opacity = '1'; }
-  });
-  card.addEventListener('mouseleave', () => {
-    card.style.transform  = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
-    card.style.transition = 'transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)';
-    const shimmer = card.querySelector('.gem-shimmer');
-    if (shimmer) shimmer.style.opacity = '0';
-  });
-});
-
-// ── CLOSE HAMBURGER ON OUTSIDE CLICK ──
+// Close hamburger on outside click
 document.addEventListener('click', e => {
-  if (!e.target.closest('.hamburger-container'))
+  if (!e.target.closest('.hamburger-container')) {
     document.querySelectorAll('.hamburger-menu').forEach(m => m.classList.remove('show'));
+  }
 });
 </script>
-
 </body>
 </html>

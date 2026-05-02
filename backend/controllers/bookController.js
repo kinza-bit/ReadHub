@@ -60,7 +60,7 @@ const getBooksByCategory = async (req, res) => {
     }
 };
 
-// ─── GET /api/books/:id — single book detail (public) ────────────────────────
+// ─── GET /api/books/:id — single book detail (public + user-specific status) ──
 const getBookById = async (req, res) => {
     try {
         const pool = await poolPromise;
@@ -73,7 +73,60 @@ const getBookById = async (req, res) => {
         if (result.recordset.length === 0) {
             return res.status(404).json({ error: 'Book not found.' });
         }
-        res.json(result.recordset[0]);
+
+        const book = result.recordset[0];
+        let userStatus = {
+            activeRental: null,
+            isInCart: [], // Array of format IDs
+            isPurchased: false
+        };
+
+        // If user is logged in, fetch their status for this book
+        if (req.session && req.session.userId) {
+            const userId = req.session.userId;
+            
+            // 1. Check for active rental
+            const rentalResult = await pool.request()
+                .input('UserID', sql.INT, userId)
+                .input('BookID', sql.INT, req.params.id)
+                .query(`
+                    SELECT DueDate FROM EbookRentals 
+                    WHERE UserID = @UserID AND BookID = @BookID 
+                      AND ActualReturnDate IS NULL 
+                      AND DueDate > SYSUTCDATETIME()
+                `);
+            if (rentalResult.recordset.length > 0) {
+                userStatus.activeRental = {
+                    expiryDate: rentalResult.recordset[0].DueDate
+                };
+            }
+
+            // 2. Check if already in cart
+            const cartResult = await pool.request()
+                .input('UserID', sql.INT, userId)
+                .input('BookID', sql.INT, req.params.id)
+                .query(`
+                    SELECT ci.FormatID FROM Cart c
+                    INNER JOIN CartItems ci ON c.CartID = ci.CartID
+                    WHERE c.UserID = @UserID AND ci.BookID = @BookID
+                `);
+            userStatus.isInCart = cartResult.recordset.map(row => row.FormatID);
+
+            // 3. Check if already purchased (Ebook Buy)
+            const purchaseResult = await pool.request()
+                .input('UserID', sql.INT, userId)
+                .input('BookID', sql.INT, req.params.id)
+                .query(`
+                    SELECT 1 FROM OrderItems oi
+                    INNER JOIN Orders o ON oi.OrderID = o.OrderID
+                    WHERE o.UserID = @UserID AND oi.BookID = @BookID AND oi.FormatID = 2
+                `);
+            if (purchaseResult.recordset.length > 0) {
+                userStatus.isPurchased = true;
+            }
+        }
+
+        res.json({ ...book, userStatus });
     } catch (error) {
         console.error('Error fetching book:', error);
         res.status(500).json({ error: 'Failed to fetch book.' });

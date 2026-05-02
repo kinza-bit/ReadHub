@@ -2,8 +2,64 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchDashboardStats();
+    loadRecentlyAdded();
     loadPopularBooks();
 });
+
+// ── Recently Added ───────────────────────────────────────────────────────────
+async function loadRecentlyAdded() {
+    const container = document.getElementById('recently-added-container');
+    const emptyState = document.getElementById('recent-empty-state');
+    const viewAllLink = document.getElementById('library-view-all');
+    if (!container || !emptyState) return;
+
+    try {
+        const res = await fetch('/api/user/recently-added');
+        if (!res.ok) throw new Error('API error');
+        const books = await res.json();
+
+        if (books.length === 0) {
+            container.style.display = 'none';
+            emptyState.style.display = 'flex';
+            if (viewAllLink) viewAllLink.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        emptyState.style.display = 'none';
+        if (viewAllLink) viewAllLink.style.display = 'block';
+
+        const grid = container.querySelector('.pb-grid');
+        grid.innerHTML = ''; // Clear skeletons
+
+        books.forEach(book => {
+            const card = document.createElement('div');
+            card.className = 'book-card-gem';
+            card.setAttribute('data-tilt', '');
+
+            card.innerHTML = `
+                <div class="gem-shimmer"></div>
+                <div class="book-cover-wrap">
+                    <img src="${book.ImageURL || '/api/placeholder/400/600'}" alt="${book.Title}">
+                </div>
+                <div class="book-card-info">
+                    <div class="book-card-title">${book.Title}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                        <span style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${book.Author}</span>
+                        <span class="badge ${book.FormatLabel === 'Rented' ? 'badge-pending' : 'badge-success'}" style="font-size: 9px; padding: 2px 6px;">${book.FormatLabel}</span>
+                    </div>
+                </div>
+            `;
+            card.onclick = () => window.location.href = '/library.html';
+            grid.appendChild(card);
+            initTilt(card);
+        });
+
+    } catch (err) {
+        console.error('Recently added error:', err);
+        container.innerHTML = `<p style="color:var(--text-muted); padding: 2rem; text-align: center;">Could not load recent books.</p>`;
+    }
+}
 
 // ── Dashboard Stats ──────────────────────────────────────────────────────────
 async function fetchDashboardStats() {

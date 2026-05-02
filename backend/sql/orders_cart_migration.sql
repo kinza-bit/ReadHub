@@ -25,15 +25,52 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    -- 1. Validation for Ebooks (Format 2: Buy, 3: Rent)
+    IF @FormatID IN (2, 3)
+    BEGIN
+        -- eBooks can only have quantity of 1
+        IF @Quantity > 1
+        BEGIN
+            THROW 50050, 'You can only purchase or rent one copy of an eBook at a time.', 1;
+        END
+
+        -- Check if already in cart
+        IF EXISTS (
+            SELECT 1 FROM Cart c
+            INNER JOIN CartItems ci ON c.CartID = ci.CartID
+            WHERE c.UserID = @UserID AND ci.BookID = @BookID AND ci.FormatID = @FormatID
+        )
+        BEGIN
+            DECLARE @FormatName NVARCHAR(20) = CASE WHEN @FormatID = 2 THEN 'Ebook' ELSE 'Rental' END;
+            DECLARE @ErrMsg NVARCHAR(100) = 'This ' + @FormatName + ' is already in your cart.';
+            THROW 50051, @ErrMsg, 1;
+        END
+
+        -- Check for active rental if renting
+        IF @FormatID = 3
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM EbookRentals 
+                WHERE UserID = @UserID AND BookID = @BookID 
+                  AND ActualReturnDate IS NULL 
+                  AND DueDate > SYSUTCDATETIME()
+            )
+            BEGIN
+                THROW 50052, 'You already have an active rental for this eBook.', 1;
+            END
+        END
+    END
+
     -- Ensure cart exists for user
     IF NOT EXISTS (SELECT 1 FROM Cart WHERE UserID = @UserID)
         INSERT INTO Cart (UserID) VALUES (@UserID);
 
     DECLARE @CartID INT = (SELECT CartID FROM Cart WHERE UserID = @UserID);
 
-    -- If same book+format already in cart, increment quantity
+    -- If same book+format already in cart (and NOT an ebook), increment quantity
     IF EXISTS (SELECT 1 FROM CartItems WHERE CartID = @CartID AND BookID = @BookID AND FormatID = @FormatID)
     BEGIN
+        -- eBooks are already blocked above, so this only hits physical books
         UPDATE CartItems
         SET Quantity = Quantity + @Quantity
         WHERE CartID = @CartID AND BookID = @BookID AND FormatID = @FormatID;

@@ -36,6 +36,10 @@ const addToCart = async (req, res) => {
 
         res.status(201).json({ message: 'Item added to cart.' });
     } catch (error) {
+        // Handle specific SQL errors from sp_AddToCart
+        if (error.number === 50050 || error.number === 50051 || error.number === 50052) {
+            return res.status(400).json({ error: error.message });
+        }
         console.error('Add to cart error:', error);
         res.status(500).json({ error: 'Failed to add item to cart.' });
     }
@@ -68,6 +72,20 @@ const updateCartItem = async (req, res) => {
 
         const pool = await poolPromise;
         if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+
+        // 1. Check if it's an eBook format (2 or 3)
+        const checkResult = await pool.request()
+            .input('CartItemID', sql.INT, req.params.cartItemId)
+            .query('SELECT FormatID FROM CartItems WHERE CartItemID = @CartItemID');
+        
+        if (checkResult.recordset.length > 0) {
+            const formatId = checkResult.recordset[0].FormatID;
+            if (formatId === 2 || formatId === 3) {
+                if (quantity > 1) {
+                    return res.status(400).json({ error: 'You can only have one copy of an eBook.' });
+                }
+            }
+        }
 
         await pool.request()
             .input('UserID',     sql.INT, req.session.userId)
@@ -139,33 +157,44 @@ const checkout = async (req, res) => {
     try {
         const { paymentMethodId, shippingName, shippingAddress, shippingCity, shippingPhone } = req.body;
 
-        // Validate required fields
         if (!paymentMethodId) {
             return res.status(400).json({ error: 'Payment method is required.' });
-        }
-        if (!shippingName || !shippingName.trim()) {
-            return res.status(400).json({ error: 'Recipient name is required.' });
-        }
-        if (!shippingAddress || !shippingAddress.trim()) {
-            return res.status(400).json({ error: 'Delivery address is required.' });
-        }
-        if (!shippingCity || !shippingCity.trim()) {
-            return res.status(400).json({ error: 'City is required.' });
-        }
-        if (!shippingPhone || !shippingPhone.trim()) {
-            return res.status(400).json({ error: 'Phone number is required.' });
         }
 
         const pool = await poolPromise;
         if (!pool) return res.status(503).json({ error: 'Database is offline.' });
 
+        // ─── Fetch cart items to validate restrictions ───
+        const cartResult = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .execute('sp_GetCartItems');
+        const cartItems = cartResult.recordset;
+
+        if (cartItems.length === 0) {
+            return res.status(400).json({ error: 'Your cart is empty.' });
+        }
+
+        const hasPhysical = cartItems.some(item => item.FormatID === 1);
+
+        // ─── COD Restriction ───
+        if (paymentMethodId === 1 && !hasPhysical) {
+            return res.status(400).json({ error: 'Cash on Delivery is only available for physical books.' });
+        }
+
+        // ─── Address Validation ───
+        if (hasPhysical) {
+            if (!shippingName?.trim() || !shippingAddress?.trim() || !shippingCity?.trim() || !shippingPhone?.trim()) {
+                return res.status(400).json({ error: 'All delivery details are required for physical items.' });
+            }
+        }
+
         const result = await pool.request()
             .input('UserID',          sql.INT,      req.session.userId)
             .input('PaymentMethodID', sql.INT,      paymentMethodId)
-            .input('ShippingName',    sql.NVarChar, shippingName.trim())
-            .input('ShippingAddress', sql.NVarChar, shippingAddress.trim())
-            .input('ShippingCity',    sql.NVarChar, shippingCity.trim())
-            .input('ShippingPhone',   sql.NVarChar, shippingPhone.trim())
+            .input('ShippingName',    sql.NVarChar, (shippingName || 'Digital Purchase').trim())
+            .input('ShippingAddress', sql.NVarChar, (shippingAddress || 'No Shipping Required').trim())
+            .input('ShippingCity',    sql.NVarChar, (shippingCity || 'Online').trim())
+            .input('ShippingPhone',   sql.NVarChar, (shippingPhone || 'N/A').trim())
             .execute('sp_CheckoutCart');
 
         const order = result.recordset[0];

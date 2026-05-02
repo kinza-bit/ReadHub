@@ -323,7 +323,11 @@ label {
 }
 .rh-payment-card-inner strong { color: var(--text); font-size: 15px; display: block; margin-bottom: 0.2rem; }
 .rh-payment-card-inner p { color: var(--text-muted); font-size: 13px; margin: 0; }
-.rh-payment-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.2s; font-size: 12px; }
+.rh-payment-check { 
+  width: 12px; height: 18px; border-radius: 4px; border: 1px solid var(--border); 
+  display: flex; align-items: center; justify-content: center; color: transparent; 
+  transition: all 0.2s; font-size: 7px; flex-shrink: 0;
+}
 .rh-payment-card input[type="radio"]:checked ~ * .rh-payment-check { background: var(--prism-1); border-color: var(--prism-1); color: #fff; }
 
 .rh-review-section { margin-bottom: 1.5rem; }
@@ -335,6 +339,73 @@ label {
 .rh-step-title { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
 
 .error-message { color: var(--prism-3); font-size: 12px; display: block; margin-top: -0.5rem; margin-bottom: 1rem; }
+
+/* Credit Card Form Styling */
+.rh-cc-form {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-sm);
+  margin-top: 0.5rem;
+  padding: 0;
+  border: 1px solid transparent;
+}
+.rh-cc-form.expanded {
+  max-height: 600px;
+  opacity: 1;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.rh-cc-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.rh-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(168, 85, 247, 0.2);
+  border-top-color: var(--prism-1);
+  border-radius: 50%;
+  animation: rh-spin 0.8s linear infinite;
+}
+
+@keyframes rh-spin {
+  to { transform: rotate(360deg); }
+}
+
+.rh-cc-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--prism-4);
+  padding: 1.25rem;
+  background: rgba(52, 211, 153, 0.1);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  margin-top: 0.5rem;
+  animation: rh-fade-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes rh-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rh-cc-form input.invalid {
+  border-color: var(--prism-3) !important;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1) !important;
+}
 
 @media (max-width: 768px) {
   .rh-checkout-layout { grid-template-columns: 1fr; }
@@ -481,6 +552,42 @@ label {
                             <div class="rh-payment-check">✓</div>
                         </div>
                     </label>
+
+                    <!-- Credit Card Details Form -->
+                    <div id="cc-form-container" class="rh-cc-form" style="display: block;">
+                        <div class="form-group">
+                            <label for="cc-name">Cardholder Name</label>
+                            <input type="text" id="cc-name" placeholder="John Doe">
+                            <span class="error-message" id="cc-name-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="cc-number">Card Number</label>
+                            <input type="text" id="cc-number" placeholder="0000 0000 0000 0000" maxlength="19">
+                            <span class="error-message" id="cc-number-error"></span>
+                        </div>
+                        <div class="rh-form-grid">
+                            <div class="form-group">
+                                <label for="cc-expiry">Expiry Date</label>
+                                <input type="text" id="cc-expiry" placeholder="MM/YY" maxlength="5">
+                                <span class="error-message" id="cc-expiry-error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="cc-cvv">CVV</label>
+                                <input type="password" id="cc-cvv" placeholder="***" maxlength="4">
+                                <span class="error-message" id="cc-cvv-error"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Processing Overlay (Inner) -->
+                        <div id="cc-processing" class="rh-cc-processing" style="display: none;">
+                            <div class="rh-spinner"></div>
+                            <p>Verifying Card...</p>
+                        </div>
+                        <div id="cc-success" class="rh-cc-success" style="display: none;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Card Verified Successfully!</span>
+                        </div>
+                    </div>
                     <label class="rh-payment-card" id="payment-cod-option">
                         <input type="radio" name="payment-method" value="1">
                         <div class="rh-payment-card-inner">

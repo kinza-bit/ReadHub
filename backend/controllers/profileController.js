@@ -203,10 +203,50 @@ const getRequests = async (req, res) => {
     }
 };
 
+// ─── GET /api/user/recently-added — last 5 purchases/rentals ─────────────────
+const getRecentlyAdded = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .query(`
+                SELECT TOP 3 * FROM (
+                    SELECT b.BookID, b.Title, b.Author, b.ImageURL, 
+                           CASE pf.FormatName 
+                                WHEN 'Physical' THEN 'Physical'
+                                WHEN 'Ebook Buy' THEN 'eBook'
+                                ELSE pf.FormatName 
+                           END as FormatLabel,
+                           o.OrderDate as AddedDate
+                    FROM OrderItems oi
+                    JOIN Orders o ON oi.OrderID = o.OrderID
+                    JOIN Books b ON oi.BookID = b.BookID
+                    JOIN PurchaseFormat pf ON oi.FormatID = pf.FormatID
+                    WHERE o.UserID = @UserID AND pf.FormatID IN (1, 2)
+
+                    UNION ALL
+
+                    SELECT b.BookID, b.Title, b.Author, b.ImageURL, 
+                           'Rented' as FormatLabel,
+                           er.StartDate as AddedDate
+                    FROM EbookRentals er
+                    JOIN Books b ON er.BookID = b.BookID
+                    WHERE er.UserID = @UserID AND er.ActualReturnDate IS NULL
+                ) AS Combined
+                ORDER BY AddedDate DESC
+            `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Recently added fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch recently added books.' });
+    }
+};
+
 module.exports = {
     getProfile, updateProfile,
     getPurchases,
     getRentals,
+    getRecentlyAdded,
     getWishlist, addToWishlist, removeFromWishlist,
     submitRequest, getRequests,
 };

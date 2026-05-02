@@ -62,6 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const stockWarning = item.FormatID === 1 && item.StockLevel < item.Quantity
                 ? `<span class="rh-stock-warn">Only ${item.StockLevel} in stock</span>` : '';
 
+            const isEbook = item.FormatID === 2 || item.FormatID === 3;
+            const qtyControl = isEbook 
+                ? `<div class="rh-qty-control" style="opacity: 0.6; pointer-events: none;">
+                     <span class="rh-qty-value">${item.Quantity}</span>
+                   </div>`
+                : `<div class="rh-qty-control">
+                     <button class="rh-qty-btn" onclick="updateQty(${item.CartItemID}, ${item.Quantity - 1})" ${item.Quantity <= 1 ? 'disabled' : ''}>−</button>
+                     <span class="rh-qty-value">${item.Quantity}</span>
+                     <button class="rh-qty-btn" onclick="updateQty(${item.CartItemID}, ${item.Quantity + 1})">+</button>
+                   </div>`;
+
             return `
                 <div class="rh-cart-item glass" data-id="${item.CartItemID}">
                     ${coverImg}
@@ -75,11 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <div class="rh-cart-item-controls">
-                        <div class="rh-qty-control">
-                            <button class="rh-qty-btn" onclick="updateQty(${item.CartItemID}, ${item.Quantity - 1})" ${item.Quantity <= 1 ? 'disabled' : ''}>−</button>
-                            <span class="rh-qty-value">${item.Quantity}</span>
-                            <button class="rh-qty-btn" onclick="updateQty(${item.CartItemID}, ${item.Quantity + 1})">+</button>
-                        </div>
+                        ${qtyControl}
                         <div class="rh-cart-item-price">PKR ${lineTotal.toLocaleString()}</div>
                         <button class="rh-cart-remove-btn" onclick="removeItem(${item.CartItemID})" title="Remove item">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -102,10 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ quantity: newQty })
             });
-            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed');
             loadCart();
         } catch (err) {
-            showToast('Failed to update quantity.', 'error');
+            showToast(err.message, 'error');
         }
     };
 

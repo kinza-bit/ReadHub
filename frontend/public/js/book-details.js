@@ -82,6 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderPurchaseOptions(book) {
         let html = '';
+        const userStatus = book.userStatus || { isInCart: [], activeRental: null, isPurchased: false };
+
         if (book.PhysicalPrice > 0) {
             const isAvail = book.PhysicalAvailability === 'Available';
             html += `
@@ -98,7 +100,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         }
+
         if (book.EbookPrice > 0) {
+            const inCartBuy = userStatus.isInCart.includes(2);
+            const inCartRent = userStatus.isInCart.includes(3);
+            const isRented = userStatus.activeRental;
+            const isPurchased = userStatus.isPurchased;
+
+            // eBook Buy Option
+            let buyBtnText = 'Buy Now';
+            let buyDisabled = false;
+            if (inCartBuy) { buyBtnText = 'Already in cart'; buyDisabled = true; }
+            else if (isPurchased) { buyBtnText = 'Already purchased'; buyDisabled = true; }
+
             html += `
                 <div class="rh-purchase-card glass">
                     <h4>
@@ -106,25 +120,41 @@ document.addEventListener('DOMContentLoaded', () => {
                         Digital eBook
                     </h4>
                     <span class="rh-purchase-price">PKR ${book.EbookPrice.toLocaleString()}</span>
-                    <button class="btn-primary" onclick="addToCart(${book.BookID}, 2)">
+                    <button class="btn-primary" onclick="addToCart(${book.BookID}, 2)" ${buyDisabled ? 'disabled' : ''}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                        Buy Now
+                        ${buyBtnText}
                     </button>
                 </div>
+            `;
+
+            // eBook Rent Option
+            let rentBtnText = 'Rent Now';
+            let rentDisabled = false;
+            let expiryMsg = '';
+            if (inCartRent) { rentBtnText = 'Already in cart'; rentDisabled = true; }
+            else if (isRented) { 
+                const expiry = new Date(userStatus.activeRental.expiryDate).toLocaleDateString();
+                rentBtnText = 'Already rented'; 
+                rentDisabled = true; 
+                expiryMsg = `<p style="font-size: 0.8rem; color: var(--color-accent); margin-top: 0.5rem;">Expires on ${expiry}</p>`;
+            }
+
+            html += `
                 <div class="rh-purchase-card glass">
                     <h4>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                         Rent eBook
                     </h4>
-                    <select id="rent-days" class="form-control" style="margin-bottom: 1rem; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1);">
+                    <select id="rent-days" class="form-control" ${rentDisabled ? 'disabled' : ''} style="margin-bottom: 1rem; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1);">
                         <option value="7">7 Days - PKR 150</option>
                         <option value="14">14 Days - PKR 250</option>
                         <option value="30">30 Days - PKR 400</option>
                     </select>
-                    <button class="btn-primary" onclick="addRentalToCart(${book.BookID})">
+                    <button class="btn-primary" onclick="addRentalToCart(${book.BookID})" ${rentDisabled ? 'disabled' : ''}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                        Rent Now
+                        ${rentBtnText}
                     </button>
+                    ${expiryMsg}
                 </div>
             `;
         }
@@ -206,8 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) { showToast('Please log in first', 'error'); return; }
         try {
             const res = await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookId: id, formatId, quantity: 1 }) });
-            if (!res.ok) throw new Error('Failed to add to cart');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to add to cart');
             showToast('Added to cart!');
+            fetchBookDetails(); // Refresh UI to update buttons
         } catch (err) { showToast(err.message, 'error'); }
     };
 
@@ -216,8 +248,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const days = document.getElementById('rent-days').value;
         try {
             const res = await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookId: id, formatId: 3, quantity: 1, rentalDays: parseInt(days) }) });
-            if (!res.ok) throw new Error('Failed to add rental');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to add rental');
             showToast('Rental added to cart!');
+            fetchBookDetails(); // Refresh UI
         } catch (err) { showToast(err.message, 'error'); }
     };
 

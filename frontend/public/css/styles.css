@@ -330,7 +330,7 @@ select.form-control {
     justify-content: center;
     padding: 0.75rem 1.5rem;
     font-weight: 600;
-    border-radius: 0.75rem;
+    border-radius: 20px;
     border: none;
     cursor: pointer;
     transition: background 0.35s ease, box-shadow 0.3s ease,
@@ -338,6 +338,7 @@ select.form-control {
         border-color 0.3s ease, opacity 0.2s ease;
     width: 100%;
     font-size: 1rem;
+    outline: none;
 }
 
 .btn:disabled {
@@ -4158,6 +4159,21 @@ body {
     font-weight: 700;
     margin-bottom: 1.5rem;
     color: var(--color-primary);
+}
+
+.rh-purchase-card .btn-primary {
+    border-radius: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    box-shadow: none;
+    border: none;
+    outline: none;
+}
+
+.rh-purchase-card .btn-primary:hover,
+.rh-purchase-card .btn-primary:focus {
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* ============================================================

@@ -78,7 +78,8 @@ const getBookById = async (req, res) => {
         let userStatus = {
             activeRental: null,
             isInCart: [], // Array of format IDs
-            isPurchased: false
+            isPurchased: false,
+            userRating: null // { rating, review }
         };
 
         // If user is logged in, fetch their status for this book
@@ -123,6 +124,21 @@ const getBookById = async (req, res) => {
                 `);
             if (purchaseResult.recordset.length > 0) {
                 userStatus.isPurchased = true;
+            }
+
+            // 4. Check for existing rating
+            const ratingResult = await pool.request()
+                .input('UserID', sql.INT, userId)
+                .input('BookID', sql.INT, req.params.id)
+                .query(`
+                    SELECT Rating, Review FROM BookRating 
+                    WHERE UserID = @UserID AND BookID = @BookID
+                `);
+            if (ratingResult.recordset.length > 0) {
+                userStatus.userRating = {
+                    rating: ratingResult.recordset[0].Rating,
+                    review: ratingResult.recordset[0].Review
+                };
             }
         }
 

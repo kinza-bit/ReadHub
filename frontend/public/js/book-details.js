@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openRateBtn = document.getElementById('open-rate-btn');
     const submitRatingBtn = document.getElementById('submit-rating-btn');
     const starInput = document.getElementById('star-input');
+    const reviewInput = document.getElementById('review-input');
     const rateBookTitleModal = document.getElementById('rate-book-title-modal');
 
     let currentUser = null;
@@ -203,28 +204,53 @@ document.addEventListener('DOMContentLoaded', () => {
     openRateBtn.addEventListener('click', () => {
         if (!currentUser) { showToast('Please log in to rate books', 'error'); return; }
         rateBookTitleModal.textContent = currentBook.Title;
+        
+        // Reset or Pre-fill
+        const existing = currentBook.userStatus?.userRating;
+        if (existing) {
+            selectedRating = existing.rating;
+            reviewInput.value = existing.review || '';
+            updateStarUI(selectedRating);
+            submitRatingBtn.disabled = false;
+            submitRatingBtn.textContent = 'Update Rating';
+        } else {
+            selectedRating = 0;
+            reviewInput.value = '';
+            updateStarUI(0);
+            submitRatingBtn.disabled = true;
+            submitRatingBtn.textContent = 'Submit Rating';
+        }
+        
         rateModal.style.display = 'flex';
     });
+
+    function updateStarUI(rating) {
+        starInput.querySelectorAll('.rh-star-btn').forEach(s => {
+            s.style.color = parseInt(s.dataset.value) <= rating ? '#FFD700' : 'var(--color-border)';
+        });
+    }
 
     starInput.querySelectorAll('.rh-star-btn').forEach(star => {
         star.addEventListener('click', () => {
             selectedRating = parseInt(star.dataset.value);
             submitRatingBtn.disabled = false;
-            starInput.querySelectorAll('.rh-star-btn').forEach(s => {
-                s.style.color = parseInt(s.dataset.value) <= selectedRating ? '#FFD700' : 'var(--color-border)';
-            });
+            updateStarUI(selectedRating);
         });
     });
 
     submitRatingBtn.addEventListener('click', async () => {
+        const review = reviewInput.value.trim();
         try {
             const res = await fetch(`/api/books/${bookId}/rate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rating: selectedRating })
+                body: JSON.stringify({ rating: selectedRating, review })
             });
-            if (!res.ok) throw new Error('Failed to submit rating');
-            showToast('Rating submitted successfully!');
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to submit rating');
+            }
+            showToast('Your rating has been submitted successfully!');
             rateModal.style.display = 'none';
             fetchBookDetails();
         } catch (err) { showToast(err.message, 'error'); }

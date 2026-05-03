@@ -223,6 +223,142 @@ body{
   100% { transform: translateY(-50%) translateX(32px); opacity: 0; }
 }
 
+/* ── RENT DURATION DROPDOWN ── */
+.rh-rent-dropdown {
+  position: relative;
+  margin-bottom: 1rem;
+  z-index: 10;
+}
+.rh-rent-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  outline: none;
+}
+.rh-rent-dropdown-trigger:hover,
+.rh-rent-dropdown-trigger:focus {
+  border-color: var(--prism-1);
+  background: rgba(168, 85, 247, 0.14);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+.rh-rent-dropdown-trigger.open {
+  border-color: var(--prism-1);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.rh-rent-dropdown-trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.rh-rent-dropdown-arrow {
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.rh-rent-dropdown-trigger.open .rh-rent-dropdown-arrow {
+  transform: rotate(180deg);
+}
+.rh-rent-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: rgba(20, 14, 44, 0.97);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--border-bright);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-4px);
+  transition: max-height 0.3s ease, opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  z-index: 50;
+}
+.rh-rent-dropdown-menu.open {
+  max-height: 320px;
+  opacity: 1;
+  overflow: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.rh-rent-dropdown-item {
+  padding: 0.7rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.rh-rent-dropdown-item:hover {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--text);
+}
+.rh-rent-dropdown-item.selected {
+  background: rgba(168, 85, 247, 0.2);
+  color: var(--prism-1);
+  font-weight: 500;
+}
+.rh-rent-badge {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.rh-rent-badge--test {
+  background: rgba(251, 146, 60, 0.15);
+  color: var(--prism-5);
+  border: 1px solid rgba(251, 146, 60, 0.25);
+}
+.rh-rent-badge--popular {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--prism-1);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+/* Light theme overrides */
+[data-theme="light"] .rh-rent-dropdown-trigger {
+  background: rgba(124, 58, 237, 0.05);
+}
+[data-theme="light"] .rh-rent-dropdown-trigger:hover,
+[data-theme="light"] .rh-rent-dropdown-trigger:focus {
+  background: rgba(124, 58, 237, 0.08);
+}
+[data-theme="light"] .rh-rent-dropdown-menu {
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+}
+[data-theme="light"] .rh-rent-dropdown-item:hover {
+  background: rgba(124, 58, 237, 0.08);
+}
+[data-theme="light"] .rh-rent-dropdown-item.selected {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--prism-2);
+}
+
 /* ── MAIN ── */
 main {
   position: relative; z-index: 1;

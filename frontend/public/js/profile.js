@@ -2,7 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchProfileData();
-    fetchUserLibrary();
     fetchUserWishlist();
 
     const form = document.getElementById('profile-form');
@@ -90,48 +89,6 @@ async function handleProfileUpdate(e) {
     }
 }
 
-async function fetchUserLibrary() {
-    try {
-        const response = await fetch('/api/user/purchases');
-        const container = document.getElementById('purchases-container');
-        const badge = document.getElementById('badge-library');
-        
-        if (!response.ok) {
-            container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Failed to load library.</div>`;
-            return;
-        }
-
-        const items = await response.json();
-        badge.textContent = items.length;
-
-        if (items.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state" style="grid-column:1/-1;">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
-                    <h4>Your Library is Empty</h4>
-                    <p>You haven't purchased any books yet. Start exploring the store!</p>
-                    <a href="/browse.html" class="btn-save mt-3" style="text-decoration:none; display:inline-block;">Browse Books</a>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = items.map(item => `
-            <div class="book-card" onclick="window.location.href='/browse.html?bookId=${item.BookID}'" style="width: 100%;">
-                <div class="book-cover">
-                    <img src="${item.ImageURL || 'https://via.placeholder.com/200x300?text=No+Cover'}" alt="${item.Title}">
-                </div>
-                <div class="book-info">
-                    <h4 class="book-title">${item.Title}</h4>
-                    <p style="color:var(--color-text-muted); font-size:0.875rem;">Qty: ${item.Quantity}</p>
-                </div>
-            </div>
-        `).join('');
-
-    } catch (error) {
-        console.error('Error fetching library:', error);
-    }
-}
 
 async function fetchUserWishlist() {
     try {

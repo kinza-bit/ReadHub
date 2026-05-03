@@ -146,11 +146,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                         Rent eBook
                     </h4>
-                    <select id="rent-days" class="form-control" ${rentDisabled ? 'disabled' : ''} style="margin-bottom: 1rem; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1);">
-                        <option value="7">7 Days - PKR 150</option>
-                        <option value="14">14 Days - PKR 250</option>
-                        <option value="30">30 Days - PKR 400</option>
-                    </select>
+                    <div class="rh-rent-dropdown" id="rent-dropdown">
+                        <button class="rh-rent-dropdown-trigger" type="button" ${rentDisabled ? 'disabled' : ''}>
+                            <span class="rh-rent-dropdown-label">7 Days — PKR 150</span>
+                            <svg class="rh-rent-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <ul class="rh-rent-dropdown-menu">
+                            <li class="rh-rent-dropdown-item" data-value="0.0014">
+                                <span>⚡ 2 Minutes</span>
+                                <span class="rh-rent-badge rh-rent-badge--test">Test</span>
+                            </li>
+                            <li class="rh-rent-dropdown-item selected" data-value="7">
+                                <span>7 Days — PKR 150</span>
+                            </li>
+                            <li class="rh-rent-dropdown-item" data-value="14">
+                                <span>14 Days — PKR 250</span>
+                                <span class="rh-rent-badge rh-rent-badge--popular">Popular</span>
+                            </li>
+                            <li class="rh-rent-dropdown-item" data-value="30">
+                                <span>30 Days — PKR 400</span>
+                            </li>
+                        </ul>
+                        <input type="hidden" id="rent-days" value="7">
+                    </div>
                     <button class="btn-primary" onclick="addRentalToCart(${book.BookID})" ${rentDisabled ? 'disabled' : ''}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
                         ${rentBtnText}
@@ -160,6 +178,46 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
         purchaseOptionsEl.innerHTML = html;
+        initRentDropdown();
+    }
+
+    function initRentDropdown() {
+        const dropdown = document.getElementById('rent-dropdown');
+        if (!dropdown) return;
+
+        const trigger = dropdown.querySelector('.rh-rent-dropdown-trigger');
+        const menu = dropdown.querySelector('.rh-rent-dropdown-menu');
+        const hiddenInput = document.getElementById('rent-days');
+        const label = trigger.querySelector('.rh-rent-dropdown-label');
+        const items = menu.querySelectorAll('.rh-rent-dropdown-item');
+
+        // Toggle open/close
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = menu.classList.contains('open');
+            menu.classList.toggle('open', !isOpen);
+            trigger.classList.toggle('open', !isOpen);
+        });
+
+        // Item selection
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                hiddenInput.value = item.dataset.value;
+                label.textContent = item.querySelector('span').textContent;
+                menu.classList.remove('open');
+                trigger.classList.remove('open');
+            });
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                menu.classList.remove('open');
+                trigger.classList.remove('open');
+            }
+        });
     }
 
     function renderStarsHTML(rating) {
@@ -273,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) { showToast('Please log in first', 'error'); return; }
         const days = document.getElementById('rent-days').value;
         try {
-            const res = await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookId: id, formatId: 3, quantity: 1, rentalDays: parseInt(days) }) });
+            const res = await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookId: id, formatId: 3, quantity: 1, rentalDays: parseFloat(days) }) });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed to add rental');
             showToast('Rental added to cart!');

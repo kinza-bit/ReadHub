@@ -425,15 +425,6 @@ label {
             </div>
         </div>
         
-        <div class="gem-card" style="padding:1.5rem; cursor:pointer; --c-accent:#38bdf8; --c-accent-bg:rgba(56,189,248,0.1); --c-accent-border:rgba(56,189,248,0.2);" onclick="document.getElementById('purchases').scrollIntoView({behavior:'smooth'})" data-tilt>
-            <div class="gem-shimmer"></div>
-            <div class="facet-corner" style="background:#38bdf8;"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; position:relative; z-index:1;">
-                <span style="font-weight: 500;">My Library</span>
-                <span style="background: var(--prism-1); color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;" id="badge-library">0</span>
-            </div>
-        </div>
-        
         <div class="gem-card" style="padding:1.5rem; cursor:pointer; --c-accent:#f472b6; --c-accent-bg:rgba(244,114,182,0.1); --c-accent-border:rgba(244,114,182,0.2);" onclick="document.getElementById('wishlist').scrollIntoView({behavior:'smooth'})" data-tilt>
             <div class="gem-shimmer"></div>
             <div class="facet-corner" style="background:#f472b6;"></div>
@@ -489,19 +480,6 @@ label {
             </form>
         </div>
 
-        <!-- Purchases Section -->
-        <div id="purchases" class="gem-card" style="padding:2rem; --c-accent:#38bdf8; --c-accent-bg:rgba(56,189,248,0.1); --c-accent-border:rgba(56,189,248,0.2);">
-            <div class="gem-shimmer"></div>
-            <div class="facet-corner" style="background:#38bdf8;"></div>
-            <div class="section-header" style="position:relative; z-index:1;">
-                <h2>My Library (Purchases)</h2>
-            </div>
-            <div class="items-grid" id="purchases-container" style="position:relative; z-index:1;">
-                <div style="grid-column: 1 / -1; padding: 2rem; text-align:center; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);">
-                    <p>Loading library...</p>
-                </div>
-            </div>
-        </div>
 
         <!-- Wishlist Section -->
         <div id="wishlist" class="gem-card" style="padding:2rem; --c-accent:#f472b6; --c-accent-bg:rgba(244,114,182,0.1); --c-accent-border:rgba(244,114,182,0.2);">

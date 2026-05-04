@@ -7,11 +7,11 @@ const API_BASE_URL = '/api';
 const showAlert = (message, type = 'error') => {
     const alertEl = document.getElementById('global-alert');
     if (!alertEl) return;
-    
+
     alertEl.className = `alert alert-${type}`;
     alertEl.textContent = message;
     alertEl.style.display = 'block';
-    
+
     // Auto-hide success messages
     if (type === 'success') {
         setTimeout(() => {
@@ -28,7 +28,7 @@ const hideAlert = () => {
 const setInputError = (inputId, message) => {
     const input = document.getElementById(inputId);
     const errorEl = document.getElementById(`${inputId}-error`);
-    if(input) input.classList.add('invalid');
+    if (input) input.classList.add('invalid');
     if (errorEl) {
         errorEl.textContent = message;
         errorEl.style.display = 'block';
@@ -51,19 +51,19 @@ const handleRegister = async (e) => {
     e.preventDefault();
     clearInputErrors();
     hideAlert();
-    
+
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    
+
     let isValid = true;
-    
+
     // Inline validation according to US-01.2
     if (!name) {
         setInputError('name', 'Name is required');
         isValid = false;
     }
-    
+
     if (!email) {
         setInputError('email', 'Email is required');
         isValid = false;
@@ -71,7 +71,7 @@ const handleRegister = async (e) => {
         setInputError('email', 'Please enter a valid email format');
         isValid = false;
     }
-    
+
     if (!password) {
         setInputError('password', 'Password is required');
         isValid = false;
@@ -79,9 +79,9 @@ const handleRegister = async (e) => {
         setInputError('password', 'Password must be at least 8 characters long');
         isValid = false;
     }
-    
+
     if (!isValid) return;
-    
+
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.textContent;
     btn.textContent = 'Registering...';
@@ -93,22 +93,22 @@ const handleRegister = async (e) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password })
         });
-        
+
         const data = await res.json();
-        
+
         if (!res.ok) {
             // US-01.3: Duplicate email or other server error
             showAlert(data.error || 'Registration failed', 'error');
             return;
         }
-        
+
         // Success
         showAlert('Registration successful! Redirecting to login...', 'success');
         e.target.reset();
         setTimeout(() => {
             window.location.href = 'login.html';
         }, 2000);
-        
+
     } catch (err) {
         showAlert('Network error. Please try again later.');
     } finally {
@@ -123,43 +123,43 @@ const handleLogin = async (e, type = 'user') => {
     e.preventDefault();
     clearInputErrors();
     hideAlert();
-    
+
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    
+
     if (!email || !password) {
         showAlert('Please enter both email and password.');
         return;
     }
-    
+
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.textContent;
     btn.textContent = 'Authenticating...';
     btn.disabled = true;
 
     const endpoint = type === 'admin' ? '/login/admin' : '/login/user';
-    
+
     try {
         const res = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        
+
         const data = await res.json();
-        
+
         if (!res.ok) {
             // US-02.2 / US-03.2: General error message to prevent credential enumeration
             showAlert(data.error || 'Incorrect email or password.', 'error');
             return;
         }
-        
+
         // Redirect upon success
         const dashboardUrl = type === 'admin' ? 'admin-dashboard.html' : 'dashboard.html';
         window.location.href = dashboardUrl;
-        
+
     } catch (err) {
-         showAlert('Network error. Please try again later.');
+        showAlert('Network error. Please try again later.');
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
@@ -170,9 +170,9 @@ const handleLogin = async (e, type = 'user') => {
 const handleLogout = async (e) => {
     const btn = e.currentTarget;
     if (btn.classList.contains('logging-out')) return;
-    
+
     btn.classList.add('logging-out');
-    
+
     // Wait for the walking entry and door shut (approx 1s)
     setTimeout(async () => {
         try {
@@ -183,7 +183,7 @@ const handleLogout = async (e) => {
             console.error('Logout failed:', err);
             btn.classList.remove('logging-out');
         }
-    }, 1000); 
+    }, 1000);
 };
 
 
@@ -192,7 +192,7 @@ const checkAuth = async (requiredRole) => {
     try {
         const res = await fetch(`${API_BASE_URL}/session`);
         const data = await res.json();
-        
+
         if (!data.isAuthenticated) {
             window.location.href = 'login.html';
             return null;
@@ -201,19 +201,19 @@ const checkAuth = async (requiredRole) => {
         // Global Logout Button Visibility
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) logoutBtn.style.display = 'inline-flex';
-        
+
         if (requiredRole && data.user.role !== requiredRole) {
             window.location.href = data.user.role === 'Admin' ? 'admin-dashboard.html' : 'dashboard.html';
             return null;
         }
-        
+
         // Fetch extended profile data from userdb for Customers
         if (data.user.role === 'Customer') {
             try {
                 const profileRes = await fetch(`${API_BASE_URL}/user/profile`);
                 if (profileRes.ok) {
                     const profileData = await profileRes.json();
-                    
+
                     const userNameEl = document.getElementById('user-name-display');
                     if (userNameEl) userNameEl.textContent = profileData.FullName.includes(' ') ? profileData.FullName.split(' ')[0] : profileData.FullName;
 
@@ -235,9 +235,9 @@ const checkAuth = async (requiredRole) => {
                 userNameEl.textContent = data.user.name;
             }
         }
-        
+
         return data.user;
-        
+
     } catch (err) {
         console.error('Session check failed:', err);
         window.location.href = 'login.html';
@@ -246,44 +246,44 @@ const checkAuth = async (requiredRole) => {
 
 // Event Listeners Initialization based on current page
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const registerForm = document.getElementById('register-form');
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
         // Add real-time validation feedback UX
         document.getElementById('email').addEventListener('input', (e) => {
-            if(e.target.value.length > 0 && !validateEmail(e.target.value)) {
+            if (e.target.value.length > 0 && !validateEmail(e.target.value)) {
                 setInputError('email', 'Invalid email format');
             } else {
                 e.target.classList.remove('invalid');
-                document.getElementById('email-error').style.display='none';
+                document.getElementById('email-error').style.display = 'none';
             }
         });
         document.getElementById('password').addEventListener('input', (e) => {
-            if(e.target.value.length > 0 && e.target.value.length < 8) {
+            if (e.target.value.length > 0 && e.target.value.length < 8) {
                 setInputError('password', 'Minimum 8 characters');
             } else {
                 e.target.classList.remove('invalid');
-                document.getElementById('password-error').style.display='none';
+                document.getElementById('password-error').style.display = 'none';
             }
         });
     }
-    
+
     const userLoginForm = document.getElementById('user-login-form');
     if (userLoginForm) {
         userLoginForm.addEventListener('submit', (e) => handleLogin(e, 'user'));
     }
-    
+
     const adminLoginForm = document.getElementById('admin-login-form');
     if (adminLoginForm) {
         adminLoginForm.addEventListener('submit', (e) => handleLogin(e, 'admin'));
     }
-    
+
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
     }
-    
+
     // Check protections
     if (document.body.classList.contains('protected-user')) {
         checkAuth('Customer');

@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<span class="rh-stock-warn">Only ${item.StockLevel} in stock</span>` : '';
 
             const isEbook = item.FormatID === 2 || item.FormatID === 3;
-            const qtyControl = isEbook 
+            const qtyControl = isEbook
                 ? `<div class="rh-qty-control" style="opacity: 0.6; pointer-events: none;">
                      <span class="rh-qty-value">${item.Quantity}</span>
                    </div>`

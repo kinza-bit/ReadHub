@@ -297,9 +297,32 @@ CREATE PROCEDURE sp_DeleteBook
 AS
 BEGIN
     SET NOCOUNT ON;
-    DELETE FROM Books WHERE BookID = @BookID;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Delete from related tables that do not have ON DELETE CASCADE
+        DELETE FROM CartItems WHERE BookID = @BookID;
+        DELETE FROM UserWishlist WHERE BookID = @BookID;
+        DELETE FROM EbookRentals WHERE BookID = @BookID;
+        DELETE FROM OrderItems WHERE BookID = @BookID;
+        
+        -- Although Inventory and BookRating may have CASCADE in the schema, 
+        -- we handle them here for robustness and consistency.
+        DELETE FROM Inventory WHERE BookID = @BookID;
+        DELETE FROM BookRating WHERE BookID = @BookID;
+
+        -- Finally, delete the book record
+        DELETE FROM Books WHERE BookID = @BookID;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO
+
 
 -- ────────────────────────────────────────────────────────────
 --   Inventory Management

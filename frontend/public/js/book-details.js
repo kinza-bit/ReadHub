@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ratingTextEl = document.getElementById('rating-text');
     const purchaseOptionsEl = document.getElementById('purchase-options');
     const wishlistBtn = document.getElementById('wishlist-btn');
-    
+
     // Modal elements
     const rateModal = document.getElementById('rate-modal');
     const openRateBtn = document.getElementById('open-rate-btn');
@@ -133,10 +133,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let rentDisabled = false;
             let expiryMsg = '';
             if (inCartRent) { rentBtnText = 'Already in cart'; rentDisabled = true; }
-            else if (isRented) { 
+            else if (isRented) {
                 const expiry = new Date(userStatus.activeRental.expiryDate).toLocaleDateString();
-                rentBtnText = 'Already rented'; 
-                rentDisabled = true; 
+                rentBtnText = 'Already rented';
+                rentDisabled = true;
                 expiryMsg = `<p style="font-size: 0.8rem; color: var(--color-accent); margin-top: 0.5rem;">Expires on ${expiry}</p>`;
             }
 
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 wishlistBtn.classList.add('active');
                 wishlistBtn.querySelector('svg').setAttribute('fill', 'currentColor');
             }
-        } catch (err) {}
+        } catch (err) { }
     }
 
     wishlistBtn.addEventListener('click', async () => {
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     openRateBtn.addEventListener('click', () => {
         if (!currentUser) { showToast('Please log in to rate books', 'error'); return; }
         rateBookTitleModal.textContent = currentBook.Title;
-        
+
         // Reset or Pre-fill
         const existing = currentBook.userStatus?.userRating;
         if (existing) {
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitRatingBtn.disabled = true;
             submitRatingBtn.textContent = 'Submit Rating';
         }
-        
+
         rateModal.style.display = 'flex';
     });
 

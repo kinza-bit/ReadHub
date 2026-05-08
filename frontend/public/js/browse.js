@@ -108,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isInWishlist = userWishlist.some(item => item.BookID === book.BookID);
             const price = book.PhysicalPrice ? `PKR ${book.PhysicalPrice.toLocaleString()}` : (book.EbookPrice ? `PKR ${book.EbookPrice.toLocaleString()}` : 'Free');
             const isAvailable = book.PhysicalAvailability === 'Available';
+            const rating = Number.parseFloat(book.AverageRating) || 0;
             
             return `
                 <div class="rh-book-card glass" onclick="window.location.href='/book-details.html?id=${book.BookID}'">
@@ -133,6 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="rh-card-body">
                         <h3 class="rh-card-title">${book.Title}</h3>
                         <p class="rh-card-author">by ${book.Author}</p>
+                        <div class="rh-card-meta">
+                            <div class="rh-card-stars" aria-label="Rating ${rating.toFixed(1)} out of 5">
+                                ${renderStarRow(rating)}
+                                <span class="rh-card-rating-num">${rating.toFixed(1)}</span>
+                            </div>
+                            <span class="rh-card-category">${book.CategoryName || 'General'}</span>
+                        </div>
                         <div class="rh-card-footer">
                             <span class="rh-card-price">${price}</span>
                             <span class="rh-card-avail ${isAvailable ? 'rh-avail--yes' : 'rh-avail--no'}">${isAvailable ? 'In Stock' : 'Out of Stock'}</span>
@@ -141,6 +149,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         }).join('');
+    }
+
+    function renderStarRow(rating) {
+        // Round to nearest half-star for display
+        const rounded = Math.round((rating || 0) * 2) / 2;
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+            const diff = rounded - i;
+            if (diff >= 0) html += '<span class="rh-star rh-star--filled">★</span>';
+            else if (diff === -0.5) html += '<span class="rh-star rh-star--half">★</span>';
+            else html += '<span class="rh-star rh-star--empty">★</span>';
+        }
+        return html;
     }
 
     // Wishlist logic

@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const ratingTextEl = document.getElementById('rating-text');
     const purchaseOptionsEl = document.getElementById('purchase-options');
     const wishlistBtn = document.getElementById('wishlist-btn');
+    const reviewsCountEl = document.getElementById('reviews-count');
+    const reviewsEmptyEl = document.getElementById('reviews-empty');
+    const reviewsListEl = document.getElementById('reviews-list');
 
     // Modal elements
     const rateModal = document.getElementById('rate-modal');
@@ -37,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize
     checkSession();
     fetchBookDetails();
+    fetchReviews();
 
     async function checkSession() {
         try {
@@ -57,6 +61,22 @@ document.addEventListener('DOMContentLoaded', () => {
             currentBook = await res.json();
             renderBookDetails(currentBook);
         } catch (err) { showError(err.message); }
+    }
+
+    async function fetchReviews() {
+        try {
+            const res = await fetch(`/api/books/${bookId}/reviews`);
+            if (!res.ok) throw new Error('Failed to load reviews');
+            const reviews = await res.json();
+            renderReviews(reviews);
+
+            // Aggregate rating comes from Books.AverageRating; count comes from reviews list
+            const agg = parseFloat(currentBook?.AverageRating) || 0;
+            ratingTextEl.textContent = `${agg.toFixed(1)} (${reviews.length} reviews)`;
+        } catch (err) {
+            // Non-blocking: book details page should still work if reviews fail
+            if (reviewsCountEl) reviewsCountEl.textContent = '(—)';
+        }
     }
 
     function renderBookDetails(book) {
@@ -220,6 +240,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function renderReviews(reviews) {
+        if (!reviewsCountEl || !reviewsEmptyEl || !reviewsListEl) return;
+
+        reviewsCountEl.textContent = `(${reviews.length})`;
+
+        if (!reviews.length) {
+            reviewsEmptyEl.style.display = 'block';
+            reviewsListEl.innerHTML = '';
+            return;
+        }
+
+        reviewsEmptyEl.style.display = 'none';
+        reviewsListEl.innerHTML = reviews.map(r => {
+            const name = r.UserFullName || 'Anonymous';
+            const rating = parseInt(r.Rating, 10) || 0;
+            const review = (r.Review || '').trim();
+            const createdAt = r.CreatedAt ? new Date(r.CreatedAt).toLocaleDateString() : '';
+
+            return `
+                <div class="review-card glass" style="padding: 1rem; border-radius: 14px;">
+                    <div style="display:flex; justify-content:space-between; gap: 1rem; align-items:flex-start;">
+                        <div>
+                            <div class="reviewer-name" style="font-weight: 700;">${escapeHtml(name)}</div>
+                            <div style="margin-top: 0.35rem;">${renderStarsHTML(rating)}</div>
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;">${createdAt}</div>
+                    </div>
+                    ${review ? `<div class="review-text" style="margin-top: 0.75rem; white-space: pre-wrap;">${escapeHtml(review)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
     function renderStarsHTML(rating) {
         let html = '';
         for (let i = 1; i <= 5; i++) {
@@ -229,6 +282,15 @@ document.addEventListener('DOMContentLoaded', () => {
             </svg>`;
         }
         return html;
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     async function checkWishlistStatus() {
@@ -311,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Your rating has been submitted successfully!');
             rateModal.style.display = 'none';
             fetchBookDetails();
+            fetchReviews();
         } catch (err) { showToast(err.message, 'error'); }
     });
 

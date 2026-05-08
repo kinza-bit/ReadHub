@@ -78,62 +78,6 @@ GO
 -- ADMIN FEATURES
 
 -- ────────────────────────────────────────────────────────────
---   Admin Login
--- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_AdminLogin', 'P') IS NOT NULL DROP PROCEDURE sp_AdminLogin;
-GO
-CREATE PROCEDURE sp_AdminLogin
-    @Username NVARCHAR(50),
-    @PasswordHash NVARCHAR(256)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT UserID, Username, Email, FullName, RoleName
-    FROM vw_AllUsers
-    WHERE Username = @Username
-      AND (SELECT PasswordHash FROM Users WHERE Username = @Username) = @PasswordHash
-      AND IsActive = 1
-      AND RoleName = 'Admin';
-END;
-GO
-
--- ────────────────────────────────────────────────────────────
---   Manage User Accounts
--- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_GetAllUsers', 'P') IS NOT NULL DROP PROCEDURE sp_GetAllUsers;
-GO
-CREATE PROCEDURE sp_GetAllUsers
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT * FROM vw_AllUsers ORDER BY CreatedAt DESC;
-END;
-GO
-
-IF OBJECT_ID('sp_UpdateUserStatus', 'P') IS NOT NULL DROP PROCEDURE sp_UpdateUserStatus;
-GO
-CREATE PROCEDURE sp_UpdateUserStatus
-    @UserID INT,
-    @IsActive BIT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    UPDATE Users SET IsActive = @IsActive WHERE UserID = @UserID;
-END;
-GO
-
-IF OBJECT_ID('sp_DeleteUser', 'P') IS NOT NULL DROP PROCEDURE sp_DeleteUser;
-GO
-CREATE PROCEDURE sp_DeleteUser
-    @UserID INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    DELETE FROM Users WHERE UserID = @UserID;
-END;
-GO
-
--- ────────────────────────────────────────────────────────────
 --   Organize Books by Categories
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_GetAllCategories', 'P') IS NOT NULL DROP PROCEDURE sp_GetAllCategories;
@@ -356,26 +300,6 @@ GO
 --  USER FEATURES
 
 -- ────────────────────────────────────────────────────────────
---   User Login
--- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_UserLogin', 'P') IS NOT NULL DROP PROCEDURE sp_UserLogin;
-GO
-CREATE PROCEDURE sp_UserLogin
-    @Username NVARCHAR(50),
-    @PasswordHash NVARCHAR(256)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT UserID, Username, Email, FullName, RoleName
-    FROM vw_AllUsers
-    WHERE Username = @Username
-      AND (SELECT PasswordHash FROM Users WHERE Username = @Username) = @PasswordHash
-      AND IsActive = 1
-      AND RoleName = 'Customer';
-END;
-GO
-
--- ────────────────────────────────────────────────────────────
 --   View Available Books
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_ViewAvailableBooks', 'P') IS NOT NULL DROP PROCEDURE sp_ViewAvailableBooks;
@@ -485,14 +409,29 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
---   Rate Books (Star Rating Only)
+--   Reviews Storage Patch (BookRating.Review)
+-- ────────────────────────────────────────────────────────────
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.columns
+    WHERE object_id = OBJECT_ID('BookRating')
+      AND name = 'Review'
+)
+BEGIN
+    ALTER TABLE BookRating ADD Review NVARCHAR(MAX) NULL;
+END
+GO
+
+-- ────────────────────────────────────────────────────────────
+--   Rate Books (Star Rating + Optional Review)
 -- ────────────────────────────────────────────────────────────
 IF OBJECT_ID('sp_RateBook', 'P') IS NOT NULL DROP PROCEDURE sp_RateBook;
 GO
 CREATE PROCEDURE sp_RateBook
     @UserID INT,
     @BookID INT,
-    @Rating INT
+    @Rating INT,
+    @Review NVARCHAR(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -504,13 +443,15 @@ BEGIN
     IF EXISTS (SELECT 1 FROM BookRating WHERE UserID = @UserID AND BookID = @BookID)
     BEGIN
         UPDATE BookRating
-        SET Rating = @Rating, CreatedAt = SYSUTCDATETIME()
+        SET Rating = @Rating,
+            Review = @Review,
+            CreatedAt = SYSUTCDATETIME()
         WHERE UserID = @UserID AND BookID = @BookID;
     END
     ELSE
     BEGIN
-        INSERT INTO BookRating (BookID, UserID, Rating)
-        VALUES (@BookID, @UserID, @Rating);
+        INSERT INTO BookRating (BookID, UserID, Rating, Review)
+        VALUES (@BookID, @UserID, @Rating, @Review);
     END
 
     UPDATE Books
@@ -520,6 +461,29 @@ BEGIN
         WHERE BookID = @BookID
     )
     WHERE BookID = @BookID;
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────
+--   Get Book Reviews (public)
+-- ────────────────────────────────────────────────────────────
+IF OBJECT_ID('sp_GetBookReviews', 'P') IS NOT NULL DROP PROCEDURE sp_GetBookReviews;
+GO
+CREATE PROCEDURE sp_GetBookReviews
+    @BookID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT
+        br.RatingID,
+        br.Rating,
+        br.Review,
+        br.CreatedAt,
+        u.FullName AS UserFullName
+    FROM BookRating br
+    INNER JOIN Users u ON br.UserID = u.UserID
+    WHERE br.BookID = @BookID
+    ORDER BY br.CreatedAt DESC;
 END;
 GO
 

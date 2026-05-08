@@ -8,6 +8,19 @@
 
 const { sql, poolPromise } = require('../db');
 
+function isSqlTooManyArgsError(err) {
+    const msg = (err && err.message ? String(err.message) : '').toLowerCase();
+    // Common SQL Server messages when the procedure signature doesn't match supplied parameters
+    return (
+        msg.includes('too many arguments') ||
+        msg.includes('has too many arguments') ||
+        msg.includes('too many parameters') ||
+        msg.includes('expects parameter') ||
+        msg.includes('expects the parameter') ||
+        msg.includes('procedure or function') && msg.includes('has too many')
+    );
+}
+
 // ─── GET /api/books — list all available books ────────────────────────────────
 const getBooks = async (req, res) => {
     try {
@@ -127,13 +140,25 @@ const getBookById = async (req, res) => {
             }
 
             // 4. Check for existing rating
-            const ratingResult = await pool.request()
-                .input('UserID', sql.INT, userId)
-                .input('BookID', sql.INT, req.params.id)
-                .query(`
-                    SELECT Rating, Review FROM BookRating 
-                    WHERE UserID = @UserID AND BookID = @BookID
-                `);
+            let ratingResult;
+            try {
+                ratingResult = await pool.request()
+                    .input('UserID', sql.INT, userId)
+                    .input('BookID', sql.INT, req.params.id)
+                    .query(`
+                        SELECT Rating, Review FROM BookRating 
+                        WHERE UserID = @UserID AND BookID = @BookID
+                    `);
+            } catch (err) {
+                // Older schema might not have a Review column yet
+                ratingResult = await pool.request()
+                    .input('UserID', sql.INT, userId)
+                    .input('BookID', sql.INT, req.params.id)
+                    .query(`
+                        SELECT Rating, NULL AS Review FROM BookRating 
+                        WHERE UserID = @UserID AND BookID = @BookID
+                    `);
+            }
             if (ratingResult.recordset.length > 0) {
                 userStatus.userRating = {
                     rating: ratingResult.recordset[0].Rating,
@@ -226,7 +251,7 @@ const rateBook = async (req, res) => {
             .input('UserID', sql.INT, req.session.userId)
             .input('BookID', sql.INT, req.params.id)
             .input('Rating', sql.INT, rating)
-            .input('Review', sql.NVarChar, review || null)
+            .input('Review', sql.NVarChar(sql.MAX), review || null)
             .execute('sp_RateBook');
 
         res.json({ message: 'Rating submitted successfully.' });

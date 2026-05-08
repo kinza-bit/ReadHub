@@ -33,7 +33,7 @@ const getProfile = async (req, res) => {
 // ─── PUT /api/profile — update current user's profile fields ─────────────────
 const updateProfile = async (req, res) => {
     try {
-        const { fullName, phoneNumber, addressLine1, city, country, profileImageUrl } = req.body;
+        const { fullName, phoneNumber, addressLine1, city, country } = req.body;
         const pool = await poolPromise;
 
         await pool.request()
@@ -43,11 +43,10 @@ const updateProfile = async (req, res) => {
             .input('AddressLine1',    sql.NVarChar,  addressLine1    || null)
             .input('City',            sql.NVarChar,  city            || null)
             .input('Country',         sql.NVarChar,  country         || null)
-            .input('ProfileImageURL', sql.NVarChar,  profileImageUrl || null)
             .query(`
                 UPDATE Users
                 SET FullName = @FullName, PhoneNumber = @PhoneNumber, AddressLine1 = @AddressLine1,
-                    City = @City, Country = @Country, ProfileImageURL = @ProfileImageURL
+                    City = @City, Country = @Country
                 WHERE UserID = @UserID
             `);
 

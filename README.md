@@ -63,7 +63,7 @@ ReadHub is a premium, full-stack web application designed for a modern bookstore
    - `features.sql` (Stored procedures & views)
    - `orders_cart_migration.sql` (Cart & Order logic)
    - `ebook_supabase_migration.sql` (Cloud storage integration)
-   - `book_requests_migration.sql` & `fix_ratings.sql` (Additional features)
+   - (Optional) any one-off maintenance scripts you add later
 
 ### 3. Environment Configuration
 Create a `.env` file in the `backend/` directory:

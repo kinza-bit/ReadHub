@@ -40,7 +40,6 @@ async function fetchProfileData() {
         // Populate form
         document.getElementById('input-fullname').value = user.FullName || '';
         document.getElementById('input-phone').value = user.PhoneNumber || '';
-        document.getElementById('input-avatar-url').value = user.ProfileImageURL || '';
         document.getElementById('input-address').value = user.AddressLine1 || '';
         document.getElementById('input-city').value = user.City || '';
         document.getElementById('input-country').value = user.Country || '';
@@ -60,7 +59,6 @@ async function handleProfileUpdate(e) {
     const data = {
         fullName: document.getElementById('input-fullname').value,
         phoneNumber: document.getElementById('input-phone').value,
-        profileImageUrl: document.getElementById('input-avatar-url').value,
         addressLine1: document.getElementById('input-address').value,
         city: document.getElementById('input-city').value,
         country: document.getElementById('input-country').value,

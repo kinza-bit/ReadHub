@@ -7,8 +7,104 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('profile-form');
     if(form) {
         form.addEventListener('submit', handleProfileUpdate);
+        
+        // Add real-time listeners and strict restrictions
+        ['input-fullname', 'input-phone', 'input-address', 'input-city', 'input-country'].forEach(id => {
+            const input = document.getElementById(id);
+            if (!input) return;
+            
+            input.addEventListener('input', () => validateProfileField(id));
+            input.addEventListener('blur', () => validateProfileField(id));
+
+            // Strict input restrictions
+            if (id === 'input-fullname' || id === 'input-city' || id === 'input-country') {
+                input.addEventListener('keypress', (e) => {
+                    if (!/[a-zA-Z\s]/.test(e.key)) e.preventDefault();
+                });
+            }
+            if (id === 'input-phone') {
+                input.addEventListener('keypress', (e) => {
+                    if (!/\d/.test(e.key)) e.preventDefault();
+                });
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 11);
+                });
+            }
+        });
     }
 });
+
+function validateProfileField(id) {
+    const input = document.getElementById(id);
+    const val = input.value.trim();
+    const errEl = document.getElementById(id + '-error');
+    
+    input.classList.remove('invalid');
+    if (errEl) {
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+    }
+
+    // 1. Full Name
+    if (id === 'input-fullname') {
+        if (!val) {
+            showFieldError(id, 'Full name is required');
+            return false;
+        }
+        if (val.length < 3) {
+            showFieldError(id, 'Name must be at least 3 characters long');
+            return false;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(val)) {
+            showFieldError(id, 'Name can only contain letters and spaces');
+            return false;
+        }
+    }
+
+    // 2. Phone Number
+    if (id === 'input-phone' && val) {
+        const cleanPhone = val.replace(/\D/g, '');
+        if (!/^03\d{9}$/.test(cleanPhone)) {
+            showFieldError(id, 'Enter a valid 11-digit phone number starting with 03');
+            return false;
+        }
+    }
+
+    // 3. Address
+    if (id === 'input-address' && val) {
+        if (val.length < 10) {
+            showFieldError(id, 'Please enter a more detailed address (min 10 characters)');
+            return false;
+        }
+    }
+
+    // 4. City & Country
+    if (id === 'input-city' || id === 'input-country') {
+        if (val) {
+            if (!/^[a-zA-Z\s]+$/.test(val)) {
+                showFieldError(id, 'Must contain letters and spaces only');
+                return false;
+            }
+            if (val.length < 2) {
+                showFieldError(id, 'Too short');
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+function showFieldError(id, msg) {
+    const el = document.getElementById(id);
+    el.classList.add('invalid');
+    const errEl = document.getElementById(id + '-error');
+    if (errEl) {
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+        errEl.style.color = 'var(--prism-3)';
+    }
+}
 
 function scrollToSection(id) {
     const el = document.getElementById(id);
@@ -51,17 +147,30 @@ async function fetchProfileData() {
 
 async function handleProfileUpdate(e) {
     e.preventDefault();
+    
+    // Validate all fields before submitting
+    const isNameValid = validateProfileField('input-fullname');
+    const isPhoneValid = validateProfileField('input-phone');
+    const isAddrValid = validateProfileField('input-address');
+    const isCityValid = validateProfileField('input-city');
+    const isCountryValid = validateProfileField('input-country');
+
+    if (!isNameValid || !isPhoneValid || !isAddrValid || !isCityValid || !isCountryValid) {
+        showToast('Please correct the errors in the form.', 'error');
+        return;
+    }
+
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.textContent;
     btn.textContent = 'Saving...';
     btn.disabled = true;
 
     const data = {
-        fullName: document.getElementById('input-fullname').value,
-        phoneNumber: document.getElementById('input-phone').value,
-        addressLine1: document.getElementById('input-address').value,
-        city: document.getElementById('input-city').value,
-        country: document.getElementById('input-country').value,
+        fullName: document.getElementById('input-fullname').value.trim(),
+        phoneNumber: document.getElementById('input-phone').value.trim(),
+        addressLine1: document.getElementById('input-address').value.trim(),
+        city: document.getElementById('input-city').value.trim(),
+        country: document.getElementById('input-country').value.trim(),
     };
 
     try {
@@ -149,4 +258,20 @@ async function removeFromWishlist(bookId) {
     } catch(err) {
         console.error(err);
     }
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast-notification');
+    const toastMsg = document.getElementById('toast-message');
+    if (!toast || !toastMsg) {
+        alert(message);
+        return;
+    }
+    toastMsg.textContent = message;
+    toast.style.display = 'block';
+    toast.className = `rh-toast rh-toast--${type} rh-toast--visible`;
+    setTimeout(() => {
+        toast.classList.remove('rh-toast--visible');
+        setTimeout(() => toast.style.display = 'none', 300);
+    }, 3500);
 }

@@ -78,12 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${user.Email}</td>
                 <td>${user.Username}</td>
                 <td><span class="badge ${user.RoleName === 'Admin' ? 'badge-primary' : ''}">${user.RoleName}</span></td>
-                <td><span class="badge ${user.IsActive ? 'badge-success' : 'badge-error'}">${user.IsActive ? 'Active' : 'Inactive'}</span></td>
                 <td class="action-btns">
                     <button class="btn btn-sm btn-secondary edit-btn" data-id="${user.UserID}">Edit</button>
-                    <button class="btn btn-sm ${user.IsActive ? 'btn-danger' : 'btn-primary'} toggle-btn" data-id="${user.UserID}">
-                        ${user.IsActive ? 'Deactivate' : 'Activate'}
-                    </button>
                 </td>
             </tr>
         `).join('');
@@ -91,10 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Attach event listeners to buttons
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.addEventListener('click', () => openEditModal(btn.dataset.id));
-        });
-
-        document.querySelectorAll('.toggle-btn').forEach(btn => {
-            btn.addEventListener('click', () => toggleUserStatus(btn.dataset.id));
         });
     }
 
@@ -111,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('edit-phone').value = user.PhoneNumber || '';
             document.getElementById('edit-city').value = user.City || '';
             document.getElementById('edit-role').value = user.RoleID;
-            document.getElementById('edit-is-active').checked = user.IsActive;
 
             editModal.classList.add('active');
         } catch (error) {
@@ -128,8 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             email: document.getElementById('edit-email').value,
             phoneNumber: document.getElementById('edit-phone').value,
             city: document.getElementById('edit-city').value,
-            roleId: parseInt(document.getElementById('edit-role').value),
-            isActive: document.getElementById('edit-is-active').checked
+            roleId: parseInt(document.getElementById('edit-role').value)
         };
 
         try {
@@ -152,20 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    async function toggleUserStatus(userId) {
-        try {
-            const response = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
-            if (response.ok) {
-                showAlert('success', 'User status updated successfully.');
-                loadUsers();
-            } else {
-                throw new Error('Toggle failed');
-            }
-        } catch (error) {
-            console.error('Error toggling status:', error);
-            showAlert('error', 'Failed to update user status.');
-        }
-    }
 
     // --- Helpers ---
     function closeModal() {

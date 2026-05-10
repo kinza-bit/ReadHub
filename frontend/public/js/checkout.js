@@ -12,6 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-3-indicator')
     ];
 
+    // Input Fields
+    const shippingNameInput = document.getElementById('shipping-name');
+    const shippingPhoneInput = document.getElementById('shipping-phone');
+    const shippingAddrInput = document.getElementById('shipping-address');
+    const shippingCityInput = document.getElementById('shipping-city');
+    
+    const ccNumberInput = document.getElementById('cc-number');
+    const ccExpiryInput = document.getElementById('cc-expiry');
+    const ccNameInput   = document.getElementById('cc-name');
+    const ccCvvInput    = document.getElementById('cc-cvv');
+
     let hasPhysical = false;
 
     loadCartForCheckout();
@@ -94,25 +105,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Step 1 → 2: Validate delivery ──
-    document.getElementById('next-to-payment').addEventListener('click', () => {
-        clearErrors();
-        let valid = true;
-        const fields = [
-            { id: 'shipping-name', label: 'Full name' },
-            { id: 'shipping-phone', label: 'Phone number' },
-            { id: 'shipping-address', label: 'Delivery address' },
-            { id: 'shipping-city', label: 'City' }
-        ];
-        fields.forEach(f => {
-            const el = document.getElementById(f.id);
-            if (!el.value.trim()) {
-                el.classList.add('invalid');
-                const errEl = document.getElementById(f.id + '-error');
-                if (errEl) { errEl.textContent = f.label + ' is required.'; errEl.style.display = 'block'; }
-                valid = false;
-            }
-        });
-        if (valid) setStep(2);
+    const nextToPaymentBtn = document.getElementById('next-to-payment');
+    
+    // Add real-time listeners for Step 1 fields
+    ['shipping-name', 'shipping-phone', 'shipping-address', 'shipping-city'].forEach(id => {
+        const input = document.getElementById(id);
+        input.addEventListener('input', () => validateField(id));
+        input.addEventListener('blur', () => validateField(id));
+
+        // Strict input restrictions
+        if (id === 'shipping-name' || id === 'shipping-city') {
+            input.addEventListener('keypress', (e) => {
+                if (!/[a-zA-Z\s]/.test(e.key)) e.preventDefault();
+            });
+        }
+        if (id === 'shipping-phone') {
+            input.addEventListener('keypress', (e) => {
+                if (!/\d/.test(e.key)) e.preventDefault();
+            });
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '').substring(0, 11);
+            });
+        }
+    });
+
+    // Also for CC name
+    ccNameInput.addEventListener('keypress', (e) => {
+        if (!/[a-zA-Z\s]/.test(e.key)) e.preventDefault();
+    });
+    ccCvvInput.addEventListener('keypress', (e) => {
+        if (!/\d/.test(e.key)) e.preventDefault();
+    });
+
+    nextToPaymentBtn.addEventListener('click', () => {
+        const isNameValid = validateField('shipping-name');
+        const isPhoneValid = validateField('shipping-phone');
+        const isAddrValid = validateField('shipping-address');
+        const isCityValid = validateField('shipping-city');
+
+        if (isNameValid && isPhoneValid && isAddrValid && isCityValid) {
+            setStep(2);
+        } else {
+            showToast('Please correct the errors in the delivery form.', 'error');
+        }
     });
 
     // ── Payment Method Toggle ──
@@ -136,10 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── CC Input Formatting ──
-    const ccNumberInput = document.getElementById('cc-number');
-    const ccExpiryInput = document.getElementById('cc-expiry');
-    const ccNameInput   = document.getElementById('cc-name');
-    const ccCvvInput    = document.getElementById('cc-cvv');
 
     ccNumberInput.addEventListener('input', (e) => {
         let v = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
@@ -167,54 +198,157 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ── Real-time Validation (Blur) ──
+    // ── Real-time Validation (Blur & Input) ──
+    ccNameInput.addEventListener('input', () => validateField('cc-name'));
     ccNameInput.addEventListener('blur', () => validateField('cc-name'));
+    
+    ccNumberInput.addEventListener('input', () => validateField('cc-number'));
     ccNumberInput.addEventListener('blur', () => validateField('cc-number'));
+    
+    ccExpiryInput.addEventListener('input', () => validateField('cc-expiry'));
     ccExpiryInput.addEventListener('blur', () => validateField('cc-expiry'));
+    
+    ccCvvInput.addEventListener('input', () => validateField('cc-cvv'));
     ccCvvInput.addEventListener('blur', () => validateField('cc-cvv'));
 
     function validateField(id) {
-        const val = document.getElementById(id).value.trim();
-        const errEl = document.getElementById(id + '-error');
         const input = document.getElementById(id);
+        const val = input.value.trim();
+        const errEl = document.getElementById(id + '-error');
         
         input.classList.remove('invalid');
-        if (errEl) errEl.style.display = 'none';
-
-        if (id === 'cc-name' && !val) {
-            showCCError(id, 'Cardholder name is required');
-            return false;
+        if (errEl) {
+            errEl.style.display = 'none';
+            errEl.textContent = '';
         }
-        if (id === 'cc-number') {
-            const digits = val.replace(/\s/g, '');
-            if (digits.length !== 16) {
-                showCCError(id, 'Enter a valid 16-digit card number');
+
+        // 1. Full Name (Shipping & CC)
+        if (id === 'shipping-name' || id === 'cc-name') {
+            if (!val) {
+                showFieldError(id, 'Name is required');
+                return false;
+            }
+            if (val.length < 3) {
+                showFieldError(id, 'Name must be at least 3 characters long');
+                return false;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(val)) {
+                showFieldError(id, 'Name can only contain letters and spaces');
                 return false;
             }
         }
+
+        // 2. Shipping Phone
+        if (id === 'shipping-phone') {
+            if (!val) {
+                showFieldError(id, 'Phone number is required');
+                return false;
+            }
+            // Strict Pakistani format: 03xxxxxxxxx (11 digits)
+            const cleanPhone = val.replace(/\D/g, '');
+            if (!/^03\d{9}$/.test(cleanPhone)) {
+                showFieldError(id, 'Enter a valid 11-digit phone number starting with 03');
+                return false;
+            }
+        }
+
+        // 3. Shipping Address
+        if (id === 'shipping-address') {
+            if (!val) {
+                showFieldError(id, 'Delivery address is required');
+                return false;
+            }
+            if (val.length < 10) {
+                showFieldError(id, 'Please enter a more detailed address (min 10 characters)');
+                return false;
+            }
+        }
+
+        // 4. Shipping City
+        if (id === 'shipping-city') {
+            if (!val) {
+                showFieldError(id, 'City name is required');
+                return false;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(val)) {
+                showFieldError(id, 'City can only contain letters and spaces');
+                return false;
+            }
+            if (val.length < 2) {
+                showFieldError(id, 'City name is too short');
+                return false;
+            }
+        }
+
+        // 5. Card Number
+        if (id === 'cc-number') {
+            const digits = val.replace(/\s/g, '');
+            if (!digits) {
+                showFieldError(id, 'Card number is required');
+                return false;
+            }
+            if (digits.length !== 16) {
+                showFieldError(id, 'Enter a valid 16-digit card number');
+                return false;
+            }
+            if (!/^\d+$/.test(digits)) {
+                showFieldError(id, 'Card number must contain digits only');
+                return false;
+            }
+        }
+
+        // 6. Expiry Date
         if (id === 'cc-expiry') {
+            if (!val) {
+                showFieldError(id, 'Expiry date is required');
+                return false;
+            }
             if (!/^\d{2}\/\d{2}$/.test(val)) {
-                showCCError(id, 'Use MM/YY format');
+                showFieldError(id, 'Use MM/YY format');
                 return false;
             }
             const [m, y] = val.split('/').map(n => parseInt(n));
             if (m < 1 || m > 12) {
-                showCCError(id, 'Month must be between 01 and 12');
+                showFieldError(id, 'Month must be between 01 and 12');
                 return false;
             }
             const now = new Date();
             const currentYear = now.getFullYear() % 100;
             const currentMonth = now.getMonth() + 1;
             if (y < currentYear || (y === currentYear && m < currentMonth)) {
-                showCCError(id, 'Card has expired');
+                showFieldError(id, 'Card has expired');
+                return false;
+            }
+            if (y > currentYear + 20) {
+                showFieldError(id, 'Invalid expiry year');
                 return false;
             }
         }
-        if (id === 'cc-cvv' && (val.length < 3 || val.length > 4)) {
-            showCCError(id, '3 or 4 digits required');
-            return false;
+
+        // 7. CVV
+        if (id === 'cc-cvv') {
+            if (!val) {
+                showFieldError(id, 'CVV is required');
+                return false;
+            }
+            if (!/^\d{3,4}$/.test(val)) {
+                showFieldError(id, '3 or 4 digits required');
+                return false;
+            }
         }
+
         return true;
+    }
+
+    function showFieldError(id, msg) {
+        const el = document.getElementById(id);
+        el.classList.add('invalid');
+        const errEl = document.getElementById(id + '-error');
+        if (errEl) {
+            errEl.textContent = msg;
+            errEl.style.display = 'block';
+            errEl.style.color = 'var(--prism-3)';
+        }
     }
 
     // ── CC Validation ──
@@ -227,20 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return isNameValid && isNumValid && isExpValid && isCvvValid;
     }
 
-    function showCCError(id, msg) {
-        const el = document.getElementById(id);
-        el.classList.add('invalid');
-        const errEl = document.getElementById(id + '-error');
-        if (errEl) {
-            errEl.textContent = msg;
-            errEl.style.display = 'block';
-            errEl.style.color = 'var(--prism-3)'; // Ensure consistent pink/red color
-        }
-    }
 
     function clearCCErrors() {
         ['cc-name', 'cc-number', 'cc-expiry', 'cc-cvv'].forEach(id => {
-            document.getElementById(id).classList.remove('invalid');
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('invalid');
             const errEl = document.getElementById(id + '-error');
             if (errEl) errEl.style.display = 'none';
         });

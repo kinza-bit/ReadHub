@@ -27,7 +27,6 @@ const profileRoutes        = require('./routes/profile');
 const adminUserRoutes      = require('./routes/adminUsers');
 const adminBookRoutes      = require('./routes/adminBooks');
 const adminCategoryRoutes  = require('./routes/adminCategories');
-const adminInventoryRoutes = require('./routes/adminInventory');
 const adminOrderRoutes     = require('./routes/adminOrders');
 const cartRoutes           = require('./routes/cart');
 const bookRequestRoutes    = require('./routes/bookRequestRoutes');
@@ -72,7 +71,6 @@ app.use('/api',          profileRoutes);        // /api/profile, /api/user/*, /a
 app.use('/api/admin',    adminUserRoutes);      // /api/admin/users/*, /api/admin/stats
 app.use('/api/admin/books',      adminBookRoutes);      // /api/admin/books/*
 app.use('/api/admin/categories', adminCategoryRoutes);  // /api/admin/categories/*
-app.use('/api/admin',    adminInventoryRoutes); // /api/admin/inventory/*, /api/admin/requests
 app.use('/api/admin/orders',     adminOrderRoutes);     // /api/admin/orders/*
 app.use('/api',          bookRequestRoutes);    // /api/book-request, /api/admin/book-requests
 

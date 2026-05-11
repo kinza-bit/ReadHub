@@ -16,7 +16,4 @@ const { requireUserAuth } = require('../middleware/auth');
 router.post('/buy',  requireUserAuth, orders.buyBook);
 router.post('/rent', requireUserAuth, orders.rentBook);
 
-// Ebook download — exposed separately at /api/ebook/download/:bookId
-router.get('/download/:bookId', requireUserAuth, orders.downloadEbook);
-
 module.exports = router;

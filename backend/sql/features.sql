@@ -48,20 +48,8 @@ GO
 -- ────────────────────────────────────────────────────────────
 -- View: vw_FullInventory
 -- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('vw_FullInventory', 'V') IS NOT NULL DROP VIEW vw_FullInventory;
-GO
-CREATE VIEW vw_FullInventory AS
-SELECT b.BookID, b.Title, b.Author,
-       (SELECT c.Name FROM Categories c WHERE c.CategoryID = b.CategoryID) AS CategoryName,
-       i.StockLevel, i.LowStockThreshold, i.TotalPhysicalSold,
-       i.TotalEbooksSold, i.TotalEbooksRented, i.LastRestockDate, i.UpdatedAt,
-       CASE
-           WHEN i.StockLevel <= i.LowStockThreshold THEN 'Low Stock'
-           ELSE 'In Stock'
-       END AS StockStatus
-FROM Inventory i
-INNER JOIN Books b ON i.BookID = b.BookID;
-GO
+-- Removed vw_FullInventory (Deprecated)
+
 
 -- ────────────────────────────────────────────────────────────
 -- View: vw_UserRequests
@@ -271,15 +259,8 @@ GO
 -- ────────────────────────────────────────────────────────────
 --   Inventory Management
 -- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_GetFullInventory', 'P') IS NOT NULL DROP PROCEDURE sp_GetFullInventory;
-GO
-CREATE PROCEDURE sp_GetFullInventory
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT * FROM vw_FullInventory ORDER BY StockLevel ASC;
-END;
-GO
+-- Removed sp_GetFullInventory (Deprecated)
+
 
 IF OBJECT_ID('sp_UpdateStockLevel', 'P') IS NOT NULL DROP PROCEDURE sp_UpdateStockLevel;
 GO
@@ -335,34 +316,8 @@ GO
 -- ────────────────────────────────────────────────────────────
 --  Download Ebook
 -- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_DownloadEbook', 'P') IS NOT NULL DROP PROCEDURE sp_DownloadEbook;
-GO
-CREATE PROCEDURE sp_DownloadEbook
-    @UserID INT,
-    @BookID INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    -- Returns PdfURL only if user actually purchased it or is actively renting it
-    SELECT PdfURL 
-    FROM Books 
-    WHERE BookID = @BookID
-      AND (
-          EXISTS (
-              SELECT 1 FROM OrderItems oi
-              INNER JOIN Orders o ON oi.OrderID = o.OrderID
-              WHERE oi.BookID = @BookID AND o.UserID = @UserID AND oi.FormatID = 2
-                AND o.PaymentStatusID = (SELECT StatusID FROM PaymentStatus WHERE StatusName = 'Completed')
-          )
-          OR
-          EXISTS (
-              SELECT 1 FROM EbookRentals er
-              WHERE er.BookID = @BookID AND er.UserID = @UserID
-                AND SYSUTCDATETIME() <= er.DueDate AND er.ActualReturnDate IS NULL
-          )
-      );
-END;
-GO
+-- Removed sp_DownloadEbook (Deprecated - replaced by Supabase signed URLs)
+
 
 -- ────────────────────────────────────────────────────────────
 --  Request Books

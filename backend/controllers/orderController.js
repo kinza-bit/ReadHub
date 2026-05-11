@@ -68,26 +68,5 @@ const rentBook = async (req, res) => {
     }
 };
 
-// ─── GET /api/ebook/download/:bookId — retrieve PDF URL if access is valid ────
-const downloadEbook = async (req, res) => {
-    try {
-        const pool = await poolPromise;
-        if (!pool) return res.status(503).json({ error: 'Database is offline.' });
+module.exports = { buyBook, rentBook };
 
-        const result = await pool.request()
-            .input('UserID', sql.INT, req.session.userId)
-            .input('BookID', sql.INT, req.params.bookId)
-            .execute('sp_DownloadEbook');
-
-        if (result.recordset.length === 0 || !result.recordset[0].PdfURL) {
-            return res.status(403).json({ error: 'Access denied. Purchase or rent this ebook first.' });
-        }
-
-        res.json({ pdfUrl: result.recordset[0].PdfURL });
-    } catch (error) {
-        console.error('Ebook download error:', error);
-        res.status(500).json({ error: 'Failed to retrieve ebook download link.' });
-    }
-};
-
-module.exports = { buyBook, rentBook, downloadEbook };

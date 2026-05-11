@@ -17,6 +17,7 @@ router.put('/profile',                requireUserAuth, profile.updateProfile);
 router.get('/user/purchases',         requireUserAuth, profile.getPurchases);
 router.get('/user/rentals',           requireUserAuth, profile.getRentals);
 router.get('/user/recently-added',    requireUserAuth, profile.getRecentlyAdded);
+router.get('/user/notifications',     requireUserAuth, profile.getNotifications);
 
 // Wishlist
 router.get('/user/wishlist',          requireUserAuth, profile.getWishlist);

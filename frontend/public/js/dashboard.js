@@ -4,7 +4,52 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchDashboardStats();
     loadRecentlyAdded();
     loadPopularBooks();
+    fetchNotifications();
 });
+
+// ── Notifications (Expiring Rentals) ──────────────────────────────────────────
+async function fetchNotifications() {
+    const area = document.getElementById('notification-area');
+    if (!area) return;
+
+    try {
+        const res = await fetch('/api/user/notifications');
+        if (!res.ok) return;
+        const notifications = await res.json();
+
+        if (notifications.length === 0) {
+            area.style.display = 'none';
+            return;
+        }
+
+        area.style.display = 'block';
+        area.innerHTML = notifications.map(notif => {
+            const daysLeft = Math.ceil((new Date(notif.DueDate) - new Date()) / (1000 * 60 * 60 * 24));
+            const hoursLeft = Math.ceil((new Date(notif.DueDate) - new Date()) / (1000 * 60 * 60));
+            
+            let timeText = daysLeft > 1 ? `${daysLeft} days` : `${hoursLeft} hours`;
+            if (hoursLeft <= 1) timeText = 'less than an hour';
+
+            return `
+                <div class="gem-card" style="--c-accent:#f59e0b;--c-accent-bg:rgba(245,158,11,0.08);--c-accent-border:rgba(245,158,11,0.2); padding: 1rem 1.5rem; margin-bottom: 0.75rem; border-left: 4px solid #f59e0b;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div class="stat-icon-wrap" style="margin-bottom: 0; width: 32px; height: 32px; flex-shrink: 0;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: var(--text); font-size: 13px;">Rental Expiring Soon</div>
+                            <div style="color: var(--text-muted); font-size: 12px;">Your rental for <strong>"${notif.Title}"</strong> expires in ${timeText}.</div>
+                        </div>
+                        <a href="/library.html" class="see-all" style="margin-left: auto;">Open Library →</a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error('Error fetching notifications:', err);
+    }
+}
 
 // ── Recently Added ───────────────────────────────────────────────────────────
 async function loadRecentlyAdded() {

@@ -76,20 +76,7 @@ const updateUser = async (req, res) => {
     }
 };
 
-// ─── DELETE /api/admin/users/:id — soft delete (toggle active status) ────────
-const toggleUserStatus = async (req, res) => {
-    try {
-        const pool = await poolPromise;
-        await pool.request()
-            .input('UserID', sql.INT, req.params.id)
-            .execute('sp_ToggleUserStatus');
 
-        res.json({ message: 'User status toggled successfully.' });
-    } catch (error) {
-        console.error('Error toggling user status:', error);
-        res.status(500).json({ error: 'Failed to toggle user status.' });
-    }
-};
 
 // ─── GET /api/admin/stats — dashboard summary counts ─────────────────────────
 const getStats = async (req, res) => {
@@ -116,4 +103,4 @@ const getStats = async (req, res) => {
     }
 };
 
-module.exports = { getAllUsers, getUserDetails, updateUser, toggleUserStatus, getStats };
+module.exports = { getAllUsers, getUserDetails, updateUser, getStats };

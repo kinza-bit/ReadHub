@@ -407,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed to add to cart');
             showToast('Added to cart!');
+            updateCartBadge(); // Update global count
             fetchBookDetails(); // Refresh UI to update buttons
         } catch (err) { showToast(err.message, 'error'); }
     };
@@ -419,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed to add rental');
             showToast('Rental added to cart!');
+            updateCartBadge(); // Update global count
             fetchBookDetails(); // Refresh UI
         } catch (err) { showToast(err.message, 'error'); }
     };

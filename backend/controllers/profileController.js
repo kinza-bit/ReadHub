@@ -241,6 +241,29 @@ const getRecentlyAdded = async (req, res) => {
     }
 };
 
+// ─── GET /api/user/notifications — fetch notifications (expiring rentals) ────
+const getNotifications = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('UserID', sql.INT, req.session.userId)
+            .query(`
+                SELECT er.RentalID, er.BookID, er.DueDate, b.Title
+                FROM EbookRentals er
+                JOIN Books b ON er.BookID = b.BookID
+                WHERE er.UserID = @UserID 
+                  AND er.ActualReturnDate IS NULL
+                  AND er.DueDate <= DATEADD(HOUR, 48, SYSUTCDATETIME())
+                  AND er.DueDate > SYSUTCDATETIME()
+                ORDER BY er.DueDate ASC
+            `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Notifications fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch notifications.' });
+    }
+};
+
 module.exports = {
     getProfile, updateProfile,
     getPurchases,
@@ -248,4 +271,5 @@ module.exports = {
     getRecentlyAdded,
     getWishlist, addToWishlist, removeFromWishlist,
     submitRequest, getRequests,
+    getNotifications
 };

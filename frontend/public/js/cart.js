@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/cart/${cartItemId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed');
             showToast('Item removed from cart.', 'success');
+            updateCartBadge(); // Update global count
             loadCart();
         } catch (err) {
             showToast('Failed to remove item.', 'error');
@@ -136,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/cart/clear', { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed');
             showToast('Cart cleared.', 'success');
+            updateCartBadge(); // Update global count
             loadCart();
         } catch (err) {
             showToast('Failed to clear cart.', 'error');

@@ -239,6 +239,9 @@ const checkAuth = async (requiredRole) => {
             }
         }
 
+        // Update global cart badge
+        updateCartBadge();
+
         return data.user;
 
     } catch (err) {
@@ -247,8 +250,34 @@ const checkAuth = async (requiredRole) => {
     }
 };
 
+// Global Cart Badge Update
+const updateCartBadge = async () => {
+    try {
+        const badge = document.getElementById('cart-badge');
+        if (!badge) return;
+
+        const res = await fetch(`${API_BASE_URL}/cart/count`);
+        if (!res.ok) {
+            badge.style.display = 'none';
+            return;
+        }
+
+        const { count } = await res.json();
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (e) {
+        console.error('Failed to update cart badge:', e);
+    }
+};
+
 // Event Listeners Initialization based on current page
 document.addEventListener('DOMContentLoaded', () => {
+    // Global cart badge update
+    updateCartBadge();
 
     const registerForm = document.getElementById('register-form');
     if (registerForm) {

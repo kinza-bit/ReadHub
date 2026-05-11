@@ -45,10 +45,7 @@ SELECT b.BookID, b.ISBN, b.Title, b.Author,
 FROM Books b;
 GO
 
--- ────────────────────────────────────────────────────────────
--- View: vw_FullInventory
--- ────────────────────────────────────────────────────────────
--- Removed vw_FullInventory (Deprecated)
+
 
 
 -- ────────────────────────────────────────────────────────────
@@ -312,13 +309,6 @@ END;
 GO
 
 
-
--- ────────────────────────────────────────────────────────────
---  Download Ebook
--- ────────────────────────────────────────────────────────────
--- Removed sp_DownloadEbook (Deprecated - replaced by Supabase signed URLs)
-
-
 -- ────────────────────────────────────────────────────────────
 --  Request Books
 -- ────────────────────────────────────────────────────────────
@@ -528,19 +518,7 @@ BEGIN
 END;
 GO
 
--- ────────────────────────────────────────────────────────────
---  Toggle User Status (Admin Soft Delete)
--- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('sp_ToggleUserStatus', 'P') IS NOT NULL DROP PROCEDURE sp_ToggleUserStatus;
-GO
-CREATE PROCEDURE sp_ToggleUserStatus
-    @UserID INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    UPDATE Users SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE UserID = @UserID;
-END;
-GO
+
 
 -- ────────────────────────────────────────────────────────────
 --  Get Users with Filtering and Sorting (Admin)
@@ -819,31 +797,9 @@ BEGIN
 END;
 GO
 
--- ────────────────────────────────────────────────────────────
--- Trigger 6: trg_AfterDeleteBookRating
--- Recalculate Books.AverageRating when a rating is deleted.
--- ────────────────────────────────────────────────────────────
-IF OBJECT_ID('trg_AfterDeleteBookRating', 'TR') IS NOT NULL DROP TRIGGER trg_AfterDeleteBookRating;
-GO
-CREATE TRIGGER trg_AfterDeleteBookRating
-ON BookRating
-AFTER DELETE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    UPDATE b
-    SET b.AverageRating = (
-        SELECT ISNULL(AVG(CAST(br.Rating AS DECIMAL(3,2))), 0.00)
-        FROM BookRating br
-        WHERE br.BookID = d.BookID
-    )
-    FROM Books b
-    INNER JOIN deleted d ON b.BookID = d.BookID;
-END;
-GO
 
 -- ────────────────────────────────────────────────────────────
--- Trigger 7: trg_AfterInsertEbookRental
+-- Trigger 6: trg_AfterInsertEbookRental
 -- Increment Inventory.TotalEbooksRented when a new rental is
 -- created in EbookRentals.
 -- (User: Rent Ebook)
@@ -869,7 +825,7 @@ END;
 GO
 
 -- ────────────────────────────────────────────────────────────
--- Trigger 8: trg_AfterUpdateInventory_LowStock
+-- Trigger 7: trg_AfterUpdateInventory_LowStock
 -- Raise a non-terminating informational warning (severity 10)
 -- when StockLevel drops to or below LowStockThreshold after
 -- an inventory update.

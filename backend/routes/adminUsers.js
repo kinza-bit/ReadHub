@@ -16,6 +16,5 @@ router.get('/stats',    requireAdminAuth, adminUsers.getStats);
 router.get('/users',          requireAdminAuth, adminUsers.getAllUsers);
 router.get('/users/:id',      requireAdminAuth, adminUsers.getUserDetails);
 router.put('/users/:id',      requireAdminAuth, adminUsers.updateUser);
-router.delete('/users/:id',   requireAdminAuth, adminUsers.toggleUserStatus);
 
 module.exports = router;

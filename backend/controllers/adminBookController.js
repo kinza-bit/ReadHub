@@ -142,6 +142,7 @@ const updateBook = async (req, res) => {
     const {
         title, author, isbn, categoryId, description,
         physicalPrice, ebookPrice, rentalPricePerDay, lateFeePerDay,
+        stockLevel, lowStockThreshold,
     } = req.body;
 
     // Fetch existing file paths before attempting the update
@@ -205,6 +206,22 @@ const updateBook = async (req, res) => {
             .input('PdfURL',            sql.NVarChar,      pdfFile ? null : existing.PdfURL) // If new upload, set local path to null
             .input('SupabasePath',      sql.NVarChar,      finalSupabasePath)
             .execute('sp_UpdateBook');
+
+        // ── Update Inventory (stock) — sp_UpdateBook only touches Books table ──
+        if (stockLevel !== undefined && stockLevel !== null && stockLevel !== '') {
+            await pool.request()
+                .input('BookID',            sql.INT, bookId)
+                .input('StockLevel',        sql.INT, parseInt(stockLevel))
+                .input('LowStockThreshold', sql.INT, lowStockThreshold ? parseInt(lowStockThreshold) : 5)
+                .query(`
+                    UPDATE Inventory
+                    SET StockLevel        = @StockLevel,
+                        LowStockThreshold = @LowStockThreshold,
+                        LastRestockDate   = SYSUTCDATETIME(),
+                        UpdatedAt         = SYSUTCDATETIME()
+                    WHERE BookID = @BookID
+                `);
+        }
 
         // Delete replaced files from disk AFTER the DB update succeeds
         if (coverFile && existing.ImageURL) unlinkOldFile(IMGS_DIR, existing.ImageURL);

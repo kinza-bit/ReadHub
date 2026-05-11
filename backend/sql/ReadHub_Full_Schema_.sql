@@ -1,7 +1,5 @@
 -- ============================================================
--- ReadHub — Full Consolidated & Updated Database Schema
--- Last Updated: 2026-05-10
--- Includes: Base Schema + Orders/Cart + Ebook Storage + Wishlist + Profiles
+-- ReadHub 
 -- ============================================================
 
 CREATE DATABASE Read_Hub;
@@ -96,7 +94,7 @@ CREATE TABLE Users (
     AddressLine1 NVARCHAR(200) NULL,
     City NVARCHAR(100) NULL,
     Country NVARCHAR(100) NULL,
-    ProfileImageURL NVARCHAR(500) NULL, -- Updated: Added for profile management
+    ProfileImageURL NVARCHAR(500) NULL, 
     IsActive BIT DEFAULT 1,
     RoleID INT NOT NULL,
     CreatedAt DATETIME2 DEFAULT SYSUTCDATETIME(),
@@ -120,7 +118,7 @@ CREATE TABLE Books (
     AverageRating DECIMAL(3,2) DEFAULT 0.00,
     ImageURL NVARCHAR(500) NULL,
     PdfURL NVARCHAR(500) NULL, 
-    SupabasePath NVARCHAR(255) NULL, -- Updated: Added for Supabase storage integration
+    SupabasePath NVARCHAR(255) NULL, 
     CONSTRAINT FK_Books_Category FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID)
 );
 
@@ -145,7 +143,7 @@ CREATE TABLE BookRating (
     BookID INT NOT NULL,
     UserID INT NOT NULL,
     Rating INT NOT NULL CHECK (Rating >= 1 AND Rating <= 5),
-    Review NVARCHAR(MAX) NULL, -- Updated: Added for detailed feedback
+    Review NVARCHAR(MAX) NULL, 
     CreatedAt DATETIME2 DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_Rating_Book FOREIGN KEY (BookID) REFERENCES Books(BookID) ON DELETE CASCADE,
     CONSTRAINT FK_Rating_User FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
@@ -225,8 +223,8 @@ CREATE TABLE OrderItems (
     Quantity INT NOT NULL,
     UnitPrice DECIMAL(10,2) NOT NULL, 
     RentalDays INT NULL, 
-    DownloadCount INT NOT NULL DEFAULT 0, -- Updated: Added for download tracking
-    MaxDownloads INT NOT NULL DEFAULT 3,   -- Updated: Added for download tracking
+    DownloadCount INT NOT NULL DEFAULT 0,
+    MaxDownloads INT NOT NULL DEFAULT 3,   
     CONSTRAINT FK_OrderItems_Order FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
     CONSTRAINT FK_OrderItems_Book FOREIGN KEY (BookID) REFERENCES Books(BookID),
     CONSTRAINT FK_OrderItems_Format FOREIGN KEY (FormatID) REFERENCES PurchaseFormat(FormatID)
@@ -242,7 +240,7 @@ CREATE TABLE EbookRentals (
     DueDate DATETIME2 NOT NULL,
     ActualReturnDate DATETIME2 NULL, 
     CurrentFine DECIMAL(10,2) DEFAULT 0.00,
-    IsNotified BIT NOT NULL DEFAULT 0, -- Updated: For expiration notifications
+    IsNotified BIT NOT NULL DEFAULT 0, 
     CONSTRAINT FK_Rentals_Order FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
     CONSTRAINT FK_Rentals_User FOREIGN KEY (UserID) REFERENCES Users(UserID),
     CONSTRAINT FK_Rentals_Book FOREIGN KEY (BookID) REFERENCES Books(BookID)
@@ -250,4 +248,3 @@ CREATE TABLE EbookRentals (
 
 GO
 
-PRINT '✅ ReadHub Full Updated Schema created successfully.';

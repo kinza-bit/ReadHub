@@ -125,15 +125,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const catId = document.getElementById('cat-id').value;
         const isEdit = !!catId;
 
-        const payload = {
-            name: document.getElementById('cat-name').value.trim(),
-            description: document.getElementById('cat-description').value.trim() || null
-        };
+        const catNameInput = document.getElementById('cat-name');
+        const rawName = catNameInput.value.trim();
+        
+        // Regex for only letters (A-Z, a-z) and spaces
+        const nameRegex = /^[A-Za-z\s]+$/;
 
-        if (!payload.name) {
+        if (!rawName) {
             showToast('Category name is required.', 'error');
             return;
         }
+
+        if (!nameRegex.test(rawName)) {
+            showToast('Category name must contain only letters.', 'error');
+            return;
+        }
+
+        const payload = {
+            name: rawName,
+            description: document.getElementById('cat-description').value.trim() || null
+        };
 
         const saveBtn = document.getElementById('save-cat-btn');
         saveBtn.disabled = true;

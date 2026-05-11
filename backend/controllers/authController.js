@@ -28,6 +28,10 @@ const register = async (req, res) => {
             return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
         }
 
+        if (password.length > 255) {
+            return res.status(400).json({ error: 'Password cannot be greater than 255 characters.' });
+        }
+
         const pool = await poolPromise;
         if (!pool) return res.status(503).json({ error: 'Database is offline. Please check your SQL Server Configuration.' });
 
@@ -209,6 +213,9 @@ const resetPassword = async (req, res) => {
         }
         if (newPassword.length < 8) {
             return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+        }
+        if (newPassword.length > 255) {
+            return res.status(400).json({ error: 'Password cannot be greater than 255 characters.' });
         }
 
         const pool = await poolPromise;

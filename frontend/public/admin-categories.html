@@ -100,7 +100,7 @@
                 <input type="hidden" id="cat-id">
                 <div class="form-group">
                     <label for="cat-name">Category Name *</label>
-                    <input type="text" id="cat-name" class="form-control" placeholder="e.g. Horror, Biography, Science Fiction" required>
+                    <input type="text" id="cat-name" class="form-control" placeholder="e.g. Horror, Biography, Science Fiction" required pattern="^[A-Za-z\s]+$" title="Category name must contain only letters.">
                 </div>
                 <div class="form-group">
                     <label for="cat-description">Description</label>

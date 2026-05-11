@@ -215,8 +215,17 @@ document.addEventListener('DOMContentLoaded', () => {
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = menu.classList.contains('open');
-            menu.classList.toggle('open', !isOpen);
-            trigger.classList.toggle('open', !isOpen);
+            const nextOpen = !isOpen;
+            
+            menu.classList.toggle('open', nextOpen);
+            trigger.classList.toggle('open', nextOpen);
+            
+            // Lift card z-index so dropdown is on top of sibling cards
+            const parentCard = dropdown.closest('.rh-purchase-card');
+            if (parentCard) {
+                parentCard.style.zIndex = nextOpen ? '100' : '';
+                parentCard.style.position = nextOpen ? 'relative' : '';
+            }
         });
 
         // Item selection
@@ -228,6 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 label.textContent = item.querySelector('span').textContent;
                 menu.classList.remove('open');
                 trigger.classList.remove('open');
+                
+                const parentCard = dropdown.closest('.rh-purchase-card');
+                if (parentCard) {
+                    parentCard.style.zIndex = '';
+                    parentCard.style.position = '';
+                }
             });
         });
 
@@ -236,6 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!dropdown.contains(e.target)) {
                 menu.classList.remove('open');
                 trigger.classList.remove('open');
+                
+                const parentCard = dropdown.closest('.rh-purchase-card');
+                if (parentCard) {
+                    parentCard.style.zIndex = '';
+                    parentCard.style.position = '';
+                }
             }
         });
     }

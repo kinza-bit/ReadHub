@@ -78,6 +78,9 @@ const handleRegister = async (e) => {
     } else if (password.length < 8) {
         setInputError('password', 'Password must be at least 8 characters long');
         isValid = false;
+    } else if (password.length > 255) {
+        setInputError('password', 'Password cannot be greater than 255 characters.');
+        isValid = false;
     }
 
     if (!isValid) return;
@@ -260,8 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         document.getElementById('password').addEventListener('input', (e) => {
-            if (e.target.value.length > 0 && e.target.value.length < 8) {
+            const len = e.target.value.length;
+            if (len > 0 && len < 8) {
                 setInputError('password', 'Minimum 8 characters');
+            } else if (len > 255) {
+                setInputError('password', 'Password cannot be greater than 255 characters.');
             } else {
                 e.target.classList.remove('invalid');
                 document.getElementById('password-error').style.display = 'none';
